@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { blockSupabase, SUPABASE_URL } from './support/supabase';
 
 const SCREENSHOT_DIR = 'e2e/screenshots';
 
@@ -38,8 +39,7 @@ async function expectCardCentered(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-  // Smoke tests never reach the real Supabase project.
-  await page.route(/supabase\.co/, (route) => route.abort());
+  await blockSupabase(page);
 });
 
 test('"/" redirects to the login form', async ({ page }) => {
@@ -66,7 +66,7 @@ test('forgot password shows its form', async ({ page }) => {
 });
 
 test('reset password shows its form when opened from a recovery link', async ({ page }) => {
-  await page.route(/supabase\.co\/auth\/v1\/user/, (route) =>
+  await page.route(`${SUPABASE_URL}/auth/v1/user`, (route) =>
     route.fulfill({ json: RECOVERY_USER }),
   );
   await page.goto(`/restablecer-contrasena#${RECOVERY_LINK_HASH}`);

@@ -484,7 +484,7 @@ recurring_templates (fase 3)
 - [x] 1Money: no se importa nada. Todo se configura desde cero con el asistente de configuración inicial.
 - [x] Compras a cuotas con TC: hoy son sin interés; al registrar una compra a más de 1 cuota con TC, la app pide la tasa (0 = sin interés).
 - [x] Invitaciones y SMTP: se posponen a la F1f. Hasta entonces el espacio tiene un solo miembro.
-- [ ] Entorno de desarrollo de base de datos (local o proyecto dev separado): se decide en el plan de la F1a.
+- [x] Entorno de desarrollo de base de datos: Supabase local en Docker (`supabase start`), con seed propio. Las pruebas pgTAP corren solo en local (en Windows `supabase test db` siempre usa un contenedor). Producción solo con `--remote=<ref>` explícito.
 
 ---
 
