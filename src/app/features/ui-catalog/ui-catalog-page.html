@@ -1,0 +1,240 @@
+<div class="catalog">
+  <cc-page-header
+    title="Catálogo UI"
+    subtitle="Componentes del sistema de diseño con sus variantes, en claro y oscuro. Solo en desarrollo."
+  />
+
+  <cc-section id="atomos" title="Átomos" description="Piezas mínimas, sin lógica de negocio.">
+    <div class="entries">
+      <app-catalog-entry name="cc-button" description="filled · tonal · outlined · text">
+        <ng-template>
+          <cc-button>Guardar</cc-button>
+          <cc-button variant="tonal">Este mes</cc-button>
+          <cc-button variant="outlined" icon="logout">Cerrar sesión</cc-button>
+          <cc-button variant="text">Cancelar</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-button · estados" description="Cargando, deshabilitado y enlace">
+        <ng-template>
+          <cc-button loadingLabel="Guardando" [loading]="true">Guardar</cc-button>
+          <cc-button [disabled]="true">Guardar</cc-button>
+          <cc-button variant="text" [link]="['/', paths.uiCatalog]">Ir al catálogo</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-button · ancho completo">
+        <ng-template>
+          <cc-button [fullWidth]="true">Entrar</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-icon-button" description="Botón, deshabilitado y enlace">
+        <ng-template>
+          <cc-icon-button icon="chevron_left" label="Periodo anterior" />
+          <cc-icon-button icon="chevron_right" label="Periodo siguiente" [disabled]="true" />
+          <cc-icon-button icon="settings" label="Catálogo" [link]="['/', paths.uiCatalog]" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-icon" description="sm · md · lg; con label es una imagen">
+        <ng-template>
+          <cc-icon name="savings" size="sm" />
+          <cc-icon name="savings" />
+          <cc-icon name="savings" size="lg" />
+          <cc-icon name="warning" label="Presupuesto excedido" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-text-field"
+        description="Vacío con ayuda, con valor, con error y deshabilitado"
+        layout="column"
+      >
+        <ng-template>
+          <cc-text-field label="Nombre" hint="Texto de ayuda" [formField]="demo.empty" />
+          <cc-text-field label="Correo" type="email" [formField]="demo.filled" />
+          <cc-text-field label="Correo" type="email" [formField]="demo.invalid" />
+          <cc-text-field label="Espacio" [formField]="demo.locked" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-password-field" description="Con error" layout="column">
+        <ng-template>
+          <cc-password-field label="Contraseña" [formField]="demo.password" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-select" description="Con valor y con error" layout="column">
+        <ng-template>
+          <cc-select label="Moneda principal" [options]="currencies" [formField]="demo.currency" />
+          <cc-select
+            label="Moneda principal"
+            [options]="currencies"
+            [formField]="demo.missingCurrency"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-switch"
+        description="Encendido, con ayuda y deshabilitado"
+        layout="column"
+      >
+        <ng-template>
+          <cc-switch label="Mostrar decimales" [formField]="demo.decimals" />
+          <cc-switch
+            label="Presupuestos"
+            hint="Muestra el restante en cada categoría"
+            [formField]="demo.budgets"
+          />
+          <cc-switch label="Bloqueado" [formField]="demo.lockedSwitch" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-message"
+        description="error (alert) · info (status)"
+        layout="column"
+      >
+        <ng-template>
+          <cc-message>No se pudo guardar. Inténtalo de nuevo.</cc-message>
+          <cc-message tone="info"
+            >Te enviamos un correo a <strong>ana&#64;example.com</strong>.</cc-message
+          >
+        </ng-template>
+      </app-catalog-entry>
+    </div>
+  </cc-section>
+
+  <cc-section id="moleculas" title="Moléculas" description="Combinaciones de átomos.">
+    <div class="entries">
+      <app-catalog-entry name="cc-brand">
+        <ng-template>
+          <cc-brand />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-page-header"
+        description="Título, subtítulo y acciones"
+        layout="column"
+      >
+        <ng-template>
+          <cc-page-header title="Cuentas" />
+          <cc-page-header title="Iniciar sesión" subtitle="Entra con tu correo y contraseña.">
+            <cc-icon-button icon="add" label="Agregar" />
+          </cc-page-header>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-form + cc-form-actions"
+        description="Formulario con error, acción principal y enlaces secundarios"
+        layout="column"
+      >
+        <ng-template>
+          <cc-form label="Ejemplo de inicio de sesión" [form]="loginDemo">
+            <cc-text-field label="Correo" type="email" [formField]="loginDemo.email" />
+            <cc-password-field label="Contraseña" [formField]="loginDemo.password" />
+            <cc-form-actions error="Correo o contraseña incorrectos.">
+              <cc-button type="submit">Entrar</cc-button>
+              <cc-button ccSecondaryAction variant="text" [link]="['/', paths.uiCatalog]">
+                ¿Olvidaste tu contraseña?
+              </cc-button>
+            </cc-form-actions>
+          </cc-form>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-form-actions" description="stretch · start · end" layout="column">
+        <ng-template>
+          <cc-form-actions><cc-button>Continuar</cc-button></cc-form-actions>
+          <cc-form-actions align="start"
+            ><cc-button variant="outlined">Cerrar sesión</cc-button></cc-form-actions
+          >
+          <cc-form-actions align="end">
+            <cc-button variant="text">Cancelar</cc-button>
+            <cc-button>Guardar</cc-button>
+          </cc-form-actions>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-section" layout="column">
+        <ng-template>
+          <cc-section title="Espacio" description="Solo el propietario cambia la configuración.">
+            <cc-text-field label="Nombre del espacio" [formField]="demo.locked" />
+          </cc-section>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-nav-item" description="Activo (ruta actual) e inactivo">
+        <ng-template>
+          <cc-nav-item label="Catálogo" icon="palette" [link]="['/', paths.uiCatalog]" />
+          <cc-nav-item
+            label="Cuentas"
+            icon="account_balance_wallet"
+            [link]="['/', paths.accounts]"
+          />
+        </ng-template>
+      </app-catalog-entry>
+    </div>
+  </cc-section>
+
+  <cc-section
+    id="organismos"
+    title="Organismos"
+    description="Secciones completas que reciben datos por inputs."
+  >
+    <div class="entries">
+      <app-catalog-entry name="cc-bottom-nav" layout="column">
+        <ng-template>
+          <cc-bottom-nav label="Navegación de ejemplo" [items]="navItems" />
+        </ng-template>
+      </app-catalog-entry>
+    </div>
+  </cc-section>
+
+  <cc-section
+    id="plantillas"
+    title="Plantillas"
+    description="Layouts sin datos, con contenido de ejemplo."
+  >
+    <div class="entries">
+      <app-catalog-entry name="cc-auth-layout" [framed]="true">
+        <ng-template>
+          <cc-auth-layout>
+            <cc-page-header title="Iniciar sesión" subtitle="Contenido de la pantalla." />
+          </cc-auth-layout>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-wizard-layout" [framed]="true">
+        <ng-template>
+          <cc-wizard-layout progress="Paso 2 de 7">
+            <cc-button ccWizardActions variant="text">Cerrar sesión</cc-button>
+            <cc-page-header title="Tu espacio" subtitle="Contenido del paso." />
+          </cc-wizard-layout>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-app-shell" [framed]="true">
+        <ng-template>
+          <cc-app-shell
+            navLabel="Navegación de ejemplo"
+            totalLabel="Total"
+            total="$ 1,234,567.90"
+            periodLabel="Periodo"
+            [navItems]="navItems"
+          >
+            <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" />
+            <cc-button ccShellPeriod variant="tonal">Este mes</cc-button>
+            <cc-icon-button ccShellPeriod icon="chevron_right" label="Periodo siguiente" />
+            <cc-icon-button ccShellActions icon="settings" label="Configuración" />
+            <cc-page-header title="Categorías" />
+          </cc-app-shell>
+        </ng-template>
+      </app-catalog-entry>
+    </div>
+  </cc-section>
+</div>

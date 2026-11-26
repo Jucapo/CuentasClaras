@@ -1,7 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
+import { capture } from './support/screenshots';
 import { blockSupabase, SUPABASE_URL } from './support/supabase';
-
-const SCREENSHOT_DIR = 'e2e/screenshots';
 
 const RECOVERY_LINK_HASH = new URLSearchParams({
   access_token: 'e2e-access-token',
@@ -20,13 +19,6 @@ const RECOVERY_USER = {
   user_metadata: {},
   created_at: '2026-01-01T00:00:00Z',
 };
-
-async function capture(page: Page, name: string): Promise<void> {
-  await page.screenshot({
-    path: `${SCREENSHOT_DIR}/${test.info().project.name}/${name}.png`,
-    fullPage: true,
-  });
-}
 
 async function expectCardCentered(page: Page): Promise<void> {
   const card = await page.locator('.auth-card').boundingBox();

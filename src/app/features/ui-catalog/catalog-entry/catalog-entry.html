@@ -1,0 +1,18 @@
+<article class="entry">
+  <header class="header">
+    <h3 class="name">{{ name() }}</h3>
+    @if (description(); as description) {
+      <p class="description">{{ description }}</p>
+    }
+  </header>
+  <div class="panels">
+    @for (scheme of schemes; track scheme.className) {
+      <div class="panel" [class]="scheme.className">
+        <span class="panel-label">{{ scheme.label }}</span>
+        <div class="demo" [class.column]="layout() === 'column'" [class.framed]="framed()">
+          <ng-container [ngTemplateOutlet]="demo()" />
+        </div>
+      </div>
+    }
+  </div>
+</article>

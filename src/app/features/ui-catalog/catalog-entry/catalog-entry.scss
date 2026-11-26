@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}
+
+.name {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.description {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--cc-catalog-panel-min-width), 1fr));
+  gap: var(--cc-space-3);
+}
+
+// Each panel sets its own color-scheme (cc-scheme-*), so the light-dark() tokens resolve per panel.
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+  min-width: 0;
+  padding: var(--cc-space-4);
+  border: var(--cc-border-width) solid var(--mat-sys-outline-variant);
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+.panel-label {
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--cc-space-3);
+}
+
+.column {
+  flex-flow: column nowrap;
+  align-items: stretch;
+}
+
+// Full-screen templates: layout containment keeps their sticky/fixed parts inside the frame.
+.framed {
+  display: block;
+  height: var(--cc-catalog-frame-height);
+  overflow: auto;
+  border-radius: var(--cc-radius-sm);
+  contain: layout paint;
+}

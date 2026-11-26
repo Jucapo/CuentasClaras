@@ -3,6 +3,7 @@ import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
 import { APP_PATHS, DEFAULT_HOME_PATH } from './core/routing/app-paths';
+import { DEV_ROUTES } from './dev.routes';
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
@@ -86,5 +87,6 @@ export const routes: Routes = [
       },
     ],
   },
+  ...DEV_ROUTES,
   { path: '**', redirectTo: DEFAULT_HOME_PATH },
 ];
