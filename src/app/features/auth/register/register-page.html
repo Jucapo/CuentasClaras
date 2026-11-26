@@ -1,68 +1,46 @@
-<h1 class="auth-title">Crear cuenta</h1>
-
 @if (sentTo(); as email) {
-  <p class="auth-message" role="status">
+  <cc-page-header title="Crear cuenta" />
+  <cc-message tone="info">
     Te enviamos un correo a <strong>{{ email }}</strong>. Abre el enlace para confirmar tu cuenta y
     luego inicia sesión.
-  </p>
+  </cc-message>
+  <cc-form-actions>
+    <cc-button ccSecondaryAction variant="text" [link]="['/', paths.login]">
+      Ya tengo cuenta
+    </cc-button>
+  </cc-form-actions>
 } @else {
-  <p class="auth-subtitle">Regístrate con tu correo.</p>
+  <cc-page-header title="Crear cuenta" subtitle="Regístrate con tu correo." />
 
-  <form class="auth-form" [formRoot]="registerForm">
-    <mat-form-field>
-      <mat-label>Correo</mat-label>
-      <input matInput type="email" autocomplete="email" [formField]="registerForm.email" />
-      @if (registerForm.email().errors()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      }
-    </mat-form-field>
+  <cc-form [form]="registerForm">
+    <cc-text-field
+      label="Correo"
+      type="email"
+      autocomplete="email"
+      [formField]="registerForm.email"
+    />
+    <cc-password-field
+      label="Contraseña"
+      autocomplete="new-password"
+      [formField]="registerForm.password"
+    />
+    <cc-password-field
+      label="Confirmar contraseña"
+      autocomplete="new-password"
+      [formField]="registerForm.confirmPassword"
+    />
 
-    <mat-form-field>
-      <mat-label>Contraseña</mat-label>
-      <input
-        matInput
-        type="password"
-        autocomplete="new-password"
-        [formField]="registerForm.password"
-      />
-      @if (registerForm.password().errors()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field>
-      <mat-label>Confirmar contraseña</mat-label>
-      <input
-        matInput
-        type="password"
-        autocomplete="new-password"
-        [formField]="registerForm.confirmPassword"
-      />
-      @if (registerForm.confirmPassword().errors()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      }
-    </mat-form-field>
-
-    <div class="auth-actions">
-      @if (errorMessage(); as message) {
-        <p class="form-error" role="alert">{{ message }}</p>
-      }
-      <button
-        matButton="filled"
-        class="auth-submit"
+    <cc-form-actions [error]="errorMessage()">
+      <cc-button
         type="submit"
-        [disabled]="registerForm().submitting()"
+        loadingLabel="Creando cuenta"
+        [loading]="registerForm().submitting()"
       >
-        @if (registerForm().submitting()) {
-          <mat-progress-spinner mode="indeterminate" diameter="20" aria-label="Creando cuenta" />
-        } @else {
-          Crear cuenta
-        }
-      </button>
-    </div>
-  </form>
+        Crear cuenta
+      </cc-button>
+      <cc-button ccSecondaryAction variant="text" [link]="['/', paths.login]">
+        Ya tengo cuenta
+      </cc-button>
+    </cc-form-actions>
+  </cc-form>
 }
-
-<nav class="auth-links" aria-label="Otras opciones">
-  <a [routerLink]="['/', paths.login]">Ya tengo cuenta</a>
-</nav>

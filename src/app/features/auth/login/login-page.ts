@@ -1,35 +1,22 @@
 import { Component, inject, input, signal } from '@angular/core';
-import { apply, form, FormField, FormRoot, required } from '@angular/forms/signals';
-import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
-import { MatIcon } from '@angular/material/icon';
-import { MatInput } from '@angular/material/input';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { Router, RouterLink } from '@angular/router';
+import { apply, form, FormField, required } from '@angular/forms/signals';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { FEATURE_FLAGS } from '../../../core/config/feature-flags';
 import { APP_PATHS } from '../../../core/routing/app-paths';
+import { Button } from '../../../shared/ui/atoms/button/button';
+import { PasswordField } from '../../../shared/ui/atoms/password-field/password-field';
+import { TextField } from '../../../shared/ui/atoms/text-field/text-field';
+import { FormActions } from '../../../shared/ui/molecules/form-actions/form-actions';
+import { Form } from '../../../shared/ui/molecules/form/form';
+import { PageHeader } from '../../../shared/ui/molecules/page-header/page-header';
 import { AUTH_VALIDATION_MESSAGES, emailSchema } from '../auth-validation';
 
 /** Email and password sign-in. */
 @Component({
   selector: 'app-login-page',
-  imports: [
-    FormField,
-    FormRoot,
-    RouterLink,
-    MatButton,
-    MatIconButton,
-    MatError,
-    MatFormField,
-    MatIcon,
-    MatInput,
-    MatLabel,
-    MatProgressSpinner,
-    MatSuffix,
-  ],
+  imports: [FormField, PageHeader, Form, FormActions, TextField, PasswordField, Button],
   templateUrl: './login-page.html',
-  styleUrl: './login-page.scss',
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
@@ -40,7 +27,6 @@ export class LoginPage {
 
   protected readonly paths = APP_PATHS;
   protected readonly publicSignup = inject(FEATURE_FLAGS).publicSignup;
-  protected readonly hidePassword = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
 
   private readonly model = signal({ email: '', password: '' });

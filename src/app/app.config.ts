@@ -5,12 +5,12 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
 import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { AppTitleStrategy } from './core/routing/app-title-strategy';
+import { provideUi } from './shared/ui/ui.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => inject(AuthService).init()),
     provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
-    { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
+    provideUi(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

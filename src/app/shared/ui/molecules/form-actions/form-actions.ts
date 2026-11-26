@@ -1,8 +1,8 @@
 import { Component, input } from '@angular/core';
 import { Message } from '../../atoms/message/message';
 
-/** `stretch` fills the width (mobile-first forms); `end` aligns actions to the right. */
-export type FormActionsAlign = 'stretch' | 'end';
+/** `stretch` fills the width (mobile-first forms); `start` and `end` keep the buttons' size. */
+export type FormActionsAlign = 'stretch' | 'start' | 'end';
 
 /**
  * Submit area of a form: the error message, the main actions (default slot) and secondary

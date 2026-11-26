@@ -1,30 +1,20 @@
 import { Component, inject, signal } from '@angular/core';
-import { apply, form, FormField, FormRoot } from '@angular/forms/signals';
-import { MatButton } from '@angular/material/button';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { apply, form, FormField } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth.service';
 import { APP_PATHS } from '../../../core/routing/app-paths';
+import { Button } from '../../../shared/ui/atoms/button/button';
+import { Message } from '../../../shared/ui/atoms/message/message';
+import { TextField } from '../../../shared/ui/atoms/text-field/text-field';
+import { FormActions } from '../../../shared/ui/molecules/form-actions/form-actions';
+import { Form } from '../../../shared/ui/molecules/form/form';
+import { PageHeader } from '../../../shared/ui/molecules/page-header/page-header';
 import { emailSchema } from '../auth-validation';
 
 /** Requests the password reset email. */
 @Component({
   selector: 'app-forgot-password-page',
-  imports: [
-    FormField,
-    FormRoot,
-    RouterLink,
-    MatButton,
-    MatError,
-    MatFormField,
-    MatInput,
-    MatLabel,
-    MatProgressSpinner,
-  ],
+  imports: [FormField, PageHeader, Form, FormActions, TextField, Button, Message],
   templateUrl: './forgot-password-page.html',
-  styleUrl: './forgot-password-page.scss',
 })
 export class ForgotPasswordPage {
   private readonly auth = inject(AuthService);

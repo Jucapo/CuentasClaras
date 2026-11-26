@@ -1,59 +1,24 @@
-<h1 class="auth-title">Iniciar sesión</h1>
-<p class="auth-subtitle">Entra con tu correo y contraseña.</p>
+<cc-page-header title="Iniciar sesión" subtitle="Entra con tu correo y contraseña." />
 
-<form class="auth-form" [formRoot]="loginForm">
-  <mat-form-field>
-    <mat-label>Correo</mat-label>
-    <input matInput type="email" autocomplete="email" [formField]="loginForm.email" />
-    @if (loginForm.email().errors()[0]; as error) {
-      <mat-error>{{ error.message }}</mat-error>
+<cc-form [form]="loginForm">
+  <cc-text-field label="Correo" type="email" autocomplete="email" [formField]="loginForm.email" />
+  <cc-password-field
+    label="Contraseña"
+    autocomplete="current-password"
+    [formField]="loginForm.password"
+  />
+
+  <cc-form-actions [error]="errorMessage()">
+    <cc-button type="submit" loadingLabel="Entrando" [loading]="loginForm().submitting()">
+      Entrar
+    </cc-button>
+    <cc-button ccSecondaryAction variant="text" [link]="['/', paths.forgotPassword]">
+      ¿Olvidaste tu contraseña?
+    </cc-button>
+    @if (publicSignup) {
+      <cc-button ccSecondaryAction variant="text" [link]="['/', paths.register]">
+        Crear cuenta
+      </cc-button>
     }
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Contraseña</mat-label>
-    <input
-      matInput
-      [type]="hidePassword() ? 'password' : 'text'"
-      autocomplete="current-password"
-      [formField]="loginForm.password"
-    />
-    <button
-      matIconButton
-      matSuffix
-      type="button"
-      [attr.aria-label]="hidePassword() ? 'Mostrar contraseña' : 'Ocultar contraseña'"
-      (click)="hidePassword.set(!hidePassword())"
-    >
-      <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
-    </button>
-    @if (loginForm.password().errors()[0]; as error) {
-      <mat-error>{{ error.message }}</mat-error>
-    }
-  </mat-form-field>
-
-  <div class="auth-actions">
-    @if (errorMessage(); as message) {
-      <p class="form-error" role="alert">{{ message }}</p>
-    }
-    <button
-      matButton="filled"
-      class="auth-submit"
-      type="submit"
-      [disabled]="loginForm().submitting()"
-    >
-      @if (loginForm().submitting()) {
-        <mat-progress-spinner mode="indeterminate" diameter="20" aria-label="Entrando" />
-      } @else {
-        Entrar
-      }
-    </button>
-  </div>
-</form>
-
-<nav class="auth-links" aria-label="Otras opciones">
-  <a [routerLink]="['/', paths.forgotPassword]">¿Olvidaste tu contraseña?</a>
-  @if (publicSignup) {
-    <a [routerLink]="['/', paths.register]">Crear cuenta</a>
-  }
-</nav>
+  </cc-form-actions>
+</cc-form>

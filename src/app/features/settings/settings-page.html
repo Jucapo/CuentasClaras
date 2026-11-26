@@ -1,14 +1,15 @@
 <cc-page-header title="Configuración" />
 
-<section class="settings-section" aria-labelledby="session-title">
-  <h2 id="session-title" class="section-title">Sesión</h2>
-  @if (user(); as currentUser) {
-    <p class="session-email">
-      Sesión iniciada como <strong>{{ currentUser.email }}</strong>
-    </p>
-  }
-  <button matButton="outlined" type="button" [disabled]="signingOut()" (click)="signOut()">
-    <mat-icon>logout</mat-icon>
-    Cerrar sesión
-  </button>
-</section>
+<cc-section title="Sesión" [description]="sessionDescription()">
+  <cc-form-actions align="start">
+    <cc-button
+      variant="outlined"
+      icon="logout"
+      loadingLabel="Cerrando sesión"
+      [loading]="signingOut()"
+      (click)="signOut()"
+    >
+      Cerrar sesión
+    </cc-button>
+  </cc-form-actions>
+</cc-section>
