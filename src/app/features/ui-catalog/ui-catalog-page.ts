@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
-import { disabled, form, FormField, required } from '@angular/forms/signals';
+import { apply, disabled, form, FormField, required } from '@angular/forms/signals';
+import { NUMBER_FORMAT_DEFAULTS, SPACE_DEFAULTS } from '../../core/config/space.constants';
 import { NAV_ITEMS } from '../../core/layout/nav-items';
 import { APP_PATHS } from '../../core/routing/app-paths';
 import { Button } from '../../shared/ui/atoms/button/button';
@@ -17,6 +18,15 @@ import { NavItem } from '../../shared/ui/molecules/nav-item/nav-item';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import { BottomNav } from '../../shared/ui/organisms/bottom-nav/bottom-nav';
+import {
+  NumberFormatForm,
+  NumberFormatPreferences,
+} from '../../shared/ui/organisms/number-format-form/number-format-form';
+import {
+  SpacePreferences,
+  spacePreferencesSchema,
+} from '../../shared/ui/organisms/space-preferences-form/space-preferences';
+import { SpacePreferencesForm } from '../../shared/ui/organisms/space-preferences-form/space-preferences-form';
 import { AppShell } from '../../shared/ui/templates/app-shell/app-shell';
 import { AuthLayout } from '../../shared/ui/templates/auth-layout/auth-layout';
 import { WizardLayout } from '../../shared/ui/templates/wizard-layout/wizard-layout';
@@ -43,6 +53,8 @@ import { CatalogEntry } from './catalog-entry/catalog-entry';
     PageHeader,
     Section,
     BottomNav,
+    SpacePreferencesForm,
+    NumberFormatForm,
     AppShell,
     AuthLayout,
     WizardLayout,
@@ -78,6 +90,17 @@ export class UiCatalogPage {
     required(path.missingCurrency, { message: 'Elige una moneda.' });
     disabled(path.locked);
     disabled(path.lockedSwitch);
+  });
+
+  private readonly preferencesModel = signal<{
+    space: SpacePreferences;
+    numberFormat: NumberFormatPreferences;
+  }>({
+    space: { name: 'Hogar', ...SPACE_DEFAULTS, monthStartDay: 28 },
+    numberFormat: { ...NUMBER_FORMAT_DEFAULTS },
+  });
+  protected readonly preferencesDemo = form(this.preferencesModel, (path) => {
+    apply(path.space, spacePreferencesSchema);
   });
 
   private readonly loginModel = signal({ email: 'ana@example.com', password: 'secreto-123' });

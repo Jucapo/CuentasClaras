@@ -192,6 +192,26 @@
           <cc-bottom-nav label="Navegación de ejemplo" [items]="navItems" />
         </ng-template>
       </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-space-preferences-form"
+        description="Paso 1 del asistente y Configuración"
+        layout="column"
+      >
+        <ng-template>
+          <cc-space-preferences-form [fields]="preferencesDemo.space" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-number-format-form"
+        description="El ejemplo sigue al interruptor de decimales"
+        layout="column"
+      >
+        <ng-template>
+          <cc-number-format-form [fields]="preferencesDemo.numberFormat" />
+        </ng-template>
+      </app-catalog-entry>
     </div>
   </cc-section>
 

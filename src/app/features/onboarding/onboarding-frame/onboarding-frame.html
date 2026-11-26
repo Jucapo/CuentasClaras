@@ -1,0 +1,12 @@
+<cc-wizard-layout [progress]="progress()">
+  <cc-button
+    ccWizardActions
+    variant="text"
+    loadingLabel="Cerrando sesión"
+    [loading]="signingOut()"
+    (click)="signOut()"
+  >
+    Cerrar sesión
+  </cc-button>
+  <router-outlet (activate)="onStepActivated()" />
+</cc-wizard-layout>

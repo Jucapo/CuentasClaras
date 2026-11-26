@@ -1,0 +1,7 @@
+<cc-select
+  label="Formato de moneda"
+  hint="Separadores de miles y decimales."
+  [options]="formatOptions()"
+  [formField]="fields().numberFormat"
+/>
+<cc-switch label="Mostrar decimales" [formField]="fields().showDecimals" />

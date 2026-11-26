@@ -2,8 +2,10 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
-import { APP_PATHS, DEFAULT_HOME_PATH } from './core/routing/app-paths';
+import { APP_PATHS, DEFAULT_HOME_PATH, ONBOARDING_STEP_PATHS } from './core/routing/app-paths';
+import { noSpaceGuard, spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
+import { ONBOARDING_STEP_DATA_KEY, ONBOARDING_STEPS } from './features/onboarding/onboarding-steps';
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
@@ -47,8 +49,26 @@ export const routes: Routes = [
     ],
   },
   {
+    path: APP_PATHS.welcome,
+    canActivate: [authGuard, noSpaceGuard],
+    loadComponent: () =>
+      import('./features/onboarding/onboarding-frame/onboarding-frame').then(
+        (m) => m.OnboardingFrame,
+      ),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: ONBOARDING_STEPS[0].path },
+      {
+        path: ONBOARDING_STEP_PATHS.space,
+        title: 'Tu espacio',
+        data: { [ONBOARDING_STEP_DATA_KEY]: 'space' },
+        loadComponent: () =>
+          import('./features/onboarding/steps/space-step/space-step').then((m) => m.SpaceStep),
+      },
+    ],
+  },
+  {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [authGuard, spaceGuard],
     loadComponent: () => import('./core/layout/shell/shell').then((m) => m.Shell),
     children: [
       {

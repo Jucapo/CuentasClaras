@@ -5,12 +5,17 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { FEATURE_FLAGS } from './core/config/feature-flags';
+import { SpaceService } from './core/spaces/space.service';
+import { UserSettingsService } from './core/user-settings/user-settings.service';
+import { ToastService } from './shared/ui/services/toast.service';
 
 describe('app routes', () => {
   const isAuthenticated = signal(false);
+  const hasSpace = signal(false);
 
-  async function navigate(url: string, signedIn: boolean) {
+  async function navigate(url: string, { signedIn = false, withSpace = false } = {}) {
     isAuthenticated.set(signedIn);
+    hasSpace.set(withSpace);
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes, withComponentInputBinding()),
@@ -18,6 +23,12 @@ describe('app routes', () => {
           provide: AuthService,
           useValue: { isAuthenticated, user: signal(null), signIn: vi.fn() },
         },
+        {
+          provide: SpaceService,
+          useValue: { hasSpace, ensureLoaded: vi.fn().mockResolvedValue({ ok: true }) },
+        },
+        { provide: UserSettingsService, useValue: { settings: signal(null) } },
+        { provide: ToastService, useValue: { show: vi.fn() } },
         { provide: FEATURE_FLAGS, useValue: { publicSignup: false } },
       ],
     });
@@ -27,29 +38,50 @@ describe('app routes', () => {
   }
 
   it('sends signed-out users from "/" to the login form', async () => {
-    const { harness, url } = await navigate('/', false);
+    const { harness, url } = await navigate('/');
 
     expect(url).toBe('/iniciar-sesion?redirect=%2Fcategorias');
     expect(harness.routeNativeElement?.querySelector('cc-auth-layout form')).not.toBeNull();
   });
 
-  it('opens the categories page for signed-in users at "/"', async () => {
-    const { harness, url } = await navigate('/', true);
+  it('sends signed-in users without a space to the first wizard step', async () => {
+    const { harness, url } = await navigate('/', { signedIn: true });
 
-    expect(url).toBe('/categorias');
+    expect(url).toBe('/bienvenida/espacio');
     expect(
-      harness.routeNativeElement?.querySelector('app-shell app-categories-page'),
+      harness.routeNativeElement?.querySelector('cc-wizard-layout app-space-step'),
     ).not.toBeNull();
   });
 
+  it('opens the categories page for signed-in users with a space', async () => {
+    const { harness, url } = await navigate('/', { signedIn: true, withSpace: true });
+
+    expect(url).toBe('/categorias');
+    expect(
+      harness.routeNativeElement?.querySelector('cc-app-shell app-categories-page'),
+    ).not.toBeNull();
+  });
+
+  it('keeps users who already have a space out of the wizard', async () => {
+    const { url } = await navigate('/bienvenida', { signedIn: true, withSpace: true });
+
+    expect(url).toBe('/categorias');
+  });
+
+  it('asks signed-out users to sign in before the wizard', async () => {
+    const { url } = await navigate('/bienvenida');
+
+    expect(url).toBe('/iniciar-sesion?redirect=%2Fbienvenida%2Fespacio');
+  });
+
   it('does not expose the sign-up page while public sign-up is closed', async () => {
-    const { url } = await navigate('/registro', false);
+    const { url } = await navigate('/registro');
 
     expect(url).toBe('/iniciar-sesion?redirect=%2Fcategorias');
   });
 
   it('sends unknown URLs to the home page', async () => {
-    const { url } = await navigate('/no-existe', true);
+    const { url } = await navigate('/no-existe', { signedIn: true, withSpace: true });
 
     expect(url).toBe('/categorias');
   });
