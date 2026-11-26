@@ -1,12 +1,13 @@
 @use '@angular/material' as mat;
 
+// The single place for the theme: Material 3 palettes and Material component overrides.
 // TODO: replace the provisional palettes with the final brand colors.
 // If the primary color changes, update `theme_color` in public/manifest.webmanifest and src/index.html.
 $primary-palette: mat.$spring-green-palette;
 $tertiary-palette: mat.$azure-palette;
 
 html {
-  // Follows the OS until the per-user theme setting arrives (F1).
+  // Follows the OS unless the user picked a mode (ThemeService sets data-theme).
   color-scheme: light dark;
 
   @include mat.theme(
@@ -19,4 +20,15 @@ html {
       density: 0,
     )
   );
+}
+
+// The system tokens use light-dark(), so setting color-scheme switches every token below it.
+html[data-theme='light'],
+.cc-scheme-light {
+  color-scheme: light;
+}
+
+html[data-theme='dark'],
+.cc-scheme-dark {
+  color-scheme: dark;
 }

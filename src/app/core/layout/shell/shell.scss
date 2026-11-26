@@ -7,7 +7,7 @@
 .shell-header {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: var(--cc-z-app-bar);
   padding-top: var(--cc-safe-area-top);
   background-color: var(--mat-sys-surface-container);
   color: var(--mat-sys-on-surface);
@@ -59,7 +59,7 @@
   position: fixed;
   inset-inline: 0;
   bottom: 0;
-  z-index: 2;
+  z-index: var(--cc-z-app-bar);
   padding-bottom: var(--cc-safe-area-bottom);
   background-color: var(--mat-sys-surface-container);
 }
