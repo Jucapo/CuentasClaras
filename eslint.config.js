@@ -50,6 +50,30 @@ module.exports = defineConfig([
     },
   },
   {
+    // Spec §13.1: Angular Material is only used inside atoms and molecules.
+    files: ['src/app/**/*.ts'],
+    ignores: [
+      'src/app/shared/ui/atoms/**',
+      'src/app/shared/ui/molecules/**',
+      'src/app/shared/ui/services/**',
+      'src/app/shared/ui/ui.providers.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@angular/material', '@angular/material/*'],
+              message:
+                'Use a cc- component from shared/ui; Material stays inside atoms and molecules.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},

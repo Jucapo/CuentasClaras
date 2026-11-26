@@ -1,38 +1,28 @@
 import { Component, inject, signal } from '@angular/core';
-import { form, FormField, FormRoot, minLength, required, validate } from '@angular/forms/signals';
-import { MatButton } from '@angular/material/button';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router, RouterLink } from '@angular/router';
+import { form, FormField, minLength, required, validate } from '@angular/forms/signals';
+import { Router } from '@angular/router';
 import { PASSWORD_MIN_LENGTH } from '../../../core/auth/auth.constants';
 import { AuthService } from '../../../core/auth/auth.service';
-import { SNACK_BAR_DURATION_MS } from '../../../core/config/app.constants';
 import { APP_PATHS } from '../../../core/routing/app-paths';
+import { Button } from '../../../shared/ui/atoms/button/button';
+import { Message } from '../../../shared/ui/atoms/message/message';
+import { PasswordField } from '../../../shared/ui/atoms/password-field/password-field';
+import { FormActions } from '../../../shared/ui/molecules/form-actions/form-actions';
+import { Form } from '../../../shared/ui/molecules/form/form';
+import { PageHeader } from '../../../shared/ui/molecules/page-header/page-header';
+import { ToastService } from '../../../shared/ui/services/toast.service';
 import { AUTH_VALIDATION_MESSAGES, matchesPassword } from '../auth-validation';
 
 /** Sets a new password from the recovery link (or for the signed-in user). */
 @Component({
   selector: 'app-reset-password-page',
-  imports: [
-    FormField,
-    FormRoot,
-    RouterLink,
-    MatButton,
-    MatError,
-    MatFormField,
-    MatInput,
-    MatLabel,
-    MatProgressSpinner,
-  ],
+  imports: [FormField, PageHeader, Form, FormActions, PasswordField, Button, Message],
   templateUrl: './reset-password-page.html',
-  styleUrl: './reset-password-page.scss',
 })
 export class ResetPasswordPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(ToastService);
 
   protected readonly paths = APP_PATHS;
   protected readonly hasSession = this.auth.isAuthenticated;
@@ -64,9 +54,7 @@ export class ResetPasswordPage {
             this.errorMessage.set(result.message);
             return;
           }
-          this.snackBar.open('Contraseña actualizada.', undefined, {
-            duration: SNACK_BAR_DURATION_MS,
-          });
+          void this.toast.show('Contraseña actualizada.');
           await this.router.navigateByUrl('/');
         },
       },

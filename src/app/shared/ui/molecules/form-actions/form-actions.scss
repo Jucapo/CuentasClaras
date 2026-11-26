@@ -10,10 +10,18 @@
   gap: var(--cc-space-2);
 }
 
+:host(.align-start) .primary,
 :host(.align-end) .primary {
   display: flex;
   flex-wrap: wrap;
+}
+
+:host(.align-end) .primary {
   justify-content: flex-end;
+}
+
+.primary:empty {
+  display: none;
 }
 
 .secondary {
