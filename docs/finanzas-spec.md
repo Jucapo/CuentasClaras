@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.4 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.5 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -30,7 +30,8 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 | Frontend | Angular (última estable), standalone + signals, TypeScript strict | Angular Material + CDK: bottom sheet, chips, date range picker, dialogs |
 | PWA | `@angular/pwa` (service worker de Angular) | Instalable en Android, iOS (Agregar a inicio) y escritorio |
 | Gráficas | Donut principal en SVG propio; barras con ECharts (`ngx-echarts`, import modular) | El donut replica el anillo segmentado de 1Money |
-| Íconos | Material Symbols Rounded, self-hosted | Catálogo curado para categorías y cuentas (§13.3) |
+| Íconos | Material Symbols Rounded, self-hosted (subset) | Catálogo curado para categorías y cuentas (§13.3) |
+| Tipografía | Roboto self-hosted (`@fontsource/roboto`) | La app no hace ninguna petición a Google Fonts |
 | UI | Atomic design con prefijo `cc-` | Material solo dentro de átomos y moléculas (§13.1) |
 | Backend | Supabase: Postgres, Auth, RLS, Edge Functions, `pg_cron` | |
 | Hosting | Vercel (SPA estático), deploy automático desde `main`, previews por PR | |
@@ -110,14 +111,28 @@ Todo lo que tiene saldo es una cuenta, incluidas las deudas.
 Atributos:
 
 - nombre, ícono y color;
+- tipo; el grupo se deriva del tipo;
 - moneda;
 - saldo inicial + fecha del saldo inicial;
-- dueño y visibilidad (§3.2);
+- dueño y visibilidad (§3.2), e "incluir en el espacio por defecto" (solo aplica a las privadas);
 - incluir en el total sí/no;
 - orden;
 - archivada.
 
 **Convención de signo única:** saldo = saldo inicial + ingresos − gastos + transferencias entrantes − transferencias salientes. Las deudas tienen saldo negativo. Comprar con tarjeta es un gasto desde la cuenta de la tarjeta, así que la deuda crece. Pagarla es una transferencia hacia la tarjeta, así que la deuda baja. Los saldos se calculan; no se guardan.
+
+Reglas de gestión (F1b):
+
+- **Saldo de las deudas:** se escribe en positivo ("lo que debes") y se guarda en negativo. Si se cambia el tipo de una cuenta entre deuda y no deuda, se conserva el monto que ve el usuario y se ajusta el signo guardado.
+- **Incluir en el total:** el valor por defecto depende del grupo.
+  - Sí solo en **Cuentas** (dinero disponible).
+  - No en Ahorros, Deudas, Me deben y Bienes: eso se ve en Mis finanzas.
+  - El formulario lo precarga según el tipo mientras el usuario no lo toque, igual que el ícono y el color.
+  - En la base de datos lo pone un trigger si no llega.
+- **Cuenta predeterminada:** se limpia sola cuando la cuenta se archiva, o cuando se vuelve privada (para todos menos el dueño).
+- **Bienes:** el tipo existe en la base de datos desde la F1b, pero la interfaz lo ofrece desde la F2.
+- **Tipo y moneda:** se pueden editar mientras no haya movimientos (F1d).
+- **Eliminar:** solo si la cuenta no tiene movimientos; si tiene, se archiva. Desde la F1d lo garantiza una FK `on delete restrict`, y la interfaz explica por qué no se puede.
 
 ### 4.2 Movimientos
 
@@ -147,12 +162,15 @@ Los ajustes sirven para conciliar con el saldo real del banco.
 - Pertenecen al espacio. Dos clases: gasto e ingreso. Máximo dos niveles (categoría → subcategoría).
 - Un movimiento puede ir a la categoría directamente o a una subcategoría.
 - Ícono, color, orden, archivada.
+- Una subcategoría puede no tener color propio: hereda el de su categoría. Una subcategoría no puede tener hijos ni ser de otra clase que su padre, y la clase no cambia después de crearla.
+- Eliminar: solo si no tiene movimientos (si tiene, se archiva). Eliminar una categoría elimina sus subcategorías, con una confirmación que las nombra.
 - **Etiquetas por defecto:** una categoría o subcategoría puede traer etiquetas que se aplican solas al registrar (editables en el momento). Ej.: Casa › Arriendo → `Fijos`.
 - Espacios nuevos: las categorías se crean en el asistente de configuración inicial (§7), desde cero o partiendo de la plantilla sugerida (Anexo A). No se importa nada de 1Money.
 
 ### 4.4 Etiquetas
 
 - Pertenecen al espacio. Relación muchos a muchos con movimientos. Nombre y color.
+- Se pueden archivar (dejan de ofrecerse al registrar, pero conservan su historial) o eliminar.
 - Atraviesan categorías. Ej.: `Fijos` agrupa Casa › Arriendo y Servicios › Internet; `Salud` puede sumar Mis gastos › Salud y Emiliano › Salud.
 - Reportes: total por etiqueta en el periodo, desglose de una etiqueta por categoría, y filtro por etiqueta en cualquier reporte o lista.
 - Las plantillas recurrentes también llevan etiquetas.
@@ -184,6 +202,9 @@ Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
   - Fase 2: TRM automática diaria, con opción de sobrescribirla.
 - Las transferencias entre monedas guardan los dos montos reales (la tasa efectiva queda implícita).
 - Formato configurable **por usuario**: separadores de miles y decimales, mostrar decimales sí/no. Por defecto el actual de 1Money: `-$ 1,234,567.90`.
+  - Sin decimales, el monto se redondea a la unidad, alejándose de cero. Solo cambia lo que se muestra; lo guardado no cambia.
+  - Al escribir, los separadores siguen el formato del usuario y se valida la agrupación de miles: en `1,234.56`, escribir "1,5" es un error, no 15.
+- Cada moneda tiene un exponente ISO 4217 fijo para las unidades menores (COP, USD y EUR: 2) y un símbolo: COP `$`, USD `US$` (para no confundir dólares con pesos), EUR `€`; las demás usan su código.
 - Un único pipe o servicio formatea montos en toda la app.
 
 ### 4.7 Presupuestos
@@ -317,6 +338,16 @@ Pestañas:
 - **Deudas:** debo, me deben y completadas, con círculo de progreso.
 - **Mis finanzas:** patrimonio por moneda y consolidado.
 
+Desde la F1b la pestaña Cuentas lista los grupos Cuentas, Ahorros, Deudas y Me deben, cada uno con su total por moneda, más un total general por moneda de las cuentas con "incluir en el total". Las archivadas van en una sección plegada.
+
+**Gestión:** crear y editar cuentas, categorías y etiquetas son pantallas con ruta propia:
+
+- `/cuentas/nueva` y `/cuentas/:id`;
+- `/configuracion/categorias/…`;
+- `/configuracion/etiquetas/…`.
+
+Los formularios son organismos que el asistente reutiliza tal cual.
+
 ### Transacciones
 
 - Lista agrupada por día y búsqueda.
@@ -373,7 +404,7 @@ Todas las tablas de negocio llevan `space_id`. Montos en `bigint` (unidades meno
 
 ```
 profiles (user_id, display_name, avatar_url, created_at)
-spaces (id, name, created_by, created_at)
+spaces (id, name, icon, color, created_by, created_at)
 space_members (space_id, user_id, role, default_account_id, joined_at)
   role: owner | editor | viewer
 space_invitations (id, space_id, email, role, token_hash, invited_by, expires_at, accepted_at)
@@ -381,11 +412,14 @@ space_settings (space_id, main_currency, month_start_day, week_start, budgets_en
                 onboarding_step, onboarding_completed_at)
 user_settings (user_id, theme, number_format, show_decimals, home_screen, last_space_id)
 
-accounts (id, space_id, owner_id, visibility, name, kind, group, currency,
+accounts (id, space_id, owner_id, visibility, name, kind, account_group, currency,
           initial_balance, initial_balance_date, icon, color, include_in_total,
-          include_in_space_by_default, sort_order, archived_at)
+          include_in_space_by_default, sort_order, archived_at, created_at)
   visibility: shared | private
   kind: cash | bank | wallet | savings | credit_card | loan | simple_debt | receivable | asset
+  account_group: accounts | savings | debts | receivables | assets   -- columna generada desde kind
+account_balances (account_id, space_id, currency, initial_balance, movements_total, balance)
+  -- vista security_invoker; en la F1b movements_total = 0 y la F1d lo llena sin cambiar columnas
 credit_card_details (account_id, credit_limit, statement_day, payment_day, monthly_fee)
 card_rates (account_id, effective_from, monthly_rate)
 loan_details (account_id, principal, disbursed_on, effective_annual_rate, term_months, payment_day, monthly_insurance)
@@ -394,9 +428,11 @@ installment_plans (id, space_id, account_id, kind, source_transaction_id, instal
   kind: loan_schedule | debt_plan | card_deferral
 installments (id, plan_id, number, due_date, principal, interest, fees, status, operation_id)
 
-categories (id, space_id, parent_id, kind, name, icon, color, sort_order, archived_at)
-tags (id, space_id, name, color)
-category_default_tags (category_id, tag_id)
+categories (id, space_id, parent_id, kind, name, icon, color, sort_order, archived_at, created_at)
+  kind: expense | income   -- color null solo en subcategorías (hereda el del padre)
+tags (id, space_id, name, color, archived_at, created_at)
+category_default_tags (space_id, category_id, tag_id)
+  -- space_id redundante a propósito: con FKs compuestas (space_id, id) no se mezclan espacios
 
 transactions (id, space_id, type, date, amount, currency, account_id, to_account_id, to_amount,
               category_id, note, include_in_space, operation_id, financing_plan_id,
@@ -414,10 +450,16 @@ recurring_templates (fase 3)
 | Tabla | Lectura | Escritura |
 |---|---|---|
 | `spaces`, `space_settings`, `categories`, `tags`, `budgets` | Miembros del espacio | Propietario o editor (configuración y miembros: solo propietario) |
-| `accounts` | Compartidas: miembros. Privadas: solo el dueño | Compartidas: propietario o editor. Privadas: solo el dueño |
+| `accounts` | Compartidas: miembros. Privadas: solo el dueño | Compartidas: propietario o editor. Privadas: solo el dueño, y además debe ser propietario o editor |
+| `category_default_tags` | Miembros del espacio | Propietario o editor |
 | `transactions` | Visible si la cuenta o la cuenta destino es visible para el usuario, o si `include_in_space = true` | Quien puede escribir en la cuenta de origen |
 
-- Funciones auxiliares: `is_space_member(space_id)`, `space_role(space_id)`, `can_see_account(account_id)`.
+- Funciones auxiliares: `is_space_member(space_id)`, `space_role(space_id)`, `is_space_editor(space_id)`, `can_see_account(account_id)`.
+- Un editor no puede volver privada la cuenta compartida de otro miembro: la política de escritura se evalúa también sobre la fila nueva.
+- Las FKs compuestas `(space_id, …)` garantizan que la cuenta predeterminada, la categoría padre y las etiquetas por defecto sean del mismo espacio.
+- RPCs de la F1b:
+  - `set_default_account(space_id, account_id)` acepta solo cuentas activas del espacio y visibles para quien llama. Con cualquier otra cuenta responde el mismo error, para no filtrar si existe.
+  - `reorder_categories(ids)` reordena hermanos y respeta la RLS.
 - `icon` y `color` guardan claves del catálogo de íconos y de la paleta (§13.3), nunca valores hex.
 - Saldos: vista SQL. Reportes: funciones RPC con `SECURITY INVOKER` (respetan RLS) que reciben un rango de fechas y el alcance. El cliente calcula el rango a partir de la configuración de periodo.
 
@@ -485,6 +527,8 @@ recurring_templates (fase 3)
 - [x] Compras a cuotas con TC: hoy son sin interés; al registrar una compra a más de 1 cuota con TC, la app pide la tasa (0 = sin interés).
 - [x] Invitaciones y SMTP: se posponen a la F1f. Hasta entonces el espacio tiene un solo miembro.
 - [x] Entorno de desarrollo de base de datos: Supabase local en Docker (`supabase start`), con seed propio. Las pruebas pgTAP corren solo en local (en Windows `supabase test db` siempre usa un contenedor). Producción solo con `--remote=<ref>` explícito.
+- [x] Postgres 17 en local y en producción (17.12): el esquema usa `on delete set null (columna)` y `nulls not distinct`.
+- [x] F1b: el detalle de las reglas de cuentas, categorías, etiquetas, montos e íconos está en §4.1, §4.3, §4.4, §4.6, §8 y §13.3.
 
 ---
 
@@ -529,12 +573,20 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 - Material Symbols Rounded, self-hosted para que funcionen sin conexión.
 - Catálogo curado de varios cientos de íconos, agrupados (Hogar, Comida, Transporte, Salud, Familia y niños, Mascotas, Educación, Ocio, Compras, Tecnología, Finanzas, Viajes, Trabajo, Otros), con palabras clave en español para buscar.
 - Si la fuente completa pesa mucho, se genera un subset con los íconos del catálogo y los de la interfaz.
+- **Implementación (F1b):**
+  - `npm run icons:build` genera el subset de forma reproducible:
+    - descarga la fuente variable y sus codepoints de `google/material-design-icons`, con commit fijo y SHA-256 verificado;
+    - fija peso 400, grado 0 y tamaño óptico 24, y conserva el eje de relleno (FILL) para los badges.
+  - El woff2 y el mapa `icon-codepoints.generated.ts` se commitean: el build no corre el script ni necesita red.
+  - Los íconos se dibujan por codepoint, no por ligadura. El nombre del ícono es un tipo (`IconName`), así que el compilador avisa si se usa uno que no está en el subset.
 
 **Colores**
 
 - Paleta curada de unos 30 colores, cada uno con variante para tema claro y oscuro, y con contraste suficiente para un ícono blanco encima.
 - Se guarda la clave del color (p. ej. `teal`), no el hex: si cambia la paleta o el tema, todo se actualiza solo.
 - Las subcategorías heredan por defecto el color de su categoría y pueden cambiarlo.
+- Contraste mínimo de 3:1 de un ícono blanco sobre cada color, en claro y en oscuro (WCAG 1.4.11, gráfico no textual). Una prueba unitaria lo verifica.
+- La paleta vive en un archivo TypeScript y cada color se aplica como `light-dark(claro, oscuro)` en una variable CSS, así que cambia sola con el tema.
 
 **Selectores**
 
