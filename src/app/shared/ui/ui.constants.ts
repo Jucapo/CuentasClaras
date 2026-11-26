@@ -18,7 +18,7 @@ export const UI_TEXT = {
   save: 'Guardar',
   moreOptions: 'Más opciones',
   dragToReorder: 'Arrastra para reordenar. Con el teclado: Alt y las flechas.',
-  gridEditHelp: 'Toca una categoría para editarla. Mantén presionada para moverla.',
+  gridEditHelp: 'Toca una categoría para editarla. Mantenla presionada y arrástrala para moverla.',
   gridEditHelpKeyboard: 'Con el teclado: Alt y las flechas para moverla.',
 } as const;
 

@@ -188,11 +188,42 @@ function answerTable(route: Route, table: string, rows: Row[], writes: RecordedW
     }
     return route.fulfill({ json: row ? [row] : [] });
   }
-  // DELETE: by id (and, for default tags, by category and tag).
-  const before = rows.length;
-  const kept = rows.filter((row) => row['id'] !== idFilter);
+  // DELETE: the rows that match every filter, e.g. id=eq.x or category_id=eq.x&tag_id=in.(a,b).
+  const deleted = rows.filter((row) => matchesFilters(row, url.searchParams));
+  const kept = rows.filter((row) => !deleted.includes(row));
   rows.splice(0, rows.length, ...kept);
-  return route.fulfill({ json: before === kept.length ? [] : [{ id: idFilter }] });
+  return route.fulfill({ json: deleted });
+}
+
+/** PostgREST query params that are not filters. */
+const NON_FILTER_PARAMS = new Set(['select', 'order', 'limit', 'offset', 'columns']);
+
+/** Whether a row matches the `eq.` and `in.()` filters of a request; no filters match nothing. */
+function matchesFilters(row: Row, params: URLSearchParams): boolean {
+  let filtered = false;
+  for (const [column, filter] of params) {
+    if (NON_FILTER_PARAMS.has(column)) {
+      continue;
+    }
+    filtered = true;
+    const value = String(row[column] ?? '');
+    if (filter.startsWith('eq.')) {
+      if (value !== filter.slice('eq.'.length)) {
+        return false;
+      }
+    } else if (filter.startsWith('in.(') && filter.endsWith(')')) {
+      const values = filter
+        .slice('in.('.length, -1)
+        .split(',')
+        .map((item) => item.replace(/^"|"$/g, ''));
+      if (!values.includes(value)) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return filtered;
 }
 
 function withDefaults(table: string, rows: readonly Row[], item: Row): Row {

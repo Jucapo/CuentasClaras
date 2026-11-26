@@ -32,7 +32,8 @@ test('a signed-in user without a space creates it in the wizard and enters the a
     month_start_day: 1,
     week_start: 'monday',
   });
-  await capture(page, 'categorias');
+  await expect(page.getByText('Aún no hay categorías de gasto')).toBeVisible();
+  await capture(page, 'categorias-vacias');
 });
 
 test('settings show the space and the session', async ({ page }) => {

@@ -23,32 +23,33 @@ test('the /ui catalog shows every design system level in light and dark', async 
   }
 });
 
-test('pickers open as a bottom sheet on mobile and as a dialog on desktop', async ({
+test('the icon and color picker opens as a bottom sheet on mobile and as a dialog on desktop', async ({
   page,
   isMobile,
 }) => {
   await blockSupabase(page);
   await page.goto('/ui');
-  const container = isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container';
+  const panel = page.locator(isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container');
 
-  const iconTrigger = page.locator('#moleculas cc-icon-picker button').first();
-  await iconTrigger.scrollIntoViewIfNeeded();
-  await iconTrigger.click();
-  const iconPanel = page.locator(container);
-  await expect(iconPanel.getByRole('heading', { name: 'Ícono' })).toBeVisible();
-  await iconPanel.getByLabel('Buscar ícono').fill('mascota');
-  await expect(iconPanel.getByRole('button', { name: 'Mascotas' })).toBeVisible();
+  const trigger = page.locator('#moleculas cc-appearance-picker button').first();
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.click();
+  await expect(panel.getByRole('heading', { name: 'Ícono y color' })).toBeVisible();
+  await panel.getByLabel('Buscar ícono').fill('mascota');
+  await expect(panel.getByRole('button', { name: 'Mascotas' })).toBeVisible();
+  // Picking previews it without closing.
+  await panel.getByRole('button', { name: 'Conejo' }).click();
+  await expect(panel.getByRole('button', { name: 'Conejo' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await captureViewport(page, 'ui-icon-picker');
-  await iconPanel.getByRole('button', { name: 'Conejo' }).click();
-  await expect(iconPanel).toBeHidden();
-  await expect(iconTrigger).toContainText('Conejo');
 
-  const colorTrigger = page.locator('#moleculas cc-color-picker button').nth(1);
-  await colorTrigger.click();
-  const colorPanel = page.locator(container);
-  await expect(colorPanel.getByRole('button', { name: 'Igual que la categoría' })).toBeVisible();
+  await panel.getByRole('tab', { name: 'Color' }).click();
+  await panel.getByRole('button', { name: 'Morado' }).click();
   await captureViewport(page, 'ui-color-picker');
-  await colorPanel.getByRole('button', { name: 'Morado' }).click();
-  await expect(colorPanel).toBeHidden();
-  await expect(colorTrigger).toContainText('Morado');
+  await panel.getByRole('button', { name: 'Listo' }).click();
+
+  await expect(panel).toBeHidden();
+  await expect(trigger).toHaveAccessibleName(/Conejo, Morado/);
 });

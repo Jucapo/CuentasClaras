@@ -149,19 +149,21 @@ export class OverlayService {
       release: async () => {
         const ownsCurrentEntry = overlayIdIn(window.history.state) === id;
         stopListening();
-        if (!ownsCurrentEntry) {
-          return;
+        if (ownsCurrentEntry) {
+          await new Promise<void>((resolve) => {
+            const done = () => {
+              window.removeEventListener('popstate', done);
+              window.clearTimeout(timer);
+              resolve();
+            };
+            const timer = window.setTimeout(done, OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS);
+            window.addEventListener('popstate', done);
+            window.history.back();
+          });
         }
-        await new Promise<void>((resolve) => {
-          const done = () => {
-            window.removeEventListener('popstate', done);
-            window.clearTimeout(timer);
-            resolve();
-          };
-          const timer = window.setTimeout(done, OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS);
-          window.addEventListener('popstate', done);
-          window.history.back();
-        });
+        // The router handles popstate in a later task; once it has, a navigation of the caller
+        // is the newest one and is not cancelled by it.
+        await new Promise<void>((resolve) => window.setTimeout(resolve));
       },
     };
   }
