@@ -1,5 +1,10 @@
 import { maxLength, required, schema, validate } from '@angular/forms/signals';
-import { ACCOUNT_KIND_OPTIONS, NAME_MAX_LENGTH } from '../../../../core/config/catalog.constants';
+import {
+  ACCOUNT_GROUP_CHOICES,
+  ACCOUNT_KIND_OPTIONS,
+  CreatableAccountGroup,
+  NAME_MAX_LENGTH,
+} from '../../../../core/config/catalog.constants';
 import { Tables } from '../../../../core/supabase/database.types';
 import {
   AccountKind,
@@ -9,7 +14,7 @@ import {
 } from '../../../../domain/accounts/account-kinds';
 import { IsoDate, isIsoDate, todayIsoDate } from '../../../../domain/dates/local-date';
 
-/** Values edited by `cc-account-form`; the balance is the amount the user sees (debts positive). */
+/** Values edited by `cc-account-editor`; the balance is the amount the user sees (debts positive). */
 export interface AccountFormValue {
   name: string;
   kind: AccountKind;
@@ -164,4 +169,15 @@ export function accountFormToRow(value: AccountFormValue, fallbackColor: string)
     // Only private accounts use it; shared ones keep the default.
     include_in_space_by_default: value.isPrivate && value.includeInSpaceByDefault,
   };
+}
+
+/** Group picked in "¿Qué vas a crear?", read from the `grupo` query param; Cuentas otherwise. */
+export function accountGroupFromParam(param: string | null | undefined): CreatableAccountGroup {
+  const groups = Object.keys(ACCOUNT_GROUP_CHOICES) as CreatableAccountGroup[];
+  return groups.find((group) => ACCOUNT_GROUP_CHOICES[group].param === param) ?? 'accounts';
+}
+
+/** Kind a new account of `group` starts with; the user can change it in "Tipo". */
+export function defaultKindFor(group: CreatableAccountGroup): AccountKind {
+  return ACCOUNT_GROUP_CHOICES[group].defaultKind;
 }

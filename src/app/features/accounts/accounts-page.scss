@@ -1,9 +1,23 @@
-.content {
+.list {
   display: flex;
   flex-direction: column;
   gap: var(--cc-space-4);
 }
 
-.toggle {
-  align-self: flex-start;
+.detail {
+  min-height: 100%;
+}
+
+.empty-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cc-space-3);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.empty-text {
+  margin: 0;
+  font: var(--mat-sys-body-large);
 }

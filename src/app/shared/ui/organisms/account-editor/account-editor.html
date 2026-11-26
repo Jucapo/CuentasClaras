@@ -1,0 +1,84 @@
+<cc-flow-hero>
+  <cc-title-field
+    ccHeroName
+    label="Nombre"
+    placeholder="Nombre de la cuenta"
+    [maxLength]="nameMaxLength"
+    [autofocus]="autofocusName()"
+    [formField]="fields().name"
+  />
+  <cc-appearance-picker
+    ccHeroBadge
+    [label]="text.changeAppearance"
+    [formField]="fields().icon"
+    [(color)]="fields().color().value"
+  />
+</cc-flow-hero>
+
+<section class="rows" [attr.aria-labelledby]="rowsTitleId">
+  <h2 class="section-title" [id]="rowsTitleId">Cuenta</h2>
+  <cc-field-row
+    icon="category"
+    label="Tipo"
+    [valueText]="kindLabel()"
+    [disabled]="fields().kind().disabled()"
+    (activate)="pickKind()"
+  />
+  <cc-field-row
+    icon="currency_exchange"
+    label="Moneda"
+    [valueText]="currencyText()"
+    [disabled]="fields().currency().disabled()"
+    (activate)="pickCurrency()"
+  />
+  <cc-field-row
+    icon="account_balance"
+    [label]="balanceText().label"
+    [valueText]="balanceValue()"
+    [error]="balanceError()"
+    [disabled]="fields().balance().disabled()"
+    (activate)="editBalance()"
+  />
+  <cc-switch
+    icon="functions"
+    label="Incluir en el total"
+    hint="El total muestra el dinero disponible; ahorros y deudas se ven en Mis finanzas."
+    [row]="true"
+    [formField]="fields().includeInTotal"
+  />
+  @if (showDefault()) {
+    <cc-switch
+      icon="star"
+      label="Cuenta predeterminada"
+      hint="La que se elige sola al registrar un movimiento."
+      [row]="true"
+      [formField]="fields().isDefault"
+    />
+  }
+
+  <cc-disclosure class="more" [label]="text.moreOptions" [(open)]="moreOpen">
+    <div class="date">
+      <cc-date-field
+        label="Fecha del saldo"
+        [maxDate]="today"
+        [formField]="fields().balanceDate"
+      />
+    </div>
+    <cc-switch
+      icon="lock"
+      label="Cuenta privada"
+      hint="Solo tú ves la cuenta, su saldo y sus movimientos."
+      [row]="true"
+      [formField]="fields().isPrivate"
+    />
+    @if (isPrivate()) {
+      <cc-switch
+        icon="group"
+        label="Incluir sus movimientos en el espacio"
+        hint="Los demás ven esos movimientos y cuentan en el presupuesto conjunto."
+        [row]="true"
+        [formField]="fields().includeInSpaceByDefault"
+      />
+    }
+  </cc-disclosure>
+</section>

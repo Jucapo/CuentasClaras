@@ -7,9 +7,11 @@ import {
   accountFormToRow,
   AccountFormValue,
   accountToFormValue,
+  accountGroupFromParam,
   applyKindDefaults,
+  defaultKindFor,
   newAccountFormValue,
-} from './account-form.model';
+} from './account-editor.model';
 
 describe('account form model', () => {
   it('starts a new account with the defaults of its kind', () => {
@@ -125,5 +127,26 @@ describe('account form model', () => {
       );
       expect(validate({ color: null }).messages).toContain(ACCOUNT_FORM_MESSAGES.colorRequired);
     });
+  });
+});
+
+describe('new account by group', () => {
+  it('reads the group of the "grupo" query param and defaults to Cuentas', () => {
+    expect(accountGroupFromParam('deuda')).toBe('debts');
+    expect(accountGroupFromParam('me-deben')).toBe('receivables');
+    expect(accountGroupFromParam('ahorro')).toBe('savings');
+    expect(accountGroupFromParam('cuenta')).toBe('accounts');
+    expect(accountGroupFromParam('bienes')).toBe('accounts');
+    expect(accountGroupFromParam(undefined)).toBe('accounts');
+  });
+
+  it('starts each group with its most common kind and that kind defaults', () => {
+    expect(defaultKindFor('accounts')).toBe('bank');
+    expect(defaultKindFor('savings')).toBe('savings');
+    expect(defaultKindFor('debts')).toBe('credit_card');
+    expect(defaultKindFor('receivables')).toBe('receivable');
+
+    const debt = newAccountFormValue('COP', '2026-11-26', defaultKindFor('debts'));
+    expect(debt).toMatchObject({ icon: 'credit_card', color: 'red', includeInTotal: false });
   });
 });

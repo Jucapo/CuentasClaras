@@ -5,8 +5,8 @@ import { UI_TEXT } from '../../ui.constants';
 
 /**
  * Layout of a create or edit flow (spec §13.5): top bar with close ("✕" when creating, "←" when
- * editing), title and main action (`[ccFlowAction]`); a header band (`[ccFlowHero]`) with the
- * large name and the icon badge; and the body (default slot) with the field rows.
+ * editing), title and main action (`[ccFlowAction]`), then the body (default slot): usually an
+ * editor organism that starts with its `cc-flow-hero` band.
  */
 @Component({
   selector: 'cc-flow-layout',

@@ -17,6 +17,8 @@ export interface AccountListItem {
   readonly notes?: string;
   readonly link?: LinkCommands;
   readonly archived?: boolean;
+  /** Its detail is open next to the list. */
+  readonly selected?: boolean;
 }
 
 /** A group of accounts (Cuentas, Ahorros, Deudas, Me deben) with its totals per currency. */

@@ -41,6 +41,62 @@ export const SELECTABLE_ACCOUNT_KINDS: readonly AccountKind[] = [
   'receivable',
 ];
 
+/** Groups offered in "¿Qué vas a crear?"; assets arrive in F2. */
+export type CreatableAccountGroup = Exclude<AccountGroup, 'assets'>;
+
+/** A choice of "¿Qué vas a crear?" (spec §7): its look, an example and the kind it starts with. */
+export interface AccountGroupChoice {
+  readonly label: string;
+  /** Title of the new account screen. */
+  readonly newTitle: string;
+  readonly example: string;
+  readonly icon: IconName;
+  readonly color: ColorKey;
+  readonly defaultKind: AccountKind;
+  /** Value of the `grupo` query param. */
+  readonly param: string;
+}
+
+/** Choices of "¿Qué vas a crear?", in display order. */
+export const ACCOUNT_GROUP_CHOICES: Readonly<Record<CreatableAccountGroup, AccountGroupChoice>> = {
+  accounts: {
+    label: 'Cuenta',
+    newTitle: 'Nueva cuenta',
+    example: 'Efectivo, banco, billetera digital',
+    icon: 'account_balance_wallet',
+    color: 'blue',
+    defaultKind: 'bank',
+    param: 'cuenta',
+  },
+  savings: {
+    label: 'Ahorro',
+    newTitle: 'Nuevo ahorro',
+    example: 'Bolsillos, CDT, metas',
+    icon: 'savings',
+    color: 'teal',
+    defaultKind: 'savings',
+    param: 'ahorro',
+  },
+  debts: {
+    label: 'Deuda',
+    newTitle: 'Nueva deuda',
+    example: 'Tarjeta, préstamo, deuda con alguien',
+    icon: 'credit_card',
+    color: 'red',
+    defaultKind: 'credit_card',
+    param: 'deuda',
+  },
+  receivables: {
+    label: 'Me deben',
+    newTitle: 'Nueva cuenta por cobrar',
+    example: 'Plata que prestaste',
+    icon: 'move_to_inbox',
+    color: 'lime',
+    defaultKind: 'receivable',
+    param: 'me-deben',
+  },
+};
+
 /** Spanish name of each category kind. */
 export const CATEGORY_KIND_LABELS = { expense: 'Gastos', income: 'Ingresos' } as const;
 

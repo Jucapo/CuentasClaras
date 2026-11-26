@@ -44,20 +44,14 @@
   gap: var(--cc-space-2);
 }
 
-.action:empty,
-.hero:empty {
+.action:empty {
   display: none;
 }
 
-.hero {
-  padding: var(--cc-space-2) var(--cc-space-4) var(--cc-space-5);
-  background-color: var(--mat-sys-surface-container);
-}
-
+// The organisms inside bring their own header band and paddings.
 .body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: var(--cc-space-2);
-  padding: var(--cc-space-3) var(--cc-space-2) var(--cc-space-6);
+  padding-bottom: var(--cc-space-6);
 }

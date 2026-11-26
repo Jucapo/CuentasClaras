@@ -22,4 +22,6 @@ export class AccountRow {
   readonly notes = input<string>();
   readonly link = input<LinkCommands>();
   readonly archived = input(false);
+  /** Its detail is open next to the list. */
+  readonly selected = input(false);
 }

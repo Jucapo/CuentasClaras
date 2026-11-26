@@ -1,36 +1,42 @@
-<cc-page-header title="Cuentas">
-  @if (canEdit()) {
-    <cc-button icon="add" variant="tonal" [link]="newAccountLink">Nueva</cc-button>
-  }
-</cc-page-header>
-
-<div class="content">
-  @if (loadError(); as error) {
-    <cc-message>{{ error }}</cc-message>
-  } @else if (isEmpty()) {
-    <cc-section
-      title="Aún no tienes cuentas"
-      description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
-    >
+<cc-list-detail-layout [detailOpen]="detailOpen()">
+  <div ccListPane class="list">
+    <cc-page-header title="Cuentas">
       @if (canEdit()) {
-        <cc-button icon="add" [link]="newAccountLink">Agregar una cuenta</cc-button>
+        <cc-icon-button icon="add" label="Nueva cuenta" shortcut="N" (click)="create()" />
       }
-    </cc-section>
-  } @else {
-    <cc-account-list [groups]="groups()" [totals]="totals()" />
-  }
+    </cc-page-header>
 
-  @if (archivedCount() > 0) {
-    <cc-button
-      class="toggle"
-      variant="text"
-      [icon]="showArchived() ? 'expand_less' : 'expand_more'"
-      (click)="showArchived.set(!showArchived())"
-    >
-      Archivadas ({{ archivedCount() }})
-    </cc-button>
-    @if (showArchived()) {
-      <cc-account-list [groups]="archivedGroups()" />
+    @if (loadError(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    } @else if (isEmpty()) {
+      <cc-section
+        title="Aún no tienes cuentas"
+        description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
+      >
+        @if (canEdit()) {
+          <cc-button icon="add" (click)="create()">Agregar una cuenta</cc-button>
+        }
+      </cc-section>
+    } @else {
+      <cc-account-list [groups]="groups()" [totals]="totals()" />
     }
-  }
-</div>
+
+    @if (hasArchived()) {
+      <cc-disclosure [label]="archivedLabel()">
+        <cc-account-list [groups]="archivedGroups()" />
+      </cc-disclosure>
+    }
+  </div>
+
+  <div ccDetailPane class="detail">
+    <router-outlet (activate)="onActivate($event)" (deactivate)="onDeactivate()" />
+  </div>
+
+  <div ccDetailEmpty class="empty-detail">
+    <cc-icon name="account_balance_wallet" size="xl" />
+    <p class="empty-text">Elige una cuenta para verla, o crea una nueva.</p>
+    @if (canEdit()) {
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="create()">Nueva cuenta</cc-button>
+    }
+  </div>
+</cc-list-detail-layout>

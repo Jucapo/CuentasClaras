@@ -1,39 +1,50 @@
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { apply, disabled, form } from '@angular/forms/signals';
+import { Component, computed, inject, input, linkedSignal, untracked } from '@angular/core';
+import { apply, disabled, form, submit } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { Account } from '../../../core/accounts/account.models';
 import { AccountsService } from '../../../core/accounts/accounts.service';
 import { isInUse } from '../../../core/catalogs/catalog-result';
+import { ACCOUNT_GROUP_CHOICES } from '../../../core/config/catalog.constants';
 import { SPACE_DEFAULTS } from '../../../core/config/space.constants';
 import { APP_PATHS } from '../../../core/routing/app-paths';
+import { HasUnsavedChanges } from '../../../core/routing/unsaved-changes.guard';
 import { SpaceService } from '../../../core/spaces/space.service';
 import { Button } from '../../../shared/ui/atoms/button/button';
 import { Message } from '../../../shared/ui/atoms/message/message';
 import { FALLBACK_COLOR } from '../../../shared/ui/colors/color-palette';
 import { FormActions } from '../../../shared/ui/molecules/form-actions/form-actions';
 import { Form } from '../../../shared/ui/molecules/form/form';
-import { PageHeader } from '../../../shared/ui/molecules/page-header/page-header';
-import { AccountForm } from '../../../shared/ui/organisms/account-form/account-form';
+import { AccountEditor } from '../../../shared/ui/organisms/account-editor/account-editor';
 import {
   accountFormSchema,
   accountFormToRow,
   AccountFormValue,
+  accountGroupFromParam,
   accountToFormValue,
+  defaultKindFor,
   newAccountFormValue,
-} from '../../../shared/ui/organisms/account-form/account-form.model';
+} from '../../../shared/ui/organisms/account-editor/account-editor.model';
 import { ConfirmService } from '../../../shared/ui/services/confirm.service';
+import { useShortcuts } from '../../../shared/ui/services/keyboard-shortcuts';
 import { ToastService } from '../../../shared/ui/services/toast.service';
+import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout';
 
-/** Creates an account (`/cuentas/nueva`) or edits, archives and deletes one (`/cuentas/:id`). */
+/**
+ * Creates an account (`/cuentas/nueva?grupo=…`) or edits, archives and deletes one
+ * (`/cuentas/:id`), as a flow (spec §7, §13.5). The same screen for both.
+ */
 @Component({
   selector: 'app-account-edit-page',
-  imports: [PageHeader, Form, FormActions, Button, Message, AccountForm],
+  imports: [FlowLayout, Form, FormActions, Button, Message, AccountEditor],
   templateUrl: './account-edit-page.html',
   styleUrl: './account-edit-page.scss',
 })
-export class AccountEditPage {
+export class AccountEditPage implements HasUnsavedChanges {
   /** Route param; absent when creating. */
   readonly id = input<string>();
+  /** `grupo` query param of a new account, from "¿Qué vas a crear?". */
+  readonly grupo = input<string>();
 
   private readonly accounts = inject(AccountsService);
   private readonly spaces = inject(SpaceService);
@@ -42,17 +53,21 @@ export class AccountEditPage {
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
-  protected readonly backLink = ['/', APP_PATHS.accounts];
+  private readonly listLink = ['/', APP_PATHS.accounts];
   protected readonly existing = computed(() => {
     const id = this.id();
     return id ? (this.accounts.accounts().find((account) => account.id === id) ?? null) : null;
   });
+  protected readonly loading = computed(() => !!this.id() && !this.accounts.loaded());
   protected readonly notFound = computed(
     () => !!this.id() && this.accounts.loaded() && !this.existing(),
   );
-  protected readonly title = computed(() =>
-    this.id() ? (this.existing()?.name ?? 'Cuenta') : 'Nueva cuenta',
-  );
+  protected readonly title = computed(() => {
+    if (this.id()) {
+      return this.existing()?.name ?? 'Cuenta';
+    }
+    return ACCOUNT_GROUP_CHOICES[accountGroupFromParam(this.grupo())].newTitle;
+  });
   protected readonly archived = computed(() => !!this.existing()?.archived_at);
   /** Private accounts are writable only by their owner; shared ones by owners and editors. */
   protected readonly canEdit = computed(() => {
@@ -68,20 +83,35 @@ export class AccountEditPage {
     return !account || account.owner_id === this.userId();
   });
 
-  protected readonly error = signal<string | null>(null);
-  /** Error of archiving or deleting, shown next to those buttons. */
-  protected readonly actionError = signal<string | null>(null);
-  protected readonly inUse = signal(false);
-  protected readonly busy = signal(false);
-
-  private readonly model = linkedSignal<AccountFormValue>(() => {
-    const account = this.existing();
-    return account
-      ? accountToFormValue(account, this.spaces.defaultAccountId() === account.id)
-      : newAccountFormValue(
-          this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency,
-        );
+  // Local state starts over when another account opens in the same screen (list and detail).
+  protected readonly error = linkedSignal<string | undefined, string | null>({
+    source: this.id,
+    computation: () => null,
   });
+  protected readonly actionError = linkedSignal<string | undefined, string | null>({
+    source: this.id,
+    computation: () => null,
+  });
+  protected readonly inUse = linkedSignal({ source: this.id, computation: () => false });
+  protected readonly busy = linkedSignal({ source: this.id, computation: () => false });
+
+  /**
+   * Values to edit, recomputed only when another account opens or the accounts finish loading, so
+   * a reload of the list does not wipe what is being edited.
+   */
+  private readonly loadedValue = computed<AccountFormValue>(() => {
+    const id = this.id();
+    const group = accountGroupFromParam(this.grupo());
+    this.accounts.loaded();
+    return untracked(() => {
+      const account = id ? this.accounts.find(id) : undefined;
+      return account ? this.toFormValue(account) : this.newFormValue(group);
+    });
+  });
+  private readonly model = linkedSignal(() => this.loadedValue());
+  /** What the model held when it was loaded or last saved. */
+  private readonly baseline = linkedSignal(() => JSON.stringify(this.loadedValue()));
+
   protected readonly form = form(
     this.model,
     (path) => {
@@ -93,6 +123,27 @@ export class AccountEditPage {
     },
     { submission: { action: () => this.save() } },
   );
+
+  constructor() {
+    useShortcuts({
+      Escape: () => void this.close(),
+      'Mod+s': () => this.submitForm(),
+    });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.canEdit() && JSON.stringify(this.model()) !== this.baseline();
+  }
+
+  protected submitForm(): void {
+    if (this.canEdit()) {
+      void submit(this.form);
+    }
+  }
+
+  protected async close(): Promise<void> {
+    await this.router.navigate(this.listLink);
+  }
 
   protected async toggleArchived(): Promise<void> {
     const account = this.existing();
@@ -110,7 +161,8 @@ export class AccountEditPage {
     this.actionError.set(null);
     void this.toast.show(account.archived_at ? 'Cuenta restaurada.' : 'Cuenta archivada.');
     if (!account.archived_at) {
-      await this.router.navigate(this.backLink);
+      this.markSaved();
+      await this.router.navigate(this.listLink);
     }
   }
 
@@ -138,7 +190,8 @@ export class AccountEditPage {
       return;
     }
     void this.toast.show('Cuenta eliminada.');
-    await this.router.navigate(this.backLink);
+    this.markSaved();
+    await this.router.navigate(this.listLink);
   }
 
   private async save(): Promise<void> {
@@ -155,6 +208,21 @@ export class AccountEditPage {
       return;
     }
     void this.toast.show(account ? 'Cuenta guardada.' : 'Cuenta creada.');
-    await this.router.navigate(this.backLink);
+    this.markSaved();
+    await this.router.navigate(this.listLink);
+  }
+
+  /** Leaving after saving, archiving or deleting needs no confirmation. */
+  private markSaved(): void {
+    this.baseline.set(JSON.stringify(this.model()));
+  }
+
+  private toFormValue(account: Account): AccountFormValue {
+    return accountToFormValue(account, this.spaces.defaultAccountId() === account.id);
+  }
+
+  private newFormValue(group: ReturnType<typeof accountGroupFromParam>): AccountFormValue {
+    const currency = this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency;
+    return newAccountFormValue(currency, undefined, defaultKindFor(group));
   }
 }

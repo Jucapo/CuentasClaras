@@ -1,4 +1,10 @@
-<cc-list-item [title]="name()" [subtitle]="notes()" [link]="link()" [muted]="archived()">
+<cc-list-item
+  [title]="name()"
+  [subtitle]="notes()"
+  [link]="link()"
+  [muted]="archived()"
+  [selected]="selected()"
+>
   <cc-icon-badge ccListItemLeading [icon]="icon()" [color]="color()" />
   <cc-amount ccListItemTrailing [amount]="balance()" [currency]="currency()" />
 </cc-list-item>

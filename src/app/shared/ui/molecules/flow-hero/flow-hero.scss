@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-4);
+  padding: var(--cc-space-2) var(--cc-space-4) var(--cc-space-5);
+  background-color: var(--mat-sys-surface-container);
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.badge {
+  display: flex;
+  flex-shrink: 0;
+}
