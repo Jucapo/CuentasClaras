@@ -1,0 +1,17 @@
+<button
+  type="button"
+  class="badge-button"
+  aria-haspopup="dialog"
+  [disabled]="disabled()"
+  [attr.aria-label]="accessibleName()"
+  [attr.title]="label()"
+  (click)="open()"
+>
+  <cc-icon-badge [icon]="value()" [color]="shownColor()" [size]="size()" />
+  @if (!disabled()) {
+    <span class="edit-mark" aria-hidden="true"><cc-icon name="edit" size="sm" /></span>
+  }
+</button>
+@if (errorMessage(); as message) {
+  <p class="error" role="alert">{{ message }}</p>
+}
