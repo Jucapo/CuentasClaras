@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
-import { APP_PATHS } from './core/routing/app-paths';
+import { APP_PATHS, DEFAULT_HOME_PATH } from './core/routing/app-paths';
 
 export const routes: Routes = [
   {
@@ -42,5 +43,47 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: APP_PATHS.login },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () => import('./core/layout/shell/shell').then((m) => m.Shell),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: DEFAULT_HOME_PATH },
+      {
+        path: APP_PATHS.accounts,
+        title: 'Cuentas',
+        loadComponent: () =>
+          import('./features/accounts/accounts-page').then((m) => m.AccountsPage),
+      },
+      {
+        path: APP_PATHS.categories,
+        title: 'Categorías',
+        loadComponent: () =>
+          import('./features/categories/categories-page').then((m) => m.CategoriesPage),
+      },
+      {
+        path: APP_PATHS.transactions,
+        title: 'Transacciones',
+        loadComponent: () =>
+          import('./features/transactions/transactions-page').then((m) => m.TransactionsPage),
+      },
+      {
+        path: APP_PATHS.budget,
+        title: 'Presupuesto',
+        loadComponent: () => import('./features/budget/budget-page').then((m) => m.BudgetPage),
+      },
+      {
+        path: APP_PATHS.summary,
+        title: 'Resumen',
+        loadComponent: () => import('./features/summary/summary-page').then((m) => m.SummaryPage),
+      },
+      {
+        path: APP_PATHS.settings,
+        title: 'Configuración',
+        loadComponent: () =>
+          import('./features/settings/settings-page').then((m) => m.SettingsPage),
+      },
+    ],
+  },
+  { path: '**', redirectTo: '' },
 ];

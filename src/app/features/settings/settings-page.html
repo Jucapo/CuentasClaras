@@ -1,0 +1,14 @@
+<app-page-header title="Configuración" />
+
+<section class="settings-section" aria-labelledby="session-title">
+  <h2 id="session-title" class="section-title">Sesión</h2>
+  @if (user(); as currentUser) {
+    <p class="session-email">
+      Sesión iniciada como <strong>{{ currentUser.email }}</strong>
+    </p>
+  }
+  <button matButton="outlined" type="button" [disabled]="signingOut()" (click)="signOut()">
+    <mat-icon>logout</mat-icon>
+    Cerrar sesión
+  </button>
+</section>

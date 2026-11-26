@@ -20,6 +20,8 @@
   --cc-nav-indicator-width: 4rem;
   --cc-nav-indicator-height: 2rem;
 
+  --cc-transition-fast: 150ms ease;
+
   --cc-safe-area-top: env(safe-area-inset-top, 0px);
   --cc-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
