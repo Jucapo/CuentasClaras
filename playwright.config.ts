@@ -17,9 +17,21 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   // Uses the locally installed Google Chrome; no Playwright browser downloads.
+  // Spec §13.4: every screen is checked on mobile and desktop, in light and dark.
   projects: [
-    { name: 'mobile', use: { ...devices['Pixel 7'], channel: 'chrome' } },
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: 'chrome' } },
+    {
+      name: 'mobile-light',
+      use: { ...devices['Pixel 7'], channel: 'chrome', colorScheme: 'light' },
+    },
+    { name: 'mobile-dark', use: { ...devices['Pixel 7'], channel: 'chrome', colorScheme: 'dark' } },
+    {
+      name: 'desktop-light',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'light' },
+    },
+    {
+      name: 'desktop-dark',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'dark' },
+    },
   ],
   webServer: {
     command: 'npm start',
