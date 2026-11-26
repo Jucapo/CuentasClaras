@@ -14,6 +14,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - `fnm use`: Node según `.node-version` (26).
 - `npm start` (http://localhost:4200) · `npm run lint` · `npm test` · `npm run test:watch` · `npm run build`
 - `npm run format` / `npm run format:check`: Prettier.
+- `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`) con el Chrome instalado (sin descargar navegadores). Reutiliza `ng serve` si está corriendo. Screenshots en `e2e/screenshots/` (ignorada por git).
 - `npx supabase login` / `npx supabase link --project-ref ryuknhuvydlwtbgruqdt`
 - `npx supabase migration new <nombre>` → editar el SQL → `npx supabase db push`
 - `npm run supabase:types`: regenera `src/app/core/supabase/database.types.ts`. Correrlo tras cada migración.
@@ -36,4 +37,4 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - Fechas de movimiento: `YYYY-MM-DD` local, sin conversiones de zona horaria.
 - BD: cambios solo con migraciones; RLS en todas las tablas; pruebas de políticas con pgTAP (`npx supabase test db`).
 - Llaves: en el frontend solo la publishable key. La service role key solo en Edge Functions, nunca en el repo.
-- Antes de commit: `npm run lint && npm test && npm run build`. Commits pequeños en conventional commits.
+- Antes de commit: `npm run lint && npm test && npm run build`, y `npm run e2e` si cambian rutas, layout o pantallas. Commits pequeños en conventional commits.
