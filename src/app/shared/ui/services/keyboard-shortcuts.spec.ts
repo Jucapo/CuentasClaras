@@ -38,7 +38,7 @@ describe('matchesShortcut', () => {
 describe('isEditableTarget', () => {
   it('is true for text inputs, text areas and editable content', () => {
     const editable = document.createElement('div');
-    editable.contentEditable = 'true';
+    editable.setAttribute('contenteditable', 'true');
     expect(isEditableTarget(document.createElement('input'))).toBe(true);
     expect(isEditableTarget(document.createElement('textarea'))).toBe(true);
     expect(isEditableTarget(editable)).toBe(true);
