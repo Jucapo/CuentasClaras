@@ -1,5 +1,4 @@
-import { Component, input } from '@angular/core';
-import { LinkCommands } from '../../atoms/button/button';
+import { Component, input, output } from '@angular/core';
 import { ColorSwatch } from '../../atoms/color-swatch/color-swatch';
 import { ListItem } from '../../molecules/list-item/list-item';
 
@@ -9,11 +8,10 @@ export interface TagListEntry {
   readonly name: string;
   readonly color: string;
   readonly subtitle?: string;
-  readonly link?: LinkCommands;
   readonly archived?: boolean;
 }
 
-/** Tags with their color. */
+/** Tags with their color; choosing one emits `opened`, e.g. to edit it in a sheet. */
 @Component({
   selector: 'cc-tag-list',
   imports: [ListItem, ColorSwatch],
@@ -22,4 +20,7 @@ export interface TagListEntry {
 })
 export class TagList {
   readonly tags = input.required<readonly TagListEntry[]>();
+  /** Lets each tag be chosen. */
+  readonly actionable = input(true);
+  readonly opened = output<string>();
 }

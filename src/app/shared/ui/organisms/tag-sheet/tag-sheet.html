@@ -1,0 +1,49 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  <cc-button
+    ccOverlayHeaderAction
+    loadingLabel="Guardando"
+    [loading]="form().submitting()"
+    (click)="done()"
+  >
+    {{ text.done }}
+  </cc-button>
+
+  <cc-form label="Etiqueta" [form]="form">
+    <div class="identity">
+      <cc-color-swatch
+        [color]="form.color().value()"
+        [label]="text.colorTab"
+        [decorative]="true"
+      />
+      <cc-text-field
+        class="name"
+        label="Nombre"
+        [maxLength]="nameMaxLength"
+        [formField]="form.name"
+      />
+    </div>
+    <h3 class="grid-title">{{ text.colorTab }}</h3>
+    <cc-color-grid [(value)]="form.color().value" />
+
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+
+    @if (data.actions; as actions) {
+      <cc-form-actions align="start">
+        <cc-button
+          variant="outlined"
+          [icon]="actions.archived ? 'unarchive' : 'archive'"
+          (click)="act(actions.archived ? 'unarchive' : 'archive')"
+        >
+          {{ actions.archived ? 'Desarchivar' : 'Archivar' }}
+        </cc-button>
+        @if (actions.canDelete) {
+          <cc-button variant="text" icon="delete" [danger]="true" (click)="act('delete')">
+            Eliminar
+          </cc-button>
+        }
+      </cc-form-actions>
+    }
+  </cc-form>
+</cc-overlay-panel>

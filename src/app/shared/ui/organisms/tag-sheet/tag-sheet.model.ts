@@ -1,7 +1,7 @@
 import { maxLength, required, schema, validate } from '@angular/forms/signals';
 import { NAME_MAX_LENGTH, TAG_DEFAULT_COLOR } from '../../../../core/config/catalog.constants';
 
-/** Values edited by `cc-tag-form`. */
+/** Values edited by `cc-tag-sheet`. */
 export interface TagFormValue {
   name: string;
   /** Palette key; null only while nothing is picked. */
