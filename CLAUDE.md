@@ -14,6 +14,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - `fnm use`: Node según `.node-version` (26). Si el shell trae `NODE_ENV=production` (pasa en el host de extensiones de VS Code), `npm install` omite las devDependencies: quita la variable o usa `npm install --include=dev`.
 - `npm start` (http://localhost:4200) · `npm run lint` · `npm test` · `npm run test:watch` · `npm run build`
 - `npm run format` / `npm run format:check`: Prettier.
+- `npm run icons:build`: regenera el subset de Material Symbols (`public/fonts`) y `icon-codepoints.generated.ts` desde el catálogo de íconos. Correrlo al cambiar `icon-catalog.ts` y commitear ambos resultados; el build no lo ejecuta ni necesita red.
 - `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`) con el Chrome instalado (sin descargar navegadores). Reutiliza `ng serve` si está corriendo. Supabase siempre simulado (`e2e/support`). Screenshots en `e2e/screenshots/` (ignorada por git).
 - Base de datos local (requiere Docker Desktop):
   - `npm run db:start` / `npm run db:stop`: stack local (API `127.0.0.1:54321`, Studio `127.0.0.1:54323`, Mailpit `127.0.0.1:54324`). `ng serve` apunta a él.
@@ -49,4 +50,17 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - Nada de colores, tamaños, radios, sombras ni z-index sueltos (Stylelint lo bloquea): tema en `_theme.scss`, tokens en `_tokens.scss`.
   - Cada cambio de UI se revisa con los screenshots de `npm run e2e` (móvil y escritorio, claro y oscuro).
 - Llaves: en el frontend solo la publishable key. La service role key solo en Edge Functions, nunca en el repo.
-- Antes de commit: `npm run lint && npm test && npm run build`, y `npm run e2e` si cambian rutas, layout o pantallas; `npm run db:test` si cambia la BD. Commits pequeños en conventional commits.
+- Commits pequeños en conventional commits. Los PRs se mergean con squash.
+
+## Proceso por fase
+
+- Verificación:
+  - Durante la fase: implementar todo con commits intermedios cuando tenga sentido, sin correr lint, pruebas ni build en cada commit. Un commit intermedio que no compile no es problema.
+  - Excepción: al escribir o cambiar una migración, correr en ese momento `npm run db:reset` y `npm run db:test`, porque los tipos generados dependen de ella.
+  - Una vez antes del PR, la suite completa: `npm run lint`, `npm test`, `npm run build`, `npm run e2e` (los 4 proyectos) y `npm run db:test`. Si algo falla, al corregir volver a correr solo lo afectado y terminar con una corrida completa.
+- Pruebas, mientras la app está en etapa de exploración:
+  - Unitarias sí, enfocadas en reglas de negocio: lógica de dominio (dinero, periodos, cuentas, categorías), servicios con lógica, guards, mapeo de errores y validaciones de formularios con reglas propias.
+  - No escribir pruebas nuevas para componentes presentacionales ni detalles visuales (átomos, moléculas, layouts): lo visual se revisa con los screenshots del e2e. Las pruebas existentes se mantienen y se arreglan si se rompen.
+  - pgTAP igual que siempre: es la seguridad de los datos.
+  - e2e solo para los flujos principales de cada fase, más los screenshots para la revisión visual.
+- Planes: concisos. Esquema SQL completo cuando la fase toca la base de datos; el resto en bullets cortos, sin repetir lo que ya dice la spec.
