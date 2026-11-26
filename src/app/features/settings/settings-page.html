@@ -1,15 +1,46 @@
 <cc-page-header title="Configuración" />
 
-<cc-section title="Sesión" [description]="sessionDescription()">
-  <cc-form-actions align="start">
-    <cc-button
-      variant="outlined"
-      icon="logout"
-      loadingLabel="Cerrando sesión"
-      [loading]="signingOut()"
-      (click)="signOut()"
-    >
-      Cerrar sesión
-    </cc-button>
-  </cc-form-actions>
-</cc-section>
+<div class="sections">
+  <cc-section title="Espacio" [description]="spaceDescription()">
+    <cc-form label="Espacio" [form]="spaceForm">
+      <cc-space-preferences-form [fields]="spaceForm.space" />
+      @if (canConfigure()) {
+        <cc-form-actions align="end" [error]="spaceError()">
+          <cc-button type="submit" loadingLabel="Guardando" [loading]="spaceForm().submitting()">
+            Guardar
+          </cc-button>
+        </cc-form-actions>
+      }
+    </cc-form>
+  </cc-section>
+
+  <cc-section title="Preferencias" description="Solo para ti, en todos tus espacios.">
+    <cc-form label="Preferencias" [form]="preferencesForm">
+      <cc-select label="Tema" [options]="themeOptions" [formField]="preferencesForm.theme" />
+      <cc-number-format-form [fields]="preferencesForm.numberFormat" />
+      <cc-form-actions align="end" [error]="preferencesError()">
+        <cc-button
+          type="submit"
+          loadingLabel="Guardando"
+          [loading]="preferencesForm().submitting()"
+        >
+          Guardar
+        </cc-button>
+      </cc-form-actions>
+    </cc-form>
+  </cc-section>
+
+  <cc-section title="Sesión" [description]="sessionDescription()">
+    <cc-form-actions align="start">
+      <cc-button
+        variant="outlined"
+        icon="logout"
+        loadingLabel="Cerrando sesión"
+        [loading]="signingOut()"
+        (click)="signOut()"
+      >
+        Cerrar sesión
+      </cc-button>
+    </cc-form-actions>
+  </cc-section>
+</div>
