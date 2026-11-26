@@ -1,22 +1,19 @@
-@use 'breakpoints';
-
 .auth-layout {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   min-height: 100dvh;
   padding: calc(var(--cc-safe-area-top) + var(--cc-space-6)) var(--cc-space-4)
     calc(var(--cc-safe-area-bottom) + var(--cc-space-6));
   background-color: var(--mat-sys-surface-container);
-
-  @include breakpoints.medium {
-    align-items: center;
-  }
 }
 
+// Auto margins center the card vertically but, unlike align-items/justify-content: center,
+// never push it above the top edge when it is taller than the viewport.
 .auth-card {
   width: 100%;
   max-width: var(--cc-auth-card-max-width);
+  margin-block: auto;
   padding: var(--cc-space-6) var(--cc-space-5);
   border-radius: var(--cc-radius-lg);
   background-color: var(--mat-sys-surface);
