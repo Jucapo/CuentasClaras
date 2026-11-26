@@ -1,8 +1,10 @@
+import { IconName } from '../../shared/ui/icons/icon-glyphs';
+
 /** Product name shown in the UI and in the document title. */
 export const APP_NAME = 'Cuentas Claras';
 
-/** Material Symbols icon shown next to the product name. */
-export const APP_BRAND_ICON = 'account_balance_wallet';
+/** Icon shown next to the product name. */
+export const APP_BRAND_ICON: IconName = 'account_balance_wallet';
 
 /** localStorage key that caches the theme preference so it applies before the user loads. */
 export const THEME_STORAGE_KEY = 'cc-theme';

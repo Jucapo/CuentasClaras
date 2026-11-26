@@ -28,9 +28,13 @@ describe('BottomNav', () => {
     expect(element.querySelector('nav')?.getAttribute('aria-label')).toBe('Navegación principal');
     const links = Array.from(element.querySelectorAll('a'));
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/cuentas', '/resumen']);
-    expect(links.map((link) => link.textContent?.trim())).toEqual([
-      'account_balance_walletCuentas',
-      'bar_chartResumen',
+    expect(links.map((link) => link.querySelector('cc-icon')?.getAttribute('data-icon'))).toEqual([
+      'account_balance_wallet',
+      'bar_chart',
+    ]);
+    expect(links.map((link) => link.querySelector('.nav-label')?.textContent?.trim())).toEqual([
+      'Cuentas',
+      'Resumen',
     ]);
   });
 });

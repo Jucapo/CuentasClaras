@@ -1,9 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
+import { iconGlyph, IconName } from '../../icons/icon-glyphs';
 import { BUTTON_SPINNER_DIAMETER } from '../../ui.constants';
 
 /** Visual emphasis of a button, from highest to lowest. */
@@ -25,8 +26,8 @@ export class Button {
   readonly type = input<'button' | 'submit'>('button');
   /** Navigates instead of acting: renders an anchor with `routerLink`. */
   readonly link = input<LinkCommands>();
-  /** Leading Material Symbols icon. */
-  readonly icon = input<string>();
+  /** Leading icon. */
+  readonly icon = input<IconName>();
   /** Shows a spinner and blocks clicks; `loadingLabel` names the busy state. */
   readonly loading = input(false);
   readonly loadingLabel = input<string>();
@@ -34,4 +35,9 @@ export class Button {
   readonly fullWidth = input(false);
 
   protected readonly spinnerDiameter = BUTTON_SPINNER_DIAMETER;
+  // A bare mat-icon (not cc-icon) keeps Material's spacing for icons inside buttons.
+  protected readonly glyph = computed(() => {
+    const name = this.icon();
+    return name ? iconGlyph(name) : null;
+  });
 }

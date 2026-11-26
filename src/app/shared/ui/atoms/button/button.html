@@ -1,7 +1,7 @@
 @if (link(); as commands) {
   <a class="button" [matButton]="variant()" [routerLink]="commands">
-    @if (icon(); as name) {
-      <mat-icon aria-hidden="true">{{ name }}</mat-icon>
+    @if (glyph(); as glyph) {
+      <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
     }
     <ng-container [ngTemplateOutlet]="label" />
   </a>
@@ -13,8 +13,8 @@
     [disabled]="disabled() || loading()"
     [attr.aria-busy]="loading() || null"
   >
-    @if (icon(); as name) {
-      <mat-icon aria-hidden="true">{{ name }}</mat-icon>
+    @if (glyph(); as glyph) {
+      <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
     }
     <ng-container [ngTemplateOutlet]="label" />
   </button>

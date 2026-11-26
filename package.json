@@ -17,7 +17,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "supabase:types": "supabase gen types typescript --schema public > src/app/core/supabase/database.types.ts && prettier --write src/app/core/supabase/database.types.ts"
+    "supabase:types": "supabase gen types typescript --schema public > src/app/core/supabase/database.types.ts && prettier --write src/app/core/supabase/database.types.ts",
+    "icons:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-icon-font.ts && prettier --write src/app/shared/ui/icons/icon-codepoints.generated.ts"
   },
   "private": true,
   "packageManager": "npm@11.20.0",
@@ -31,6 +32,7 @@
     "@angular/platform-browser": "^22.3.0",
     "@angular/router": "^22.3.0",
     "@angular/service-worker": "^22.3.0",
+    "@fontsource/roboto": "^5.3.0",
     "@supabase/supabase-js": "^2.119.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -49,6 +51,7 @@
     "prettier": "^3.8.1",
     "stylelint": "^18.1.0",
     "stylelint-config-standard-scss": "^18.0.0",
+    "subset-font": "2.9.0",
     "supabase": "^3.4.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.72.2",

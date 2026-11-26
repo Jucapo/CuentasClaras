@@ -6,10 +6,10 @@
     ariaCurrentWhenActive="page"
     [attr.aria-label]="label()"
   >
-    <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+    <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph() }}</mat-icon>
   </a>
 } @else {
   <button matIconButton type="button" [disabled]="disabled()" [attr.aria-label]="label()">
-    <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+    <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph() }}</mat-icon>
   </button>
 }
