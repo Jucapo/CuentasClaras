@@ -22,6 +22,11 @@ html {
   );
 }
 
+// Toasts (ToastService) float above the bottom navigation instead of covering it.
+.mat-mdc-snack-bar-container.cc-toast {
+  margin-bottom: calc(var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-2));
+}
+
 // The system tokens use light-dark(), so setting color-scheme switches every token below it.
 html[data-theme='light'],
 .cc-scheme-light {

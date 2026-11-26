@@ -1,4 +1,12 @@
-import { NumberFormat, Weekday } from '../spaces/space.models';
+import { NumberFormat, ThemePreference, Weekday } from '../spaces/space.models';
+
+/** Theme choices in display order (spec §13.2). */
+export const THEME_OPTIONS: readonly { readonly value: ThemePreference; readonly label: string }[] =
+  [
+    { value: 'system', label: 'Según el sistema' },
+    { value: 'light', label: 'Claro' },
+    { value: 'dark', label: 'Oscuro' },
+  ];
 
 /** Longest space name; matches the `spaces.name` check in the database. */
 export const SPACE_NAME_MAX_LENGTH = 60;
