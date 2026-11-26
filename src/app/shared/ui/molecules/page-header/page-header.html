@@ -1,0 +1,7 @@
+<div class="titles">
+  <h1 class="title">{{ title() }}</h1>
+  @if (subtitle(); as subtitle) {
+    <p class="subtitle">{{ subtitle }}</p>
+  }
+</div>
+<ng-content />

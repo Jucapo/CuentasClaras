@@ -1,0 +1,16 @@
+<mat-slide-toggle
+  [id]="controlId"
+  [checked]="checked()"
+  [disabled]="disabled()"
+  [required]="required()"
+  [aria-describedby]="hintId()"
+  (change)="checked.set($event.checked)"
+  (focusout)="touch.emit()"
+>
+  {{ label() }}
+</mat-slide-toggle>
+@if (errorMessage(); as message) {
+  <p class="supporting-text error" role="alert">{{ message }}</p>
+} @else if (hint(); as hint) {
+  <p class="supporting-text" [id]="hintId()">{{ hint }}</p>
+}

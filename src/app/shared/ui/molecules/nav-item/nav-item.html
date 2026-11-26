@@ -1,0 +1,12 @@
+<a
+  class="nav-item"
+  matRipple
+  [routerLink]="link()"
+  routerLinkActive="active"
+  ariaCurrentWhenActive="page"
+>
+  <span class="nav-indicator">
+    <cc-icon [name]="icon()" />
+  </span>
+  <span class="nav-label">{{ label() }}</span>
+</a>

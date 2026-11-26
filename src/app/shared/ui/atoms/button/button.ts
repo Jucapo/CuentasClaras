@@ -1,0 +1,37 @@
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, input } from '@angular/core';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { RouterLink } from '@angular/router';
+import { BUTTON_SPINNER_DIAMETER } from '../../ui.constants';
+
+/** Visual emphasis of a button, from highest to lowest. */
+export type ButtonVariant = 'filled' | 'tonal' | 'outlined' | 'text';
+
+/** Router link commands, as accepted by `routerLink`. */
+export type LinkCommands = string | readonly unknown[];
+
+/** Text button; renders a link when it gets `link`. Listen to (click) on the host. */
+@Component({
+  selector: 'cc-button',
+  imports: [NgTemplateOutlet, RouterLink, MatButton, MatIcon, MatProgressSpinner],
+  templateUrl: './button.html',
+  styleUrl: './button.scss',
+  host: { '[class.full-width]': 'fullWidth()' },
+})
+export class Button {
+  readonly variant = input<ButtonVariant>('filled');
+  readonly type = input<'button' | 'submit'>('button');
+  /** Navigates instead of acting: renders an anchor with `routerLink`. */
+  readonly link = input<LinkCommands>();
+  /** Leading Material Symbols icon. */
+  readonly icon = input<string>();
+  /** Shows a spinner and blocks clicks; `loadingLabel` names the busy state. */
+  readonly loading = input(false);
+  readonly loadingLabel = input<string>();
+  readonly disabled = input(false);
+  readonly fullWidth = input(false);
+
+  protected readonly spinnerDiameter = BUTTON_SPINNER_DIAMETER;
+}

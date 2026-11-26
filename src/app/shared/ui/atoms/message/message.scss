@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+:host(.tone-error) {
+  padding: var(--cc-space-3);
+  border-radius: var(--cc-radius-sm);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-body-medium);
+}
+
+:host(.tone-info) {
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+}

@@ -1,0 +1,25 @@
+<mat-form-field class="field">
+  <mat-label>{{ label() }}</mat-label>
+  <input
+    #input
+    matInput
+    [id]="controlId"
+    [type]="type()"
+    [value]="value()"
+    [disabled]="disabled()"
+    [required]="required()"
+    [placeholder]="placeholder()"
+    [errorStateMatcher]="errorStateMatcher"
+    [attr.name]="name() || null"
+    [attr.autocomplete]="autocomplete()"
+    [attr.inputmode]="inputMode() ?? null"
+    [attr.maxlength]="maxLength() ?? null"
+    (input)="onInput($event)"
+    (blur)="touch.emit()"
+  />
+  @if (errorMessage(); as message) {
+    <mat-error>{{ message }}</mat-error>
+  } @else if (hint(); as hint) {
+    <mat-hint>{{ hint }}</mat-hint>
+  }
+</mat-form-field>

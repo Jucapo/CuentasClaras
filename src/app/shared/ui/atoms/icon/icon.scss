@@ -1,0 +1,20 @@
+:host {
+  --cc-icon-size: var(--cc-icon-size-md);
+
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+:host(.size-sm) {
+  --cc-icon-size: var(--cc-icon-size-sm);
+}
+
+:host(.size-lg) {
+  --cc-icon-size: var(--cc-icon-size-lg);
+}
+
+.icon {
+  width: var(--cc-icon-size);
+  height: var(--cc-icon-size);
+  font-size: var(--cc-icon-size);
+}

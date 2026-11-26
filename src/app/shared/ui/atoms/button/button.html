@@ -1,0 +1,34 @@
+@if (link(); as commands) {
+  <a class="button" [matButton]="variant()" [routerLink]="commands">
+    @if (icon(); as name) {
+      <mat-icon aria-hidden="true">{{ name }}</mat-icon>
+    }
+    <ng-container [ngTemplateOutlet]="label" />
+  </a>
+} @else {
+  <button
+    class="button"
+    [matButton]="variant()"
+    [type]="type()"
+    [disabled]="disabled() || loading()"
+    [attr.aria-busy]="loading() || null"
+  >
+    @if (icon(); as name) {
+      <mat-icon aria-hidden="true">{{ name }}</mat-icon>
+    }
+    <ng-container [ngTemplateOutlet]="label" />
+  </button>
+}
+
+<ng-template #label>
+  <!-- The label stays in place while loading so the button keeps its width. -->
+  <span class="label" [class.hidden]="loading()"><ng-content /></span>
+  @if (loading()) {
+    <mat-progress-spinner
+      class="spinner"
+      mode="indeterminate"
+      [diameter]="spinnerDiameter"
+      [attr.aria-label]="loadingLabel() ?? null"
+    />
+  }
+</ng-template>

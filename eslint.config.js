@@ -36,6 +36,20 @@ module.exports = defineConfig([
     },
   },
   {
+    // Design system components (spec §13.1) use the cc- prefix.
+    files: ['src/app/shared/ui/**/*.ts'],
+    rules: {
+      '@angular-eslint/directive-selector': [
+        'error',
+        { type: 'attribute', prefix: 'cc', style: 'camelCase' },
+      ],
+      '@angular-eslint/component-selector': [
+        'error',
+        { type: 'element', prefix: 'cc', style: 'kebab-case' },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},

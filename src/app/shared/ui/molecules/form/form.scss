@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+// Material form fields reserve space for their hint/error line, so the gap stays small.
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}

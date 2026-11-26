@@ -1,0 +1,9 @@
+<section class="section" [attr.aria-labelledby]="titleId">
+  <header class="header">
+    <h2 class="title" [id]="titleId">{{ title() }}</h2>
+    @if (description(); as description) {
+      <p class="description">{{ description }}</p>
+    }
+  </header>
+  <ng-content />
+</section>

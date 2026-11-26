@@ -1,0 +1,15 @@
+@if (link(); as commands) {
+  <a
+    matIconButton
+    [routerLink]="commands"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    [attr.aria-label]="label()"
+  >
+    <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+  </a>
+} @else {
+  <button matIconButton type="button" [disabled]="disabled()" [attr.aria-label]="label()">
+    <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+  </button>
+}
