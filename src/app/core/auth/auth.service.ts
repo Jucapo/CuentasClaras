@@ -1,16 +1,17 @@
 import { computed, DOCUMENT, inject, Injectable, signal } from '@angular/core';
 import { AuthError, Session } from '@supabase/supabase-js';
+import { ACTION_OK, actionFailed, ActionResult } from '../action-result';
 import { APP_PATHS } from '../routing/app-paths';
 import { SupabaseService } from '../supabase/supabase.service';
 import { authErrorMessage } from './auth-error-messages';
 
 /** Outcome of an auth operation, with a user-facing message on failure. */
-export type AuthResult = { ok: true } | { ok: false; message: string };
+export type AuthResult = ActionResult;
 
-const SUCCESS: AuthResult = { ok: true };
+const SUCCESS: AuthResult = ACTION_OK;
 
 function failure(error: AuthError): AuthResult {
-  return { ok: false, message: authErrorMessage(error) };
+  return actionFailed(authErrorMessage(error));
 }
 
 /** Session state and email/password flows backed by Supabase Auth. */

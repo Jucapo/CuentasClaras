@@ -10,6 +10,8 @@ export const APP_PATHS = {
   budget: 'presupuesto',
   summary: 'resumen',
   settings: 'configuracion',
+  /** Setup wizard (spec §7). */
+  welcome: 'bienvenida',
   /** Design system catalog; only routed in development builds. */
   uiCatalog: 'ui',
 } as const;
