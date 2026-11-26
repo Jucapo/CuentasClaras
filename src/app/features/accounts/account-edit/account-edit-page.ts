@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { apply, disabled, form, FormField } from '@angular/forms/signals';
+import { apply, disabled, form } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AccountsService } from '../../../core/accounts/accounts.service';
@@ -27,7 +27,7 @@ import { ToastService } from '../../../shared/ui/services/toast.service';
 /** Creates an account (`/cuentas/nueva`) or edits, archives and deletes one (`/cuentas/:id`). */
 @Component({
   selector: 'app-account-edit-page',
-  imports: [FormField, PageHeader, Form, FormActions, Button, Message, AccountForm],
+  imports: [PageHeader, Form, FormActions, Button, Message, AccountForm],
   templateUrl: './account-edit-page.html',
   styleUrl: './account-edit-page.scss',
 })

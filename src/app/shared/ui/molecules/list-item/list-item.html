@@ -1,6 +1,6 @@
 <ng-content select="[ccListItemStart]" />
 @if (link(); as commands) {
-  <a class="main" matRipple [routerLink]="commands">
+  <a class="main" matRipple [routerLink]="commands" [queryParams]="queryParams()">
     <ng-container [ngTemplateOutlet]="content" />
     <cc-icon class="chevron" name="chevron_right" size="sm" />
   </a>

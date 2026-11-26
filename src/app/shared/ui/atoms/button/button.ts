@@ -3,7 +3,7 @@ import { Component, computed, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { Params, RouterLink } from '@angular/router';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
 import { BUTTON_SPINNER_DIAMETER } from '../../ui.constants';
 
@@ -26,6 +26,7 @@ export class Button {
   readonly type = input<'button' | 'submit'>('button');
   /** Navigates instead of acting: renders an anchor with `routerLink`. */
   readonly link = input<LinkCommands>();
+  readonly queryParams = input<Params | null>(null);
   /** Leading icon. */
   readonly icon = input<IconName>();
   /** Shows a spinner and blocks clicks; `loadingLabel` names the busy state. */

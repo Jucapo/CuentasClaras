@@ -1,0 +1,24 @@
+<cc-page-header title="Etiquetas" [backLink]="backLink" backLabel="Volver a Configuración">
+  @if (canEdit()) {
+    <cc-button icon="add" variant="tonal" [link]="newLink">Nueva</cc-button>
+  }
+</cc-page-header>
+
+<div class="content">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <cc-section
+      title="Aún no hay etiquetas"
+      description="Las etiquetas agrupan movimientos de distintas categorías, como «Fijos» o «Salud»."
+    />
+  } @else {
+    <cc-tag-list [tags]="active()" />
+  }
+
+  @if (archived().length > 0) {
+    <cc-section title="Archivadas" description="No se ofrecen al registrar; puedes restaurarlas.">
+      <cc-tag-list [tags]="archived()" />
+    </cc-section>
+  }
+</div>

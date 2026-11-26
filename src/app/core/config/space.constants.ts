@@ -25,6 +25,9 @@ export const SPACE_DEFAULTS = {
   weekStart: 'monday',
 } as const satisfies { mainCurrency: string; monthStartDay: number; weekStart: Weekday };
 
+/** Icon and color of a space; the same as the database defaults of `spaces`. */
+export const SPACE_APPEARANCE_DEFAULTS = { icon: 'home', color: 'green' } as const;
+
 /** Defaults of the number format preference; the same as the database defaults. */
 export const NUMBER_FORMAT_DEFAULTS = {
   numberFormat: 'comma_dot',

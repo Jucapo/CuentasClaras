@@ -1,0 +1,81 @@
+@if (reorderable()) {
+  <p class="instructions" [id]="instructionsId">{{ instructions }}</p>
+}
+
+<div
+  class="roots"
+  role="list"
+  cdkDropList
+  cdkDropListLockAxis="y"
+  [cdkDropListDisabled]="!reorderable()"
+  (cdkDropListDropped)="dropped(null, nodes(), $event)"
+>
+  @for (node of nodes(); track node.id; let index = $index) {
+    <div class="node" role="listitem" cdkDrag [cdkDragData]="node.id">
+      <cc-list-item [title]="node.name" [subtitle]="node.subtitle" [link]="node.link">
+        @if (reorderable()) {
+          <button
+            ccListItemStart
+            cdkDragHandle
+            type="button"
+            class="handle"
+            [attr.aria-label]="'Mover ' + node.name"
+            [attr.aria-describedby]="instructionsId"
+            (keydown)="onHandleKeydown($event, null, nodes(), index)"
+          >
+            <cc-icon name="drag_indicator" />
+          </button>
+        }
+        <cc-icon-badge ccListItemLeading [icon]="node.icon" [color]="node.color" />
+      </cc-list-item>
+
+      @if (node.children.length > 0 || node.addChildLink) {
+        <div
+          class="children"
+          role="list"
+          [attr.aria-label]="'Subcategorías de ' + node.name"
+          cdkDropList
+          cdkDropListLockAxis="y"
+          [cdkDropListDisabled]="!reorderable()"
+          (cdkDropListDropped)="dropped(node.id, node.children, $event)"
+        >
+          @for (child of node.children; track child.id; let childIndex = $index) {
+            <div class="child" role="listitem" cdkDrag [cdkDragData]="child.id">
+              <cc-list-item [title]="child.name" [subtitle]="child.subtitle" [link]="child.link">
+                @if (reorderable()) {
+                  <button
+                    ccListItemStart
+                    cdkDragHandle
+                    type="button"
+                    class="handle"
+                    [attr.aria-label]="'Mover ' + child.name"
+                    [attr.aria-describedby]="instructionsId"
+                    (keydown)="onHandleKeydown($event, node.id, node.children, childIndex)"
+                  >
+                    <cc-icon name="drag_indicator" size="sm" />
+                  </button>
+                }
+                <cc-icon-badge
+                  ccListItemLeading
+                  size="sm"
+                  [icon]="child.icon"
+                  [color]="child.color"
+                />
+              </cc-list-item>
+            </div>
+          }
+          @if (node.addChildLink; as addChildLink) {
+            <cc-list-item
+              class="add-child"
+              [title]="addChildLabel()"
+              [link]="addChildLink"
+              [queryParams]="node.addChildQueryParams ?? null"
+            >
+              <cc-icon ccListItemLeading name="add" size="sm" />
+            </cc-list-item>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

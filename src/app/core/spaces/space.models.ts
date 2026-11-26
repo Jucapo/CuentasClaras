@@ -47,7 +47,11 @@ export interface SpaceSummary {
 }
 
 /** What the owner can change of a space itself (its settings are separate). */
-export type SpacePatch = Partial<Pick<SpaceSummary, 'name' | 'icon' | 'color'>>;
+export interface SpacePatch {
+  name?: string;
+  icon?: string;
+  color?: string;
+}
 
 /** A space the current user belongs to, with their role, default account and its settings. */
 export interface SpaceMembership {

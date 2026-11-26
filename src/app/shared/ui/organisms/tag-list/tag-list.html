@@ -1,0 +1,13 @@
+<div class="list" role="list">
+  @for (tag of tags(); track tag.id) {
+    <cc-list-item
+      role="listitem"
+      [title]="tag.name"
+      [subtitle]="tag.subtitle"
+      [link]="tag.link"
+      [muted]="!!tag.archived"
+    >
+      <cc-color-swatch ccListItemLeading [color]="tag.color" [label]="tag.name" [decorative]="true" />
+    </cc-list-item>
+  }
+</div>

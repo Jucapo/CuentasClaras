@@ -1,5 +1,5 @@
 @if (link(); as commands) {
-  <a class="button" [matButton]="variant()" [routerLink]="commands">
+  <a class="button" [matButton]="variant()" [routerLink]="commands" [queryParams]="queryParams()">
     @if (glyph(); as glyph) {
       <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
     }

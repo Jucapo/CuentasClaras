@@ -4,6 +4,14 @@
   <cc-section title="Espacio" [description]="spaceDescription()">
     <cc-form label="Espacio" [form]="spaceForm">
       <cc-space-preferences-form [fields]="spaceForm.space" />
+      <div class="pair">
+        <cc-icon-picker
+          label="Ícono del espacio"
+          [color]="spaceForm.color().value()"
+          [formField]="spaceForm.icon"
+        />
+        <cc-color-picker label="Color del espacio" [formField]="spaceForm.color" />
+      </div>
       @if (canConfigure()) {
         <cc-form-actions align="end" [error]="spaceError()">
           <cc-button type="submit" loadingLabel="Guardando" [loading]="spaceForm().submitting()">
@@ -12,6 +20,35 @@
         </cc-form-actions>
       }
     </cc-form>
+  </cc-section>
+
+  <cc-section title="Catálogos" description="Las cuentas, categorías y etiquetas del espacio.">
+    <div role="list">
+      <cc-list-item
+        role="listitem"
+        title="Cuentas"
+        subtitle="Saldos, cuentas privadas y la predeterminada"
+        [link]="catalogLinks.accounts"
+      >
+        <cc-icon ccListItemLeading name="account_balance_wallet" />
+      </cc-list-item>
+      <cc-list-item
+        role="listitem"
+        title="Categorías"
+        subtitle="De gasto y de ingreso, con subcategorías"
+        [link]="catalogLinks.categories"
+      >
+        <cc-icon ccListItemLeading name="category" />
+      </cc-list-item>
+      <cc-list-item
+        role="listitem"
+        title="Etiquetas"
+        subtitle="Agrupan movimientos de distintas categorías"
+        [link]="catalogLinks.tags"
+      >
+        <cc-icon ccListItemLeading name="label" />
+      </cc-list-item>
+    </div>
   </cc-section>
 
   <cc-section title="Preferencias" description="Solo para ti, en todos tus espacios.">

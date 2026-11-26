@@ -44,6 +44,14 @@ export const SELECTABLE_ACCOUNT_KINDS: readonly AccountKind[] = [
 /** Spanish name of each category kind. */
 export const CATEGORY_KIND_LABELS = { expense: 'Gastos', income: 'Ingresos' } as const;
 
+/** Value of the `clase` query param for each category kind. */
+export const CATEGORY_KIND_PARAM = { expense: 'gasto', income: 'ingreso' } as const;
+
+/** Category kind named by the `clase` query param; expenses unless it says income. */
+export function categoryKindFromParam(value: string | null | undefined): 'expense' | 'income' {
+  return value === CATEGORY_KIND_PARAM.income ? 'income' : 'expense';
+}
+
 /** Icon and color a new category starts with. */
 export const CATEGORY_DEFAULTS = {
   icon: 'category',

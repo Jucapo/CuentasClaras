@@ -1,0 +1,47 @@
+<cc-page-header [title]="title()" [backLink]="backLink" backLabel="Volver a etiquetas" />
+
+@if (notFound()) {
+  <cc-message>No encontramos esta etiqueta. Puede que se haya eliminado.</cc-message>
+} @else {
+  <div class="content">
+    @if (archived()) {
+      <cc-message tone="info">
+        Esta etiqueta está archivada: no se ofrece al registrar movimientos.
+      </cc-message>
+    }
+    <cc-form label="Etiqueta" [form]="form">
+      <cc-tag-form [fields]="form" />
+      @if (canEdit()) {
+        <cc-form-actions align="end" [error]="error()">
+          <cc-button type="submit" loadingLabel="Guardando" [loading]="form().submitting()">
+            Guardar
+          </cc-button>
+        </cc-form-actions>
+      }
+    </cc-form>
+
+    @if (existing() && canEdit()) {
+      <cc-form-actions align="start" [error]="actionError()">
+        <cc-button
+          variant="outlined"
+          [icon]="archived() ? 'unarchive' : 'archive'"
+          [disabled]="busy()"
+          (click)="toggleArchived()"
+        >
+          {{ archived() ? 'Desarchivar' : 'Archivar' }}
+        </cc-button>
+        @if (!inUse()) {
+          <cc-button
+            variant="text"
+            icon="delete"
+            [danger]="true"
+            [disabled]="busy()"
+            (click)="remove()"
+          >
+            Eliminar
+          </cc-button>
+        }
+      </cc-form-actions>
+    }
+  </div>
+}

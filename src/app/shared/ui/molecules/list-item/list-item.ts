@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { MatRipple } from '@angular/material/core';
-import { RouterLink } from '@angular/router';
+import { Params, RouterLink } from '@angular/router';
 import { LinkCommands } from '../../atoms/button/button';
 import { Icon } from '../../atoms/icon/icon';
 
@@ -21,6 +21,7 @@ export class ListItem {
   readonly title = input.required<string>();
   readonly subtitle = input<string>();
   readonly link = input<LinkCommands>();
+  readonly queryParams = input<Params | null>(null);
   /** Dims the row, e.g. for archived items. */
   readonly muted = input(false);
 }

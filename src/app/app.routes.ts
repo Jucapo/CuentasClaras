@@ -127,6 +127,48 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/settings-page').then((m) => m.SettingsPage),
       },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}`,
+        title: 'Categorías',
+        loadComponent: () =>
+          import('./features/settings/categories/categories-settings-page').then(
+            (m) => m.CategoriesSettingsPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/${NEW_ITEM_PATH}`,
+        title: 'Nueva categoría',
+        loadComponent: () =>
+          import('./features/settings/categories/category-edit/category-edit-page').then(
+            (m) => m.CategoryEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/:id`,
+        title: 'Categoría',
+        loadComponent: () =>
+          import('./features/settings/categories/category-edit/category-edit-page').then(
+            (m) => m.CategoryEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}`,
+        title: 'Etiquetas',
+        loadComponent: () =>
+          import('./features/settings/tags/tags-settings-page').then((m) => m.TagsSettingsPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/${NEW_ITEM_PATH}`,
+        title: 'Nueva etiqueta',
+        loadComponent: () =>
+          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/:id`,
+        title: 'Etiqueta',
+        loadComponent: () =>
+          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
+      },
     ],
   },
   ...DEV_ROUTES,
