@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.5 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.6 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -299,7 +299,7 @@ Reportes:
 
 ## 7. Pantallas (MVP)
 
-Navegación inferior como 1Money: **Cuentas · Categorías · Transacciones · Presupuesto · Resumen**. Pantalla de inicio configurable; por defecto, Categorías.
+Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuesto · Resumen**. En móvil van en la navegación inferior; en pantallas medianas y grandes, en un rail lateral (§13.5). Pantalla de inicio configurable; por defecto, Categorías.
 
 ### Encabezado global
 
@@ -310,7 +310,7 @@ Navegación inferior como 1Money: **Cuentas · Categorías · Transacciones · P
 ### Categorías (inicio)
 
 - Pestañas Gastos / Ingresos.
-- Burbujas de categoría alrededor del donut. Cada burbuja muestra:
+- Burbujas de categoría alrededor del donut (`cc-category-grid`). Cada burbuja muestra:
   - nombre;
   - restante del presupuesto arriba;
   - gastado abajo;
@@ -318,6 +318,11 @@ Navegación inferior como 1Money: **Cuentas · Categorías · Transacciones · P
   - una marca si se pasó del presupuesto.
 - En el centro del donut: total de gastos y total de ingresos del periodo.
 - Tocar una categoría abre el registro rápido.
+- Desde la F1b2 la grilla existe sin montos; los montos y el registro rápido llegan en la F1d.
+- **Modo edición:** el lápiz del encabezado abre `/categorias/editar`. Es la misma grilla con una burbuja "+" para crear; tocar una categoría abre su pantalla, y las burbujas se reordenan arrastrándolas. Configuración → Categorías lleva al mismo lugar: un solo flujo con dos puntos de entrada.
+- **Pantalla de categoría:** nombre grande en el encabezado, badge de ícono y color, etiquetas por defecto y la lista de subcategorías con "Añadir subcategoría".
+  - Si la categoría es nueva, añadir una subcategoría la guarda primero.
+- **Subcategoría:** se crea y edita en un sheet con nombre, etiquetas por defecto e ícono. El color se hereda de la categoría y se puede cambiar. En "Más opciones" se puede mover a otra categoría o volverla principal.
 
 ### Registro rápido (bottom sheet)
 
@@ -340,13 +345,21 @@ Pestañas:
 
 Desde la F1b la pestaña Cuentas lista los grupos Cuentas, Ahorros, Deudas y Me deben, cada uno con su total por moneda, más un total general por moneda de las cuentas con "incluir en el total". Las archivadas van en una sección plegada.
 
-**Gestión:** crear y editar cuentas, categorías y etiquetas son pantallas con ruta propia:
+**Crear una cuenta:** el "+" abre "¿Qué vas a crear?" (Cuenta, Ahorro, Deuda o Me deben). Después viene un formulario corto:
 
-- `/cuentas/nueva` y `/cuentas/:id`;
-- `/configuracion/categorias/…`;
-- `/configuracion/etiquetas/…`.
+- el nombre grande en el encabezado, con el badge de ícono y color al lado;
+- filas para el tipo, la moneda y el saldo (cada una abre un sheet enfocado), e interruptores para "Incluir en el total" y la cuenta predeterminada;
+- en "Más opciones": fecha del saldo, cuenta privada e "incluir en el espacio".
 
-Los formularios son organismos que el asistente reutiliza tal cual.
+Lo mínimo para guardar es el nombre; el saldo arranca en 0 y lo demás viene precargado por tipo. Crear y editar usan la misma pantalla.
+
+**Gestión:** crear y editar cuentas y categorías son pantallas con ruta propia. Las etiquetas y las subcategorías se crean y editan en un sheet.
+
+- `/cuentas/nueva?grupo=…` y `/cuentas/:id`;
+- `/categorias/editar`, `/categorias/editar/nueva?clase=…` y `/categorias/editar/:id`;
+- `/configuracion/etiquetas`.
+
+Los organismos de estas pantallas y sheets son los que el asistente reutiliza tal cual.
 
 ### Transacciones
 
@@ -488,7 +501,8 @@ recurring_templates (fase 3)
 | F0 · Setup | Repo, Supabase, Vercel, Angular PWA, Supabase CLI y migraciones, pantallas de login/registro/recuperar contraseña, guard de sesión, layout con navegación inferior y páginas vacías, deploy automático |
 | F1a · Base multiusuario | Migraciones de perfiles, espacios, miembros y configuración (espacio y usuario); RLS con pruebas pgTAP; RPC para crear espacio; servicio de espacio activo y guard; entrada al asistente con el paso 1 (crear espacio). Base del sistema de diseño: estructura atomic, átomos y moléculas de formulario, pantallas de auth migradas, catálogo `/ui` |
 | F1b · Catálogos | Catálogo de íconos y paleta de colores con sus pickers; cuentas de todos los tipos con saldo inicial (incluidas deudas y "me deben"), cuentas privadas, categorías y subcategorías, etiquetas y etiquetas por defecto; pantallas de gestión |
-| F1c · Asistente | Asistente de configuración inicial completo (§7), reutilizando los formularios de F1b; plantilla sugerida (Anexo A) |
+| F1b2 · Flujos móviles y diseño adaptativo | Layouts por clase de tamaño (navegación inferior o rail, lista y detalle lado a lado) y flujos cortos pensados primero para móvil (§13.5): crear cuenta por tipo, selector único de ícono y color, grilla de categorías con modo edición, pantalla de categoría, subcategorías y etiquetas en sheet. Reemplaza los formularios largos de la F1b. Sin cambios en la base de datos |
+| F1c · Asistente | Asistente de configuración inicial completo (§7), reutilizando los flujos de la F1b2; plantilla sugerida (Anexo A) |
 | F1d · Movimientos | Movimientos (gasto, ingreso, transferencia, ajuste), registro rápido con cuotas y tasa para TC, selector de periodos, pantalla de inicio Categorías, multimoneda con tasa manual |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
 | F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
@@ -541,10 +555,10 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-icon-picker`, `cc-color-picker`, `cc-category-chip`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-wizard-stepper` | `shared/ui/organisms` |
-| Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, layout de página | `shared/ui/templates` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-nav-rail` | `shared/ui/organisms` |
+| Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
 Reglas:
@@ -588,10 +602,14 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 - Contraste mínimo de 3:1 de un ícono blanco sobre cada color, en claro y en oscuro (WCAG 1.4.11, gráfico no textual). Una prueba unitaria lo verifica.
 - La paleta vive en un archivo TypeScript y cada color se aplica como `light-dark(claro, oscuro)` en una variable CSS, así que cambia sola con el tema.
 
-**Selectores**
+**Selector**
 
-- Picker de íconos con búsqueda y grupos; picker de color en grilla.
-- En móvil se abren como bottom sheet; en escritorio, como diálogo.
+- Un solo selector de ícono y color (`cc-appearance-picker`) con vista previa en vivo y pestañas Ícono | Color.
+  - Ícono: búsqueda, atajos por grupo y grilla.
+  - Color: grilla de la paleta; en subcategorías, la primera opción es "Igual que la categoría".
+- Se abre tocando el badge grande del encabezado de cada flujo. "Listo" aplica los dos valores; cerrar los descarta.
+- En móvil se abre como bottom sheet; en pantallas medianas y grandes, como diálogo.
+- Dentro de un sheet (p. ej. el de subcategoría) va en línea (`cc-appearance-editor`), porque un sheet no abre otro.
 
 **Fuente única:** el catálogo de íconos y la paleta viven cada uno en un solo archivo, y de ahí salen tanto los pickers como los estilos.
 
@@ -600,6 +618,48 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 - Cada cambio de UI se verifica con screenshots de Playwright en móvil y escritorio, en claro y oscuro.
 - Microinteracciones sutiles (ripple, transiciones cortas), respetando `prefers-reduced-motion`.
 - Accesibilidad: contraste AA en textos, áreas táctiles de al menos 44 px y label en todos los campos.
+
+### 13.5 Patrones de interacción y layouts adaptativos
+
+Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al dispositivo en vez de solo estirarse. El asistente (F1c) reutiliza estos flujos.
+
+**Clases de tamaño** (window size classes de Material 3)
+
+| Clase | Ancho | Navegación | Lista y detalle | Selecciones |
+|---|---|---|---|---|
+| Compacta | < 600 px | Barra inferior | Un panel a la vez; los flujos ocupan la pantalla completa | Bottom sheet |
+| Mediana | 600–839 px | Rail (ícono sobre la etiqueta) | Un panel a la vez, junto al rail | Diálogo |
+| Expandida | ≥ 840 px | Rail expandido (ícono y etiqueta en fila) | Lado a lado: lista a la izquierda, detalle a la derecha | Diálogo |
+
+- `LayoutService` expone la clase como signal. Las plantillas cambian según la clase; los organismos son los mismos en todas.
+- Los cortes viven en `_breakpoints.scss` y en `WINDOW_BREAKPOINTS`, y deben coincidir.
+
+**Flujos** (crear o editar algo)
+
+- Barra superior con cerrar, título y Guardar. Al crear, cerrar es "✕" (descarta); al editar algo que ya existe, "←".
+- Encabezado con el nombre grande y, al lado, el badge de ícono y color que abre el selector (§13.3). El foco automático en el nombre va solo al crear.
+- Debajo, filas tipo lista: cada fila abre un sheet enfocado en un solo dato, salvo los interruptores, que cambian en la misma fila.
+- Lo poco usado va plegado en "Más opciones".
+- Si hay cambios sin guardar, salir (cerrar, volver, Esc o el atrás del sistema) pide confirmación: "¿Descartar los cambios?".
+- En compacta el flujo ocupa la pantalla completa (sin encabezado ni navegación); en expandida va en el panel de detalle.
+
+**Sheets y diálogos**
+
+- Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
+- El atrás del sistema (Android o el navegador) cierra solo el overlay abierto, sin navegar.
+
+**Teclado y puntero** (mediana y expandida)
+
+- Atajos:
+  - `N`: nuevo;
+  - `E`: editar categorías;
+  - `Esc`: cerrar el flujo o el panel;
+  - `Ctrl/⌘+S`: guardar;
+  - `Alt` + flechas: reordenar.
+- Los atajos de una tecla se pueden apagar en Preferencias (WCAG 2.1.4). La preferencia se guarda en el dispositivo y viene encendida.
+- Estados de hover solo en dispositivos con puntero.
+
+**Una sola versión de cada flujo:** si un flujo nuevo reemplaza a otro, el anterior se elimina.
 
 ---
 
