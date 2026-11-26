@@ -139,6 +139,7 @@ export class AccountEditor {
     const { label, hint } = this.balanceText();
     const amount = await this.overlay.open<number, AmountPanelData>(AmountPanel, {
       label,
+      autoFocus: 'input',
       data: {
         title: label,
         label,

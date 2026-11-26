@@ -8,7 +8,7 @@ import {
   CategoryFormValue,
   categoryToFormValue,
   newCategoryFormValue,
-} from './category-form.model';
+} from './category-editor.model';
 
 describe('category form model', () => {
   it('starts a subcategory inheriting the color of its parent', () => {

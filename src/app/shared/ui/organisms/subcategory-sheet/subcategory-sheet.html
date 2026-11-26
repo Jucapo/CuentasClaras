@@ -1,0 +1,71 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  <cc-button
+    ccOverlayHeaderAction
+    loadingLabel="Guardando"
+    [loading]="form().submitting()"
+    (click)="done()"
+  >
+    {{ text.done }}
+  </cc-button>
+
+  <cc-form label="Subcategoría" [form]="form">
+    <div class="identity">
+      <cc-icon-badge size="lg" [icon]="form.icon().value()" [color]="shownColor()" />
+      <cc-text-field
+        class="name"
+        label="Nombre"
+        [maxLength]="nameMaxLength"
+        [formField]="form.name"
+      />
+    </div>
+
+    @if (data.tagOptions.length > 0) {
+      <cc-chip-select
+        label="Etiquetas por defecto"
+        [options]="data.tagOptions"
+        [formField]="form.tagIds"
+      />
+    }
+
+    <cc-appearance-editor
+      [showPreview]="false"
+      [(icon)]="form.icon().value"
+      [(color)]="form.color().value"
+      [inheritFrom]="inheritFrom()"
+    />
+    @if (colorError(); as message) {
+      <cc-message>{{ message }}</cc-message>
+    }
+
+    @if (data.actions; as actions) {
+      <cc-disclosure [label]="text.moreOptions">
+        <div class="more">
+          <cc-select
+            label="Categoría"
+            hint="Muévela a otra categoría o vuélvela una categoría principal."
+            [options]="parentOptions"
+            [formField]="form.parentId"
+          />
+          <cc-form-actions align="start">
+            <cc-button
+              variant="outlined"
+              [icon]="actions.archived ? 'unarchive' : 'archive'"
+              (click)="act(actions.archived ? 'unarchive' : 'archive')"
+            >
+              {{ actions.archived ? 'Desarchivar' : 'Archivar' }}
+            </cc-button>
+            @if (actions.canDelete) {
+              <cc-button variant="text" icon="delete" [danger]="true" (click)="act('delete')">
+                Eliminar
+              </cc-button>
+            }
+          </cc-form-actions>
+        </div>
+      </cc-disclosure>
+    }
+
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+  </cc-form>
+</cc-overlay-panel>

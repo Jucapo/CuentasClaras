@@ -3,7 +3,7 @@ import { CATEGORY_DEFAULTS, NAME_MAX_LENGTH } from '../../../../core/config/cata
 import { CategoryKind } from '../../../../core/categories/category.models';
 import { Tables } from '../../../../core/supabase/database.types';
 
-/** Values edited by `cc-category-form`. */
+/** Values edited by `cc-category-editor` and `cc-subcategory-sheet`. */
 export interface CategoryFormValue {
   name: string;
   kind: CategoryKind;

@@ -1,0 +1,48 @@
+<cc-flow-hero>
+  <cc-title-field
+    ccHeroName
+    label="Nombre"
+    placeholder="Nombre de la categoría"
+    [maxLength]="nameMaxLength"
+    [autofocus]="autofocusName()"
+    [formField]="fields().name"
+  />
+  <cc-appearance-picker
+    ccHeroBadge
+    [label]="text.changeAppearance"
+    [formField]="fields().icon"
+    [(color)]="fields().color().value"
+  />
+</cc-flow-hero>
+
+<div class="rows">
+  <cc-field-row
+    icon="label"
+    [label]="text.tags"
+    [valueText]="tagsText()"
+    [disabled]="fields().tagIds().disabled()"
+    (activate)="pickTags()"
+  />
+</div>
+
+<section class="subcategories" [attr.aria-labelledby]="titleId">
+  <h2 class="section-title" [id]="titleId">{{ text.subcategories }}</h2>
+  <cc-category-list
+    [label]="text.subcategories"
+    [entries]="subcategories()"
+    [reorderable]="canEdit()"
+    [addLabel]="canEdit() ? text.addSubcategory : null"
+    (opened)="openSubcategory.emit($event)"
+    (add)="addSubcategory.emit()"
+    (reorder)="reorderSubcategories.emit($event)"
+  />
+  @if (archivedSubcategories().length > 0) {
+    <cc-disclosure [label]="archivedLabel()">
+      <cc-category-list
+        label="Subcategorías archivadas"
+        [entries]="archivedSubcategories()"
+        (opened)="openSubcategory.emit($event)"
+      />
+    </cc-disclosure>
+  }
+</section>

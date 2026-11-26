@@ -30,6 +30,8 @@ export interface OverlayOptions<D> {
   readonly label: string;
   /** `picker` is wide enough for grids; `confirm` is a short question. */
   readonly size?: 'picker' | 'confirm';
+  /** What gets the focus: the title by default, or a CSS selector, e.g. `input` for a new item. */
+  readonly autoFocus?: string;
 }
 
 const PANEL_CLASS = { dialog: 'cc-overlay-dialog', sheet: 'cc-overlay-sheet' } as const;
@@ -71,10 +73,10 @@ export class OverlayService {
       injector,
       data: options.data,
       ariaLabel: options.label,
-      autoFocus: 'first-heading',
+      autoFocus: options.autoFocus ?? 'first-heading',
       // Back and navigation are handled below: back closes only the top overlay.
       closeOnNavigation: false,
-    } as const;
+    };
     const sizeClass = `cc-overlay-${options.size ?? 'picker'}`;
 
     // Loaded on demand to keep dialogs and sheets out of the initial bundle.

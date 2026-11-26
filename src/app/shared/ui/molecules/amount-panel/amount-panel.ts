@@ -1,4 +1,4 @@
-import { Component, inject, signal, viewChild, afterNextRender } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { Button } from '../../atoms/button/button';
 import { MoneyField } from '../../atoms/money-field/money-field';
@@ -20,7 +20,7 @@ export interface AmountPanelData {
   readonly requiredMessage: string;
 }
 
-/** Focused sheet or dialog to type one amount; resolves with minor units on "Listo". */
+/** Focused sheet or dialog to type one amount; resolves with minor units on "Listo". Open it with `autoFocus: 'input'`. */
 @Component({
   selector: 'cc-amount-panel',
   imports: [OverlayPanel, Form, MoneyField, FormField, Button],
@@ -30,7 +30,6 @@ export interface AmountPanelData {
 export class AmountPanel {
   protected readonly data = inject<AmountPanelData>(OVERLAY_DATA);
   private readonly handle = inject<OverlayHandle<number>>(OverlayHandle);
-  private readonly field = viewChild.required(MoneyField);
 
   protected readonly text = UI_TEXT;
   private readonly model = signal<{ amount: number | null }>({ amount: this.data.value });
@@ -47,9 +46,6 @@ export class AmountPanel {
     },
   );
 
-  constructor() {
-    afterNextRender(() => this.field().focus());
-  }
 
   protected done(): void {
     void submit(this.form);
