@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.2 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.4 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -30,6 +30,8 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 | Frontend | Angular (última estable), standalone + signals, TypeScript strict | Angular Material + CDK: bottom sheet, chips, date range picker, dialogs |
 | PWA | `@angular/pwa` (service worker de Angular) | Instalable en Android, iOS (Agregar a inicio) y escritorio |
 | Gráficas | Donut principal en SVG propio; barras con ECharts (`ngx-echarts`, import modular) | El donut replica el anillo segmentado de 1Money |
+| Íconos | Material Symbols Rounded, self-hosted | Catálogo curado para categorías y cuentas (§13.3) |
+| UI | Atomic design con prefijo `cc-` | Material solo dentro de átomos y moléculas (§13.1) |
 | Backend | Supabase: Postgres, Auth, RLS, Edge Functions, `pg_cron` | |
 | Hosting | Vercel (SPA estático), deploy automático desde `main`, previews por PR | |
 | Esquema | Migraciones SQL versionadas en `supabase/migrations`; Supabase CLI como devDependency | Tipos TS generados desde el esquema |
@@ -73,10 +75,11 @@ Resultado: dos personas pueden tener cuentas separadas y llevar un presupuesto c
 - Email + contraseña, con verificación de correo y recuperación de contraseña.
 - No usar magic links: en iOS la PWA instalada no comparte sesión con Safari, así que el link abre en el navegador y no inicia sesión en la app.
 - Al registrarse se crea el perfil (trigger en `auth.users`).
-- **Onboarding** al primer inicio de sesión sin espacio, dos opciones:
-  - Crear espacio: nombre, moneda, día de inicio de mes y plantilla de categorías.
-  - Aceptar una invitación pendiente.
-- **Invitaciones:**
+- **Onboarding** al primer inicio de sesión sin espacio:
+  - Crear espacio con el asistente de configuración inicial (§7).
+  - Aceptar una invitación pendiente (fase F1f).
+- **Invitaciones** (fase F1f, cuando la app esté madura; hasta entonces el espacio tiene un solo miembro):
+  - Requieren SMTP propio. Recomendado: SMTP de Gmail con contraseña de aplicación, sin dominio propio.
   - El propietario invita por email con un rol.
   - Una Edge Function envía la invitación y crea al usuario si no existe. Esto permite invitar aunque el registro público esté cerrado.
   - El link lleva un token con vencimiento.
@@ -145,7 +148,7 @@ Los ajustes sirven para conciliar con el saldo real del banco.
 - Un movimiento puede ir a la categoría directamente o a una subcategoría.
 - Ícono, color, orden, archivada.
 - **Etiquetas por defecto:** una categoría o subcategoría puede traer etiquetas que se aplican solas al registrar (editables en el momento). Ej.: Casa › Arriendo → `Fijos`.
-- Espacios nuevos: se crean con una plantilla genérica de categorías (por definir). El espacio de Juan se crea con la semilla de 1Money (Anexo A).
+- Espacios nuevos: las categorías se crean en el asistente de configuración inicial (§7), desde cero o partiendo de la plantilla sugerida (Anexo A). No se importa nada de 1Money.
 
 ### 4.4 Etiquetas
 
@@ -219,6 +222,10 @@ El modelo de cuentas ya las soporta desde la fase 1 (saldos, pagos como transfer
 - Tasa mensual vigente con historial: se actualiza cada mes desde el extracto.
 - Compra a **1 cuota** (la mayoría): gasto normal en la fecha de compra, sin interés.
 - Compra a **N > 1 cuotas**: crea un plan de cuotas (diferido) con capital = monto / N. El interés se calcula sobre el saldo del diferido con la tasa de la tarjeta, o es 0 si la compra se marca sin intereses.
+- **Registro de compras con TC:**
+  - Si la cuenta elegida es de tipo tarjeta de crédito, el registro muestra el campo "Cuotas" (por defecto 1).
+  - Si Cuotas > 1, pide la tasa de interés mensual, prellenada con la tasa vigente de la tarjeta. 0 = sin interés, que es el caso más común hoy.
+  - Desde la F1d se guardan cuotas y tasa con la compra. El reparto en presupuestos y el cálculo de intereses llegan en la F2; mientras tanto la compra cuenta completa en su fecha.
 - Pago de la tarjeta: transferencia desde la cuenta pagadora. Intereses y cuota de manejo son gastos en Financieros.
 
 **d) Me deben**
@@ -324,10 +331,27 @@ Barras de gastado vs. presupuestado por categoría y total. Edición de montos.
 
 Reportes de §6 para el periodo seleccionado.
 
-### Autenticación y onboarding
+### Autenticación
 
 - Inicio de sesión, registro (oculto mientras el registro público esté cerrado) y recuperar contraseña.
-- Crear espacio o aceptar invitación.
+
+### Asistente de configuración inicial
+
+Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configuración del espacio y la situación financiera actual.
+
+- Pasos:
+  1. **Espacio y preferencias:** nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana.
+  2. **Situación financiera actual:** cuentas, ahorros, deudas y "me deben", cada una con su saldo actual. Moneda por cuenta (p. ej. USD) y cuenta predeterminada. Las deudas piden solo nombre, tipo y saldo; los datos de tasa, plazo y cuotas se completan en la F2.
+  3. **Ingresos:** categorías de ingreso (fuentes) y, opcional, el monto mensual esperado de cada una.
+  4. **Categorías de gasto:** empezar desde cero o partir de la plantilla sugerida (Anexo A), y editar categorías y subcategorías con ícono y color.
+  5. **Etiquetas:** crear etiquetas (p. ej. Fijos) y asignar etiquetas por defecto a subcategorías.
+  6. **Presupuesto (opcional):** monto mensual por categoría de gasto.
+  7. **Resumen:** todo lo configurado, con opción de volver a cualquier paso antes de terminar.
+- Comportamiento:
+  - El progreso se guarda en cada paso: si se cierra la app, se retoma donde quedó.
+  - Los pasos opcionales se pueden saltar.
+  - Reutiliza los mismos formularios de gestión de cuentas, categorías y etiquetas (sin duplicar código).
+  - Se puede volver a abrir desde Configuración para revisar o completar la configuración.
 
 ### Configuración
 
@@ -353,7 +377,8 @@ spaces (id, name, created_by, created_at)
 space_members (space_id, user_id, role, default_account_id, joined_at)
   role: owner | editor | viewer
 space_invitations (id, space_id, email, role, token_hash, invited_by, expires_at, accepted_at)
-space_settings (space_id, main_currency, month_start_day, week_start, budgets_enabled, default_period)
+space_settings (space_id, main_currency, month_start_day, week_start, budgets_enabled, default_period,
+                onboarding_step, onboarding_completed_at)
 user_settings (user_id, theme, number_format, show_decimals, home_screen, last_space_id)
 
 accounts (id, space_id, owner_id, visibility, name, kind, group, currency,
@@ -379,6 +404,7 @@ transactions (id, space_id, type, date, amount, currency, account_id, to_account
 transaction_tags (transaction_id, tag_id)
 
 budgets (id, space_id, category_id, amount, effective_from)
+  -- category_id puede ser de gasto (presupuesto) o de ingreso (ingreso mensual esperado)
 exchange_rates (date, base, quote, rate, source)
 recurring_templates (fase 3)
 ```
@@ -392,6 +418,7 @@ recurring_templates (fase 3)
 | `transactions` | Visible si la cuenta o la cuenta destino es visible para el usuario, o si `include_in_space = true` | Quien puede escribir en la cuenta de origen |
 
 - Funciones auxiliares: `is_space_member(space_id)`, `space_role(space_id)`, `can_see_account(account_id)`.
+- `icon` y `color` guardan claves del catálogo de íconos y de la paleta (§13.3), nunca valores hex.
 - Saldos: vista SQL. Reportes: funciones RPC con `SECURITY INVOKER` (respetan RLS) que reciben un rango de fechas y el alcance. El cliente calcula el rango a partir de la configuración de periodo.
 
 ---
@@ -409,7 +436,6 @@ recurring_templates (fase 3)
   3. Sugiere la categoría según el historial de ese comercio.
   4. Lo deja en "Por confirmar".
 - **Atajos:** Atajo en iOS y widget o atajo en Android que llaman a un endpoint autenticado (token personal por usuario) para crear pendientes.
-- **Importación de 1Money:** si 1Money permite exportar el historial (por confirmar).
 
 ---
 
@@ -418,7 +444,12 @@ recurring_templates (fase 3)
 | Fase | Alcance |
 |---|---|
 | F0 · Setup | Repo, Supabase, Vercel, Angular PWA, Supabase CLI y migraciones, pantallas de login/registro/recuperar contraseña, guard de sesión, layout con navegación inferior y páginas vacías, deploy automático |
-| F1 · MVP (reemplazo de 1Money) | Perfiles, espacios, miembros, invitaciones (Edge Function) y RLS completo con cuentas privadas; onboarding; cuentas; categorías y subcategorías; etiquetas; movimientos (gasto, ingreso, transferencia, ajuste); registro rápido; selector de periodos; presupuestos; Transacciones; Resumen; Configuración; multimoneda con tasa manual. Deudas como cuentas con saldo. Migración desde 1Money al inicio de un periodo |
+| F1a · Base multiusuario | Migraciones de perfiles, espacios, miembros y configuración (espacio y usuario); RLS con pruebas pgTAP; RPC para crear espacio; servicio de espacio activo y guard; entrada al asistente con el paso 1 (crear espacio). Base del sistema de diseño: estructura atomic, átomos y moléculas de formulario, pantallas de auth migradas, catálogo `/ui` |
+| F1b · Catálogos | Catálogo de íconos y paleta de colores con sus pickers; cuentas de todos los tipos con saldo inicial (incluidas deudas y "me deben"), cuentas privadas, categorías y subcategorías, etiquetas y etiquetas por defecto; pantallas de gestión |
+| F1c · Asistente | Asistente de configuración inicial completo (§7), reutilizando los formularios de F1b; plantilla sugerida (Anexo A) |
+| F1d · Movimientos | Movimientos (gasto, ingreso, transferencia, ajuste), registro rápido con cuotas y tasa para TC, selector de periodos, pantalla de inicio Categorías, multimoneda con tasa manual |
+| F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
+| F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
 | F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes |
 | F3 · Automatización | Recurrentes, cuotas automáticas, correo, atajos, bandeja "Por confirmar" |
 | F4 · Abrir a terceros | Registro público con captcha, límites de tasa, política de datos, exportar y borrar cuenta, plantilla genérica de categorías pulida |
@@ -430,6 +461,7 @@ recurring_templates (fase 3)
 - TypeScript strict. Componentes standalone. Estado con signals.
 - Código e identificadores en inglés; interfaz en español (preparada para i18n más adelante).
 - Separación de responsabilidades en archivos distintos (componente, plantilla, estilos, servicio).
+- Componentes según atomic design y sistema de diseño (§13).
 - Lógica de dominio pura en `src/app/domain/`, sin dependencias de Angular y con pruebas unitarias: dinero, periodos, amortización y prorrateo.
 - Nada de valores quemados: configuración, tokens de diseño y constantes centralizadas.
 - Comentarios: solo TSDoc de una línea en símbolos exportados, una nota corta donde algo parece incorrecto pero es deliberado, y TODOs. Nada más.
@@ -446,39 +478,101 @@ recurring_templates (fase 3)
 
 ---
 
-## 12. Decisiones pendientes
+## 12. Decisiones
 
 - [x] Nombre: Cuentas Claras (repo `CuentasClaras`).
-- [ ] ¿Importar historial de 1Money o arrancar con saldos iniciales?
-- [ ] ¿Las compras diferidas de tarjeta tienen interés o son promociones sin interés? El modelo soporta ambas; se define por compra.
-- [ ] Completar las categorías y subcategorías que no se ven en las capturas (Anexo A).
-- [ ] Plantilla genérica de categorías para espacios nuevos (antes de F4).
+- [x] 1Money: no se importa nada. Todo se configura desde cero con el asistente de configuración inicial.
+- [x] Compras a cuotas con TC: hoy son sin interés; al registrar una compra a más de 1 cuota con TC, la app pide la tasa (0 = sin interés).
+- [x] Invitaciones y SMTP: se posponen a la F1f. Hasta entonces el espacio tiene un solo miembro.
+- [ ] Entorno de desarrollo de base de datos (local o proyecto dev separado): se decide en el plan de la F1a.
 
 ---
 
-## Anexo A — Semilla del espacio "Hogar" (desde 1Money)
+## 13. Sistema de diseño y personalización
+
+Meta: un diseño visual excelente y muy personalizable, con estilos centralizados para que un cambio se haga en un solo lugar.
+
+### 13.1 Atomic design
+
+| Nivel | Qué es | Ejemplos | Carpeta |
+|---|---|---|---|
+| Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-icon-picker`, `cc-color-picker`, `cc-category-chip`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-wizard-stepper` | `shared/ui/organisms` |
+| Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, layout de página | `shared/ui/templates` |
+| Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
+
+Reglas:
+
+- Las páginas componen organismos y moléculas. No usan componentes de Angular Material directamente ni tienen estilos propios, salvo layout.
+- Angular Material solo se usa dentro de átomos y moléculas. Cambiar el estilo de todos los campos = cambiar un solo componente.
+- Átomos y moléculas son presentacionales: inputs/outputs, OnPush, sin servicios de datos.
+- Los campos de formulario son controles personalizados compatibles con Signal Forms.
+- Prefijo de selector `cc-`.
+- Antes de crear un componente, buscar si ya existe uno que se pueda reutilizar o extender.
+- Catálogo `/ui`, solo en desarrollo: muestra cada componente reutilizable con sus variantes, en claro y oscuro.
+
+### 13.2 Tema
+
+- Un solo lugar para el tema: paleta Material 3 en `_theme.scss` y tokens `--cc-*` en `_tokens.scss`.
+- Nada de colores, tamaños, radios ni sombras sueltos en los componentes: todo sale de tokens.
+- Modo claro, oscuro o según el sistema, como preferencia de cada usuario.
+- Más adelante: que cada usuario elija el color principal de la app (paleta Material 3 generada en tiempo de ejecución).
+
+### 13.3 Íconos y colores personalizables
+
+Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiquetas llevan color.
+
+**Íconos**
+
+- Material Symbols Rounded, self-hosted para que funcionen sin conexión.
+- Catálogo curado de varios cientos de íconos, agrupados (Hogar, Comida, Transporte, Salud, Familia y niños, Mascotas, Educación, Ocio, Compras, Tecnología, Finanzas, Viajes, Trabajo, Otros), con palabras clave en español para buscar.
+- Si la fuente completa pesa mucho, se genera un subset con los íconos del catálogo y los de la interfaz.
+
+**Colores**
+
+- Paleta curada de unos 30 colores, cada uno con variante para tema claro y oscuro, y con contraste suficiente para un ícono blanco encima.
+- Se guarda la clave del color (p. ej. `teal`), no el hex: si cambia la paleta o el tema, todo se actualiza solo.
+- Las subcategorías heredan por defecto el color de su categoría y pueden cambiarlo.
+
+**Selectores**
+
+- Picker de íconos con búsqueda y grupos; picker de color en grilla.
+- En móvil se abren como bottom sheet; en escritorio, como diálogo.
+
+**Fuente única:** el catálogo de íconos y la paleta viven cada uno en un solo archivo, y de ahí salen tanto los pickers como los estilos.
+
+### 13.4 Calidad visual
+
+- Cada cambio de UI se verifica con screenshots de Playwright en móvil y escritorio, en claro y oscuro.
+- Microinteracciones sutiles (ripple, transiciones cortas), respetando `prefers-reduced-motion`.
+- Accesibilidad: contraste AA en textos, áreas táctiles de al menos 44 px y label en todos los campos.
+
+---
+
+## Anexo A — Plantilla sugerida de categorías
+
+Opcional en el asistente: se puede editar todo o empezar desde cero.
 
 **Gastos**
 
-| Categoría | Subcategorías conocidas |
+| Categoría | Subcategorías |
 |---|---|
-| Financieros | (completar; incluir Intereses, Cuota de manejo, Seguros) |
-| Casa | Arriendo, Facturas, Personal aseo, Jardín, Mascotas, Mantenimiento |
-| Mercado | (completar) |
-| Ocio | (completar) |
-| Domicilios & Antojos | (completar) |
-| Compras | (completar) |
-| Carro | (completar) |
-| Familia | (completar) |
-| Mis gastos | Salud, Educación, Cuidado personal, Juegos, Ropa, Compras, Herramientas |
-| Angela | (completar) |
-| Emiliano | Colegio, Cuidado personal, Actividades extras, Juguetes, Útiles, Salud, Ropa, Ahorros, Deporte, Fiesta, … (completar) |
-| Emmanuel | (completar) |
-| Gabriel | (completar) |
-| Regalos | (completar) |
-| Suscripciones | (completar) |
-| Otras bajo "Más…" | (completar) |
+| Hogar | Arriendo o hipoteca, Servicios públicos, Internet y telefonía, Mantenimiento, Aseo |
+| Mercado | Supermercado, Plaza, Tienda |
+| Transporte | Combustible, Transporte público, Mantenimiento del vehículo, Parqueadero, Peajes |
+| Salud | Medicamentos, Consultas, Seguros de salud |
+| Educación | Colegio, Útiles, Cursos |
+| Ocio | Salidas, Viajes, Juegos |
+| Restaurantes y domicilios | Restaurantes, Domicilios, Antojos |
+| Compras | Ropa, Tecnología, Hogar |
+| Suscripciones | Streaming, Software, Otras |
+| Mascotas | Comida, Veterinario |
+| Regalos | — |
+| Financieros | Intereses, Cuota de manejo, Seguros, Comisiones |
+| Otros | — |
 
-**Ingresos:** Globant, HTEC, Otros, Intereses.
+**Ingresos:** Salario, Trabajo independiente, Intereses, Otros.
 
-**Etiquetas iniciales sugeridas:** Fijos.
+**Etiquetas sugeridas:** Fijos.
