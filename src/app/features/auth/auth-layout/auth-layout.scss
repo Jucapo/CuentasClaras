@@ -1,0 +1,35 @@
+@use 'breakpoints';
+
+.auth-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100dvh;
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-6)) var(--cc-space-4)
+    calc(var(--cc-safe-area-bottom) + var(--cc-space-6));
+  background-color: var(--mat-sys-surface-container);
+
+  @include breakpoints.medium {
+    align-items: center;
+  }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: var(--cc-auth-card-max-width);
+  padding: var(--cc-space-6) var(--cc-space-5);
+  border-radius: var(--cc-radius-lg);
+  background-color: var(--mat-sys-surface);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-2);
+  margin-bottom: var(--cc-space-5);
+  color: var(--mat-sys-primary);
+}
+
+.brand-name {
+  font: var(--mat-sys-title-large);
+}
