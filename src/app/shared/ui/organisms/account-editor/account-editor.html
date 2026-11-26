@@ -3,7 +3,6 @@
     ccHeroName
     label="Nombre"
     placeholder="Nombre de la cuenta"
-    [maxLength]="nameMaxLength"
     [autofocus]="autofocusName()"
     [formField]="fields().name"
   />
@@ -58,11 +57,7 @@
 
   <cc-disclosure class="more" [label]="text.moreOptions" [(open)]="moreOpen">
     <div class="date">
-      <cc-date-field
-        label="Fecha del saldo"
-        [maxDate]="today"
-        [formField]="fields().balanceDate"
-      />
+      <cc-date-field label="Fecha del saldo" [maxDate]="today" [formField]="fields().balanceDate" />
     </div>
     <cc-switch
       icon="lock"

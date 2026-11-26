@@ -95,8 +95,7 @@ export class CategoriesEditPage {
     this.categories
       .categories()
       .filter(
-        (category) =>
-          category.kind === this.kind() && category.archived_at && !category.parent_id,
+        (category) => category.kind === this.kind() && category.archived_at && !category.parent_id,
       )
       .map((category) => ({
         id: category.id,

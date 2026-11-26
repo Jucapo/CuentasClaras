@@ -1,6 +1,5 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { FieldTree, FormField } from '@angular/forms/signals';
-import { NAME_MAX_LENGTH } from '../../../../core/config/catalog.constants';
 import { TitleField } from '../../atoms/title-field/title-field';
 import { AppearancePicker } from '../../molecules/appearance-picker/appearance-picker';
 import { ChipOption } from '../../molecules/chip-select/chip-select';
@@ -52,7 +51,6 @@ export class CategoryEditor {
   private readonly overlay = inject(OverlayService);
 
   protected readonly text = { ...UI_TEXT, ...TEXT };
-  protected readonly nameMaxLength = NAME_MAX_LENGTH.category;
   protected readonly titleId = `cc-category-editor-${nextEditorId++}`;
   protected readonly tagsText = computed(() => {
     const names = new Map(this.tagOptions().map((tag) => [tag.value, tag.label]));

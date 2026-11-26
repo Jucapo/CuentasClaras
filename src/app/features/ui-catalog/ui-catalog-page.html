@@ -45,14 +45,22 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry name="cc-icon-button · atajo" description="Anuncia su tecla (N)">
+        <ng-template>
+          <cc-icon-button icon="add" label="Nueva cuenta" shortcut="N" />
+          <cc-icon-button icon="edit" label="Editar categorías" shortcut="E" />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry
         name="cc-icon"
-        description="sm · md · lg · relleno; con label es una imagen"
+        description="sm · md · lg · xl · relleno; con label es una imagen"
       >
         <ng-template>
           <cc-icon name="savings" size="sm" />
           <cc-icon name="savings" />
           <cc-icon name="savings" size="lg" />
+          <cc-icon name="savings" size="xl" />
           <cc-icon name="savings" size="lg" [filled]="true" />
           <cc-icon name="warning" label="Presupuesto excedido" />
         </ng-template>
@@ -60,14 +68,49 @@
 
       <app-catalog-entry
         name="cc-icon-badge"
-        description="Ícono blanco sobre un color de la paleta · sm · md · lg"
+        description="Ícono blanco sobre un color de la paleta · sm · md · lg · xl"
       >
         <ng-template>
           <cc-icon-badge icon="shopping_cart" color="green" size="sm" />
           <cc-icon-badge icon="home" color="orange" />
           <cc-icon-badge icon="credit_card" color="red" size="lg" label="Tarjeta" />
           <cc-icon-badge icon="savings" color="teal" size="lg" />
-          <cc-icon-badge icon="pets" color="mustard" size="lg" />
+          <cc-icon-badge icon="pets" color="mustard" size="xl" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-donut" description="Anillo con contenido al centro (sin montos)">
+        <ng-template>
+          <div class="donut-demo">
+            <cc-donut><strong>Gastos</strong></cc-donut>
+          </div>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-tabs"
+        description="Pestañas con ícono que cambian el contenido"
+        layout="column"
+      >
+        <ng-template>
+          <cc-tabs label="Clase" [options]="kindTabs" [(value)]="kind">
+            <p class="tab-demo">Contenido de {{ kind() === 'expense' ? 'Gastos' : 'Ingresos' }}</p>
+          </cc-tabs>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-title-field"
+        description="Nombre grande del encabezado de un flujo; con error"
+        layout="column"
+      >
+        <ng-template>
+          <cc-title-field label="Nombre" [formField]="demo.title" />
+          <cc-title-field
+            label="Nombre"
+            placeholder="Nombre de la cuenta"
+            [formField]="demo.emptyTitle"
+          />
         </ng-template>
       </app-catalog-entry>
 
@@ -189,6 +232,23 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-switch · fila"
+        description="Fila de un flujo, con ícono y ayuda"
+        layout="column"
+      >
+        <ng-template>
+          <cc-switch
+            icon="functions"
+            label="Incluir en el total"
+            hint="El total muestra el dinero disponible."
+            [row]="true"
+            [formField]="demo.decimals"
+          />
+          <cc-switch icon="lock" label="Bloqueado" [row]="true" [formField]="demo.lockedSwitch" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-message"
         description="error (alert) · info (status)"
         layout="column"
@@ -275,27 +335,134 @@
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-icon-picker"
-        description="Abre el catálogo: bottom sheet en móvil, diálogo en escritorio"
-        layout="column"
+        name="cc-appearance-picker"
+        description="Badge que abre «Ícono y color»: sheet en móvil, diálogo en pantallas grandes"
       >
         <ng-template>
-          <cc-icon-picker
-            label="Ícono"
-            [color]="pickers.color().value()"
+          <cc-appearance-picker
+            label="Cambiar ícono y color"
             [formField]="pickers.icon"
+            [(color)]="pickers.color().value"
+          />
+          <cc-appearance-picker
+            label="Cambiar ícono y color"
+            size="lg"
+            inheritFrom="orange"
+            [formField]="pickers.subIcon"
+            [(color)]="pickers.subColor().value"
           />
         </ng-template>
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-color-picker"
-        description="Color propio y subcategoría que hereda"
+        name="cc-appearance-editor"
+        description="Vista previa y pestañas Ícono | Color, en línea (subcategoría que hereda)"
         layout="column"
       >
         <ng-template>
-          <cc-color-picker label="Color" [formField]="pickers.color" />
-          <cc-color-picker label="Color" inheritFrom="orange" [formField]="pickers.subColor" />
+          <cc-appearance-editor
+            inheritFrom="orange"
+            [(icon)]="pickers.subIcon().value"
+            [(color)]="pickers.subColor().value"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-icon-grid"
+        description="Búsqueda, grupos y grilla"
+        layout="column"
+      >
+        <ng-template>
+          <cc-icon-grid [color]="pickers.color().value()" [(value)]="pickers.icon().value" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-color-grid"
+        description="Paleta, con «Igual que la categoría»"
+        layout="column"
+      >
+        <ng-template>
+          <cc-color-grid inheritFrom="orange" [(value)]="pickers.subColor().value" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-flow-hero"
+        description="Encabezado de un flujo: nombre grande y badge"
+        layout="column"
+      >
+        <ng-template>
+          <cc-flow-hero>
+            <cc-title-field ccHeroName label="Nombre" [formField]="demo.title" />
+            <cc-appearance-picker
+              ccHeroBadge
+              label="Cambiar ícono y color"
+              [formField]="pickers.icon"
+              [(color)]="pickers.color().value"
+            />
+          </cc-flow-hero>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-field-row"
+        description="Fila que abre un sheet enfocado; con error y deshabilitada"
+        layout="column"
+      >
+        <ng-template>
+          <cc-field-row icon="category" label="Tipo" valueText="Tarjeta de crédito" />
+          <cc-field-row
+            icon="account_balance"
+            label="Lo que debes"
+            valueText="—"
+            error="Escribe el saldo; puede ser 0."
+          />
+          <cc-field-row
+            icon="currency_exchange"
+            label="Moneda"
+            valueText="Peso colombiano (COP)"
+            [disabled]="true"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-disclosure" description="Sección plegable" layout="column">
+        <ng-template>
+          <cc-disclosure label="Más opciones" [(open)]="moreOpen">
+            <cc-switch icon="lock" label="Cuenta privada" [row]="true" [formField]="demo.budgets" />
+          </cc-disclosure>
+          <cc-disclosure label="Archivadas (2)">
+            <p>Contenido plegado.</p>
+          </cc-disclosure>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-option-panel · cc-amount-panel"
+        description="Sheets enfocados: en móvil, sheet; en pantallas grandes, diálogo"
+      >
+        <ng-template>
+          <cc-button variant="tonal" (click)="openOptions()">¿Qué vas a crear?</cc-button>
+          <cc-button variant="tonal" (click)="openAmount()">Lo que debes</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-category-bubble" description="Vista, edición, seleccionada y «+»">
+        <ng-template>
+          <div class="bubbles-demo">
+            <cc-category-bubble name="Mercado" icon="shopping_cart" color="green" />
+            <cc-category-bubble name="Hogar" icon="home" color="orange" variant="edit" />
+            <cc-category-bubble
+              name="Salud"
+              icon="medical_services"
+              color="red"
+              variant="edit"
+              [selected]="true"
+            />
+            <cc-category-bubble name="Nueva" variant="add" />
+          </div>
         </ng-template>
       </app-catalog-entry>
 
@@ -348,6 +515,23 @@
           <cc-list-item title="Etiquetas" subtitle="3 activas" [link]="['/', paths.uiCatalog]">
             <cc-icon ccListItemLeading name="label" />
           </cc-list-item>
+          <cc-list-item title="Fijos" subtitle="Abre su sheet" [actionable]="true">
+            <cc-color-swatch
+              ccListItemLeading
+              color="indigo"
+              label="Índigo"
+              [decorative]="true"
+              [small]="true"
+            />
+          </cc-list-item>
+          <cc-list-item
+            title="Seleccionada"
+            subtitle="Su detalle está abierto al lado"
+            [link]="['/', paths.uiCatalog]"
+            [selected]="true"
+          >
+            <cc-icon ccListItemLeading name="star" />
+          </cc-list-item>
           <cc-list-item title="Viajes" subtitle="Archivada" [muted]="true">
             <cc-color-swatch
               ccListItemLeading
@@ -386,6 +570,27 @@
           />
         </ng-template>
       </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-nav-item · en fila"
+        description="Del rail expandido: activo e inactivo"
+        layout="column"
+      >
+        <ng-template>
+          <cc-nav-item
+            label="Catálogo"
+            icon="palette"
+            layout="inline"
+            [link]="['/', paths.uiCatalog]"
+          />
+          <cc-nav-item
+            label="Cuentas"
+            icon="account_balance_wallet"
+            layout="inline"
+            [link]="['/', paths.accounts]"
+          />
+        </ng-template>
+      </app-catalog-entry>
     </div>
   </cc-section>
 
@@ -395,9 +600,48 @@
     description="Secciones completas que reciben datos por inputs."
   >
     <div class="entries">
-      <app-catalog-entry name="cc-bottom-nav" layout="column">
+      <app-catalog-entry name="cc-bottom-nav" description="Clase compacta" layout="column">
         <ng-template>
           <cc-bottom-nav label="Navegación de ejemplo" [items]="navItems" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-nav-rail" description="Clase mediana y expandida">
+        <ng-template>
+          <div class="rail-demo">
+            <cc-nav-rail label="Rail de ejemplo" [items]="navItems" />
+          </div>
+          <div class="rail-demo">
+            <cc-nav-rail label="Rail expandido de ejemplo" [items]="navItems" [expanded]="true" />
+          </div>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-grid"
+        description="Modo vista: burbujas alrededor del donut"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-grid label="Categorías de gasto" centerLabel="Gastos" [items]="gridItems" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-grid · edición"
+        description="Botones, «+», seleccionada y arrastre"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-grid
+            mode="edit"
+            label="Categorías de gasto"
+            centerLabel="Gastos"
+            addLabel="Nueva"
+            selectedId="c4"
+            [items]="gridItems"
+            [reorderable]="true"
+          />
         </ng-template>
       </app-catalog-entry>
 
@@ -432,43 +676,59 @@
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-account-form"
-        description="Cuentas y asistente; tipo deuda: el saldo se escribe en positivo"
+        name="cc-account-editor"
+        description="Cuentas y asistente: deuda con el saldo en positivo y «Más opciones»"
         layout="column"
       >
         <ng-template>
-          <cc-account-form [fields]="catalogForms.account" />
+          <cc-account-editor [fields]="catalogForms.account" />
         </ng-template>
       </app-catalog-entry>
 
       <app-catalog-entry
         name="cc-category-list"
-        description="Con subcategorías, arrastre y enlace para agregar"
+        description="Subcategorías con arrastre y fila para añadir; archivada"
         layout="column"
       >
         <ng-template>
-          <cc-category-list [nodes]="categoryNodes" [reorderable]="true" />
+          <cc-category-list
+            label="Subcategorías de Hogar"
+            addLabel="Añadir subcategoría"
+            [entries]="subcategoryEntries"
+            [reorderable]="true"
+          />
+          <cc-category-list label="Archivadas" [entries]="archivedEntries" />
         </ng-template>
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-category-form"
-        description="Subcategoría que hereda el color de su categoría"
+        name="cc-category-editor"
+        description="Pantalla de categoría: etiquetas y subcategorías"
         layout="column"
       >
         <ng-template>
-          <cc-category-form
+          <cc-category-editor
             [fields]="catalogForms.category"
-            [parents]="parentCategories"
             [tagOptions]="tagOptions"
+            [subcategories]="subcategoryEntries"
+            [archivedSubcategories]="archivedEntries"
           />
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-tag-list + cc-tag-form" layout="column">
+      <app-catalog-entry
+        name="cc-subcategory-sheet · cc-tag-sheet"
+        description="Sheets de subcategoría (con «Más opciones») y de etiqueta"
+      >
+        <ng-template>
+          <cc-button variant="tonal" (click)="openSubcategory()">Subcategoría</cc-button>
+          <cc-button variant="tonal" (click)="openTag()">Nueva etiqueta</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-tag-list" description="Activa y archivada" layout="column">
         <ng-template>
           <cc-tag-list [tags]="tagEntries" />
-          <cc-tag-form [fields]="catalogForms.tag" />
         </ng-template>
       </app-catalog-entry>
     </div>
@@ -497,23 +757,66 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-app-shell" [framed]="true">
+      @for (windowClass of shellClasses; track windowClass.value) {
+        <app-catalog-entry
+          [name]="'cc-app-shell · ' + windowClass.label"
+          [description]="windowClass.description"
+          [framed]="true"
+        >
+          <ng-template>
+            <app-fixed-layout [windowClass]="windowClass.value">
+              <cc-app-shell
+                navLabel="Navegación de ejemplo"
+                totalLabel="Total"
+                total="$ 1,234,567.90"
+                periodLabel="Periodo"
+                [navItems]="navItems"
+              >
+                <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" />
+                <cc-button ccShellPeriod variant="tonal">Este mes</cc-button>
+                <cc-icon-button ccShellPeriod icon="chevron_right" label="Periodo siguiente" />
+                <cc-icon-button ccShellActions icon="settings" label="Configuración" />
+                <cc-page-header title="Categorías" />
+              </cc-app-shell>
+            </app-fixed-layout>
+          </ng-template>
+        </app-catalog-entry>
+      }
+
+      <app-catalog-entry
+        name="cc-flow-layout"
+        description="Flujo: cerrar, título y Guardar; el cuerpo trae su encabezado"
+        [framed]="true"
+      >
         <ng-template>
-          <cc-app-shell
-            navLabel="Navegación de ejemplo"
-            totalLabel="Total"
-            total="$ 1,234,567.90"
-            periodLabel="Periodo"
-            [navItems]="navItems"
-          >
-            <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" />
-            <cc-button ccShellPeriod variant="tonal">Este mes</cc-button>
-            <cc-icon-button ccShellPeriod icon="chevron_right" label="Periodo siguiente" />
-            <cc-icon-button ccShellActions icon="settings" label="Configuración" />
-            <cc-page-header title="Categorías" />
-          </cc-app-shell>
+          <app-fixed-layout windowClass="compact">
+            <cc-flow-layout title="Nueva deuda">
+              <cc-button ccFlowAction>Guardar</cc-button>
+              <cc-account-editor [fields]="catalogForms.account" />
+            </cc-flow-layout>
+          </app-fixed-layout>
         </ng-template>
       </app-catalog-entry>
+
+      @for (windowClass of listDetailClasses; track windowClass.value) {
+        <app-catalog-entry
+          [name]="'cc-list-detail-layout · ' + windowClass.label"
+          [description]="windowClass.description"
+          [framed]="true"
+        >
+          <ng-template>
+            <app-fixed-layout [windowClass]="windowClass.value">
+              <cc-list-detail-layout [detailOpen]="false">
+                <div ccListPane>
+                  <cc-account-list [groups]="accountGroups" />
+                </div>
+                <div ccDetailPane></div>
+                <p ccDetailEmpty>Elige una cuenta para verla, o crea una nueva.</p>
+              </cc-list-detail-layout>
+            </app-fixed-layout>
+          </ng-template>
+        </app-catalog-entry>
+      }
     </div>
   </cc-section>
 </div>

@@ -52,7 +52,8 @@ export class OptionPanel<T> {
   protected readonly text = UI_TEXT;
   protected readonly picked = signal<readonly T[]>(initialSelection(this.data));
   protected readonly groups = computed(() => groupOptions(this.data.options));
-  protected readonly role = this.data.mode === 'action' ? null : this.data.mode === 'single' ? 'radio' : 'checkbox';
+  protected readonly role =
+    this.data.mode === 'action' ? null : this.data.mode === 'single' ? 'radio' : 'checkbox';
 
   protected isPicked(option: PanelOption<T>): boolean {
     return this.data.mode !== 'action' && this.picked().includes(option.value);

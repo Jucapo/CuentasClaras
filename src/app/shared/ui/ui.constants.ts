@@ -23,7 +23,12 @@ export const UI_TEXT = {
 } as const;
 
 /** SVG geometry of `cc-donut`, in viewBox units. */
-export const DONUT_GEOMETRY = { viewBox: '0 0 100 100', center: 50, radius: 44, stroke: 8 } as const;
+export const DONUT_GEOMETRY = {
+  viewBox: '0 0 100 100',
+  center: 50,
+  radius: 44,
+  stroke: 8,
+} as const;
 
 /** How long a touch must be held before a drag starts, so scrolling a grid keeps working. */
 export const TOUCH_DRAG_DELAY_MS = 300;

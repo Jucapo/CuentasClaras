@@ -46,7 +46,6 @@ export class AmountPanel {
     },
   );
 
-
   protected done(): void {
     void submit(this.form);
   }

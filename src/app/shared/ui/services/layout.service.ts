@@ -29,10 +29,9 @@ export class LayoutService {
 }
 
 /** Values of `LayoutService` for tests and catalog demos that need a fixed window class. */
-export function fixedLayout(windowClass: WindowClass): Pick<
-  LayoutService,
-  'windowClass' | 'isCompact' | 'isExpanded'
-> {
+export function fixedLayout(
+  windowClass: WindowClass,
+): Pick<LayoutService, 'windowClass' | 'isCompact' | 'isExpanded'> {
   const value = computed(() => windowClass);
   return {
     windowClass: value,

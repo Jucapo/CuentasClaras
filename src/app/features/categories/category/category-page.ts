@@ -1,12 +1,4 @@
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  linkedSignal,
-  untracked,
-} from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, untracked } from '@angular/core';
 import { apply, disabled, form, submit } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { ActionResult } from '../../../core/action-result';
@@ -15,11 +7,7 @@ import { CategoriesService } from '../../../core/categories/categories.service';
 import { Category } from '../../../core/categories/category.models';
 import { TagsService } from '../../../core/categories/tags.service';
 import { CATEGORY_KIND_PARAM, categoryKindFromParam } from '../../../core/config/catalog.constants';
-import {
-  APP_PATHS,
-  CATEGORY_PATHS,
-  CATEGORY_QUERY_PARAMS,
-} from '../../../core/routing/app-paths';
+import { APP_PATHS, CATEGORY_PATHS, CATEGORY_QUERY_PARAMS } from '../../../core/routing/app-paths';
 import { HasUnsavedChanges } from '../../../core/routing/unsaved-changes.guard';
 import { SpaceService } from '../../../core/spaces/space.service';
 import { effectiveColor } from '../../../domain/categories/category-tree';
@@ -79,7 +67,9 @@ export class CategoryPage implements HasUnsavedChanges {
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly existing = computed(() => {
     const id = this.id();
-    return id ? (this.categories.categories().find((category) => category.id === id) ?? null) : null;
+    return id
+      ? (this.categories.categories().find((category) => category.id === id) ?? null)
+      : null;
   });
   protected readonly loading = computed(() => !!this.id() && !this.categories.loaded());
   protected readonly notFound = computed(

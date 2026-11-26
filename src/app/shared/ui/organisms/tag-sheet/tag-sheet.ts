@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { apply, form, FormField, submit } from '@angular/forms/signals';
 import { ActionResult } from '../../../../core/action-result';
-import { NAME_MAX_LENGTH } from '../../../../core/config/catalog.constants';
 import { Button } from '../../atoms/button/button';
 import { ColorSwatch } from '../../atoms/color-swatch/color-swatch';
 import { Message } from '../../atoms/message/message';
@@ -52,7 +51,6 @@ export class TagSheet {
   private readonly handle = inject<OverlayHandle<TagSheetResult>>(OverlayHandle);
 
   protected readonly text = UI_TEXT;
-  protected readonly nameMaxLength = NAME_MAX_LENGTH.tag;
   protected readonly error = signal<string | null>(null);
 
   private readonly model = signal<TagFormValue>(this.data.value);

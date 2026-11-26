@@ -11,12 +11,7 @@
   <cc-form label="Subcategoría" [form]="form">
     <div class="identity">
       <cc-icon-badge size="lg" [icon]="form.icon().value()" [color]="shownColor()" />
-      <cc-text-field
-        class="name"
-        label="Nombre"
-        [maxLength]="nameMaxLength"
-        [formField]="form.name"
-      />
+      <cc-text-field class="name" label="Nombre" [formField]="form.name" />
     </div>
 
     @if (data.tagOptions.length > 0) {

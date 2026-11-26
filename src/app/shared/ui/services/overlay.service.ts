@@ -117,7 +117,11 @@ export class OverlayService {
     }
     const id = nextOverlayId++;
     const isOpen = () => (overlayIdIn(window.history.state) ?? 0) >= id;
-    window.history.pushState({ ...window.history.state, [HISTORY_KEY]: id }, '', window.location.href);
+    window.history.pushState(
+      { ...window.history.state, [HISTORY_KEY]: id },
+      '',
+      window.location.href,
+    );
 
     const onPopState = () => {
       if (!isOpen()) {

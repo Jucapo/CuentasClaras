@@ -134,18 +134,14 @@ export const routes: Routes = [
             title: 'Nueva categoría',
             canDeactivate: [unsavedChangesGuard],
             loadComponent: () =>
-              import('./features/categories/category/category-page').then(
-                (m) => m.CategoryPage,
-              ),
+              import('./features/categories/category/category-page').then((m) => m.CategoryPage),
           },
           {
             path: ':id',
             title: 'Categoría',
             canDeactivate: [unsavedChangesGuard],
             loadComponent: () =>
-              import('./features/categories/category/category-page').then(
-                (m) => m.CategoryPage,
-              ),
+              import('./features/categories/category/category-page').then((m) => m.CategoryPage),
           },
         ],
       },

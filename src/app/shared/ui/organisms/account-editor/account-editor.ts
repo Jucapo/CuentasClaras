@@ -3,7 +3,6 @@ import { FieldTree, FormField } from '@angular/forms/signals';
 import {
   ACCOUNT_GROUP_LABELS,
   ACCOUNT_KIND_OPTIONS,
-  NAME_MAX_LENGTH,
   SELECTABLE_ACCOUNT_KINDS,
 } from '../../../../core/config/catalog.constants';
 import { currencyLabel, SUPPORTED_CURRENCIES } from '../../../../core/config/space.constants';
@@ -69,7 +68,6 @@ export class AccountEditor {
   private readonly moneyFormat = inject(MONEY_FORMAT);
 
   protected readonly text = UI_TEXT;
-  protected readonly nameMaxLength = NAME_MAX_LENGTH.account;
   protected readonly today = todayIsoDate();
   protected readonly moreOpen = signal(false);
   protected readonly rowsTitleId = `cc-account-editor-${nextEditorId++}`;

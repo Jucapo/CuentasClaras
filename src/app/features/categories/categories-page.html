@@ -4,7 +4,12 @@
   }
 </cc-page-header>
 
-<cc-tabs label="Clase de categorías" [options]="kindTabs" [value]="kind()" (valueChange)="changeKind($event)">
+<cc-tabs
+  label="Clase de categorías"
+  [options]="kindTabs"
+  [value]="kind()"
+  (valueChange)="changeKind($event)"
+>
   <div class="content">
     @if (loadError(); as error) {
       <cc-message>{{ error }}</cc-message>
@@ -18,11 +23,7 @@
         }
       </cc-section>
     } @else {
-      <cc-category-grid
-        [label]="gridLabel()"
-        [centerLabel]="kindLabel()"
-        [items]="items()"
-      />
+      <cc-category-grid [label]="gridLabel()" [centerLabel]="kindLabel()" [items]="items()" />
     }
   </div>
 </cc-tabs>

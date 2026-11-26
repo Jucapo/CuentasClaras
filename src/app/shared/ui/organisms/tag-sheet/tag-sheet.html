@@ -10,17 +10,8 @@
 
   <cc-form label="Etiqueta" [form]="form">
     <div class="identity">
-      <cc-color-swatch
-        [color]="form.color().value()"
-        [label]="text.colorTab"
-        [decorative]="true"
-      />
-      <cc-text-field
-        class="name"
-        label="Nombre"
-        [maxLength]="nameMaxLength"
-        [formField]="form.name"
-      />
+      <cc-color-swatch [color]="form.color().value()" [label]="text.colorTab" [decorative]="true" />
+      <cc-text-field class="name" label="Nombre" [formField]="form.name" />
     </div>
     <h3 class="grid-title">{{ text.colorTab }}</h3>
     <cc-color-grid [(value)]="form.color().value" />

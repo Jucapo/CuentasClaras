@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { apply, form, FormField, submit } from '@angular/forms/signals';
 import { ActionResult } from '../../../../core/action-result';
-import { NAME_MAX_LENGTH } from '../../../../core/config/catalog.constants';
 import { Button } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Message } from '../../atoms/message/message';
@@ -70,7 +69,6 @@ export class SubcategorySheet {
   private readonly handle = inject<OverlayHandle<SubcategorySheetResult>>(OverlayHandle);
 
   protected readonly text = UI_TEXT;
-  protected readonly nameMaxLength = NAME_MAX_LENGTH.category;
   protected readonly error = signal<string | null>(null);
 
   private readonly model = signal<CategoryFormValue>(this.data.value);

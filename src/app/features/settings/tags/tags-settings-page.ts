@@ -17,7 +17,10 @@ import {
   TagSheetData,
   TagSheetResult,
 } from '../../../shared/ui/organisms/tag-sheet/tag-sheet';
-import { newTagFormValue, TagFormValue } from '../../../shared/ui/organisms/tag-sheet/tag-sheet.model';
+import {
+  newTagFormValue,
+  TagFormValue,
+} from '../../../shared/ui/organisms/tag-sheet/tag-sheet.model';
 import { ConfirmService } from '../../../shared/ui/services/confirm.service';
 import { useShortcuts } from '../../../shared/ui/services/keyboard-shortcuts';
 import { OverlayService } from '../../../shared/ui/services/overlay.service';

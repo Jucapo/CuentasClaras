@@ -1,12 +1,5 @@
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
-import {
-  afterRenderEffect,
-  Component,
-  ElementRef,
-  inject,
-  input,
-  output,
-} from '@angular/core';
+import { afterRenderEffect, Component, ElementRef, inject, input, output } from '@angular/core';
 import { moveItem } from '../../../../domain/categories/category-tree';
 import { Donut } from '../../atoms/donut/donut';
 import { CategoryBubble } from '../../molecules/category-bubble/category-bubble';

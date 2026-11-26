@@ -13,3 +13,23 @@
   flex-direction: column;
   gap: var(--cc-space-6);
 }
+
+.donut-demo {
+  width: calc(var(--cc-badge-size-xl) * 2.5);
+}
+
+.tab-demo {
+  margin: 0;
+  padding: var(--cc-space-3);
+}
+
+.bubbles-demo {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--cc-space-1);
+  width: 100%;
+}
+
+.rail-demo {
+  height: var(--cc-catalog-frame-height);
+}
