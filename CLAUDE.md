@@ -11,7 +11,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 
 ## Comandos
 
-- `fnm use`: Node según `.node-version` (26).
+- `fnm use`: Node según `.node-version` (26). Si el shell trae `NODE_ENV=production` (pasa en el host de extensiones de VS Code), `npm install` omite las devDependencies: quita la variable o usa `npm install --include=dev`.
 - `npm start` (http://localhost:4200) · `npm run lint` · `npm test` · `npm run test:watch` · `npm run build`
 - `npm run format` / `npm run format:check`: Prettier.
 - `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`) con el Chrome instalado (sin descargar navegadores). Reutiliza `ng serve` si está corriendo. Supabase siempre simulado (`e2e/support`). Screenshots en `e2e/screenshots/` (ignorada por git).
@@ -23,10 +23,10 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 
 ## Estructura
 
-- `src/app/core`: servicios globales (supabase, auth, routing, layout, config).
-- `src/app/shared`: pipes y UI reutilizable.
+- `src/app/core`: servicios globales (supabase, auth, spaces, user-settings, theme, routing, layout, config).
+- `src/app/shared/ui`: sistema de diseño (`atoms`, `molecules`, `organisms`, `templates`, `services`).
 - `src/app/domain`: lógica pura sin Angular, con pruebas.
-- `src/app/features/<feature>`: pantallas.
+- `src/app/features/<feature>`: pantallas. `ui-catalog` (ruta `/ui`) solo existe en desarrollo (`dev.routes.ts`).
 - `src/styles`: tema, tokens (`--cc-*`) y breakpoints. Los componentes hacen `@use 'breakpoints'`.
 - `supabase/migrations`, `supabase/tests/database` (pgTAP), `supabase/seed.sql` (solo local).
 
@@ -42,5 +42,11 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - Cambios solo con migraciones; RLS en todas las tablas; pruebas de políticas con pgTAP (`npm run db:test`).
   - Toda tabla nueva necesita grants explícitos: Supabase ya no los da por defecto. `revoke all` a `anon`/`authenticated`/`service_role`, `grant select` + `grant update (columnas)` a `authenticated` y CRUD a `service_role`. Cubrirlos en `supabase/tests/database/privileges.test.sql`.
   - Toda función nueva necesita `grant execute` explícito: la migración base revocó el default a PUBLIC. Helpers `security definer` en el esquema `private` con `set search_path = ''`.
+- Sistema de diseño (§13):
+  - Atomic design en `shared/ui` con prefijo `cc-`; antes de crear un componente, busca uno que se pueda reutilizar o extender, y agrega cada componente nuevo al catálogo `/ui`.
+  - Las páginas componen componentes `cc-`: nada de Angular Material (ESLint lo bloquea fuera de `atoms`, `molecules` y `services`) ni estilos propios salvo layout.
+  - Los campos son controles de Signal Forms (`FormValueControl`) con `label` obligatorio; átomos y moléculas son presentacionales.
+  - Nada de colores, tamaños, radios, sombras ni z-index sueltos (Stylelint lo bloquea): tema en `_theme.scss`, tokens en `_tokens.scss`.
+  - Cada cambio de UI se revisa con los screenshots de `npm run e2e` (móvil y escritorio, claro y oscuro).
 - Llaves: en el frontend solo la publishable key. La service role key solo en Edge Functions, nunca en el repo.
 - Antes de commit: `npm run lint && npm test && npm run build`, y `npm run e2e` si cambian rutas, layout o pantallas; `npm run db:test` si cambia la BD. Commits pequeños en conventional commits.
