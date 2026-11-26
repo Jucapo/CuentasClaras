@@ -3,7 +3,7 @@ import { ACTION_OK, actionFailed, ActionResult, DataResult } from '../action-res
 import { AuthService } from '../auth/auth.service';
 import { GENERIC_DATA_ERROR_MESSAGE } from '../supabase/data-error-messages';
 import { UserSettingsService } from '../user-settings/user-settings.service';
-import { NewSpace, SpaceMembership, SpaceSettingsPatch } from './space.models';
+import { NewSpace, SpaceMembership, SpacePatch, SpaceSettingsPatch } from './space.models';
 import { SpacesApi } from './spaces.api';
 
 interface LoadedSpaces {
@@ -37,6 +37,13 @@ export class SpaceService {
   readonly activeRole = computed(() => this.active()?.role ?? null);
   /** Space configuration is owner-only (spec §3.1). */
   readonly canConfigure = computed(() => this.activeRole() === 'owner');
+  /** Owners and editors manage accounts, categories and tags (spec §3.1). */
+  readonly canEdit = computed(() => {
+    const role = this.activeRole();
+    return role === 'owner' || role === 'editor';
+  });
+  /** The user's default account in the active space. */
+  readonly defaultAccountId = computed(() => this.active()?.defaultAccountId ?? null);
 
   constructor() {
     // Forget everything as soon as the session ends or another user signs in.
@@ -89,17 +96,38 @@ export class SpaceService {
     return created;
   }
 
-  /** Renames the active space (owner only). */
-  async renameActiveSpace(name: string): Promise<ActionResult> {
+  /** Changes the name, icon or color of the active space (owner only). */
+  async updateActiveSpace(patch: SpacePatch): Promise<ActionResult> {
     const active = this.active();
     if (!active) {
       return actionFailed(GENERIC_DATA_ERROR_MESSAGE);
     }
-    const result = await this.api.renameSpace(active.space.id, name);
+    const result = await this.api.updateSpace(active.space.id, patch);
     if (result.ok) {
-      this.replaceMembership(active.space.id, (m) => ({ ...m, space: { ...m.space, name } }));
+      this.replaceMembership(active.space.id, (m) => ({ ...m, space: { ...m.space, ...patch } }));
     }
     return result;
+  }
+
+  /** Sets (or clears, with null) the user's default account in the active space. */
+  async setDefaultAccount(accountId: string | null): Promise<ActionResult> {
+    const active = this.active();
+    if (!active) {
+      return actionFailed(GENERIC_DATA_ERROR_MESSAGE);
+    }
+    const result = await this.api.setDefaultAccount(active.space.id, accountId);
+    if (result.ok) {
+      this.replaceMembership(active.space.id, (m) => ({ ...m, defaultAccountId: accountId }));
+    }
+    return result;
+  }
+
+  /** Forgets a default account that the database cleared (archived, made private or deleted). */
+  forgetDefaultAccount(accountId: string): void {
+    const active = this.active();
+    if (active?.defaultAccountId === accountId) {
+      this.replaceMembership(active.space.id, (m) => ({ ...m, defaultAccountId: null }));
+    }
   }
 
   /** Saves preferences of the active space (owner only). */

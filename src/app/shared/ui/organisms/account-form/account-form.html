@@ -1,0 +1,41 @@
+<cc-text-field label="Nombre" placeholder="Bancolombia" [formField]="fields().name" />
+<cc-select label="Tipo" [options]="kindOptions" [formField]="fields().kind" />
+<cc-currency-select label="Moneda" [formField]="fields().currency" />
+<div class="pair">
+  <cc-money-field
+    [label]="balanceText().label"
+    [hint]="balanceText().hint"
+    [currency]="fields().currency().value()"
+    [allowNegative]="allowNegative()"
+    [formField]="fields().balance"
+  />
+  <cc-date-field label="Fecha del saldo" [maxDate]="today" [formField]="fields().balanceDate" />
+</div>
+<div class="pair">
+  <cc-icon-picker label="Ícono" [color]="fields().color().value()" [formField]="fields().icon" />
+  <cc-color-picker label="Color" [formField]="fields().color" />
+</div>
+<cc-switch
+  label="Sumar en el total"
+  hint="El total muestra el dinero disponible; ahorros y deudas se ven en Mis finanzas."
+  [formField]="fields().includeInTotal"
+/>
+@if (showDefault()) {
+  <cc-switch
+    label="Cuenta predeterminada"
+    hint="Se propone al registrar tus movimientos."
+    [formField]="fields().isDefault"
+  />
+}
+<cc-switch
+  label="Cuenta privada"
+  hint="Solo tú ves la cuenta, su saldo y sus movimientos."
+  [formField]="fields().isPrivate"
+/>
+@if (isPrivate()) {
+  <cc-switch
+    label="Incluir sus movimientos en el espacio"
+    hint="Valor inicial al registrar; puedes cambiarlo en cada movimiento."
+    [formField]="fields().includeInSpaceByDefault"
+  />
+}

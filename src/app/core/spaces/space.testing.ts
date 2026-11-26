@@ -21,7 +21,12 @@ export function membershipFixture(
   name: string,
   role: SpaceMembership['role'] = 'owner',
 ): SpaceMembership {
-  return { space: { id, name }, role, settings: spaceSettingsFixture({ space_id: id }) };
+  return {
+    space: { id, name, icon: 'home', color: 'green' },
+    role,
+    defaultAccountId: null,
+    settings: spaceSettingsFixture({ space_id: id }),
+  };
 }
 
 /** User settings row with the database defaults, for tests. */

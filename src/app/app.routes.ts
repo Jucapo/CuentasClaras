@@ -2,7 +2,13 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
-import { APP_PATHS, DEFAULT_HOME_PATH, ONBOARDING_STEP_PATHS } from './core/routing/app-paths';
+import {
+  APP_PATHS,
+  DEFAULT_HOME_PATH,
+  NEW_ITEM_PATH,
+  ONBOARDING_STEP_PATHS,
+  SETTINGS_PATHS,
+} from './core/routing/app-paths';
 import { noSpaceGuard, spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
 import { ONBOARDING_STEP_DATA_KEY, ONBOARDING_STEPS } from './features/onboarding/onboarding-steps';
@@ -76,6 +82,22 @@ export const routes: Routes = [
         title: 'Cuentas',
         loadComponent: () =>
           import('./features/accounts/accounts-page').then((m) => m.AccountsPage),
+      },
+      {
+        path: `${APP_PATHS.accounts}/${NEW_ITEM_PATH}`,
+        title: 'Nueva cuenta',
+        loadComponent: () =>
+          import('./features/accounts/account-edit/account-edit-page').then(
+            (m) => m.AccountEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.accounts}/:id`,
+        title: 'Cuenta',
+        loadComponent: () =>
+          import('./features/accounts/account-edit/account-edit-page').then(
+            (m) => m.AccountEditPage,
+          ),
       },
       {
         path: APP_PATHS.categories,
