@@ -7,7 +7,6 @@ docs/finanzas-spec.md
 supabase/.temp/
 supabase/.branches/
 supabase/config.jsonc
-src/app/core/supabase/database.types.ts
 e2e/screenshots/
 e2e/test-results/
 playwright-report/
