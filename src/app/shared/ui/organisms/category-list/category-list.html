@@ -1,81 +1,47 @@
-@if (reorderable()) {
+@if (reorderable() && entries().length > 1) {
   <p class="instructions" [id]="instructionsId">{{ instructions }}</p>
 }
 
 <div
-  class="roots"
+  class="rows"
   role="list"
   cdkDropList
   cdkDropListLockAxis="y"
+  [attr.aria-label]="label()"
   [cdkDropListDisabled]="!reorderable()"
-  (cdkDropListDropped)="dropped(null, nodes(), $event)"
+  (cdkDropListDropped)="dropped($event)"
 >
-  @for (node of nodes(); track node.id; let index = $index) {
-    <div class="node" role="listitem" cdkDrag [cdkDragData]="node.id">
-      <cc-list-item [title]="node.name" [subtitle]="node.subtitle" [link]="node.link">
+  @for (entry of entries(); track entry.id; let index = $index) {
+    <div class="row" role="listitem" cdkDrag [cdkDragData]="entry.id">
+      <cc-list-item
+        [title]="entry.name"
+        [subtitle]="entry.subtitle"
+        [muted]="!!entry.muted"
+        [actionable]="true"
+        (activate)="opened.emit(entry.id)"
+      >
         @if (reorderable()) {
           <button
             ccListItemStart
             cdkDragHandle
             type="button"
             class="handle"
-            [attr.aria-label]="'Mover ' + node.name"
+            [attr.aria-label]="'Mover ' + entry.name"
             [attr.aria-describedby]="instructionsId"
-            (keydown)="onHandleKeydown($event, null, nodes(), index)"
+            aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+            (keydown)="onHandleKeydown($event, index)"
           >
             <cc-icon name="drag_indicator" />
           </button>
         }
-        <cc-icon-badge ccListItemLeading [icon]="node.icon" [color]="node.color" />
+        <cc-icon-badge ccListItemLeading [icon]="entry.icon" [color]="entry.color" />
       </cc-list-item>
-
-      @if (node.children.length > 0 || node.addChildLink) {
-        <div
-          class="children"
-          role="list"
-          [attr.aria-label]="'Subcategorías de ' + node.name"
-          cdkDropList
-          cdkDropListLockAxis="y"
-          [cdkDropListDisabled]="!reorderable()"
-          (cdkDropListDropped)="dropped(node.id, node.children, $event)"
-        >
-          @for (child of node.children; track child.id; let childIndex = $index) {
-            <div class="child" role="listitem" cdkDrag [cdkDragData]="child.id">
-              <cc-list-item [title]="child.name" [subtitle]="child.subtitle" [link]="child.link">
-                @if (reorderable()) {
-                  <button
-                    ccListItemStart
-                    cdkDragHandle
-                    type="button"
-                    class="handle"
-                    [attr.aria-label]="'Mover ' + child.name"
-                    [attr.aria-describedby]="instructionsId"
-                    (keydown)="onHandleKeydown($event, node.id, node.children, childIndex)"
-                  >
-                    <cc-icon name="drag_indicator" size="sm" />
-                  </button>
-                }
-                <cc-icon-badge
-                  ccListItemLeading
-                  size="sm"
-                  [icon]="child.icon"
-                  [color]="child.color"
-                />
-              </cc-list-item>
-            </div>
-          }
-          @if (node.addChildLink; as addChildLink) {
-            <cc-list-item
-              class="add-child"
-              [title]="addChildLabel()"
-              [link]="addChildLink"
-              [queryParams]="node.addChildQueryParams ?? null"
-            >
-              <cc-icon ccListItemLeading name="add" size="sm" />
-            </cc-list-item>
-          }
-        </div>
-      }
     </div>
   }
 </div>
+
+@if (addLabel(); as addLabel) {
+  <cc-list-item class="add" [title]="addLabel" [actionable]="true" (activate)="add.emit()">
+    <cc-icon ccListItemLeading class="add-icon" name="add" />
+  </cc-list-item>
+}

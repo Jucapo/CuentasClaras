@@ -1,0 +1,58 @@
+@use 'breakpoints';
+
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+// The donut takes the 2×2 center of the first rows; the bubbles flow around it.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--cc-space-3) var(--cc-space-1);
+  align-items: start;
+}
+
+.donut {
+  grid-row: 2 / span 2;
+  grid-column: 2 / span 2;
+  align-self: center;
+  padding: var(--cc-space-2);
+}
+
+@include breakpoints.container-wide {
+  .grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .donut {
+    grid-column: 3 / span 2;
+  }
+}
+
+.center-label {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.cell {
+  min-width: 0;
+}
+
+.help {
+  margin: var(--cc-space-3) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+// Dragged copy and the gap it leaves (CDK classes).
+.cdk-drag-preview {
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: var(--cc-elevation-3);
+}
+
+.cdk-drag-placeholder {
+  opacity: var(--cc-disabled-opacity);
+}

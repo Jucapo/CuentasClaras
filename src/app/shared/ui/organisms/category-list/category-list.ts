@@ -1,43 +1,29 @@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { Component, input, output } from '@angular/core';
-import { Params } from '@angular/router';
 import { moveItem } from '../../../../domain/categories/category-tree';
-import { LinkCommands } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Icon } from '../../atoms/icon/icon';
 import { ListItem } from '../../molecules/list-item/list-item';
 import { UI_TEXT } from '../../ui.constants';
 
-/** A category as the list shows it. */
+/** A category or subcategory as the list shows it. */
 export interface CategoryListEntry {
   readonly id: string;
   readonly name: string;
   readonly icon: string;
   /** Color to paint: its own or the inherited one. */
   readonly color: string | null;
+  /** E.g. its default tags. */
   readonly subtitle?: string;
-  readonly link?: LinkCommands;
-}
-
-/** A top-level category with its subcategories. */
-export interface CategoryListNode extends CategoryListEntry {
-  readonly children: readonly CategoryListEntry[];
-  /** Link to create a subcategory under it; hidden when absent. */
-  readonly addChildLink?: LinkCommands;
-  readonly addChildQueryParams?: Params;
-}
-
-/** New order of sibling categories after a move. */
-export interface CategoryReorder {
-  readonly parentId: string | null;
-  readonly ids: readonly string[];
+  /** Dims the row, e.g. when archived. */
+  readonly muted?: boolean;
 }
 
 let nextListId = 0;
 
 /**
- * Categories with their subcategories. With `reorderable`, siblings move by dragging the handle
- * or, from the keyboard, with Alt + up/down on it; subcategories stay under their parent.
+ * Categories as rows that open their sheet or screen (`opened`), with an optional "add" row at the
+ * end. With `reorderable`, rows move by dragging the handle or with Alt + up/down on it.
  */
 @Component({
   selector: 'cc-category-list',
@@ -46,49 +32,38 @@ let nextListId = 0;
   styleUrl: './category-list.scss',
 })
 export class CategoryList {
-  readonly nodes = input.required<readonly CategoryListNode[]>();
+  readonly entries = input.required<readonly CategoryListEntry[]>();
+  /** Accessible name of the list. */
+  readonly label = input.required<string>();
   readonly reorderable = input(false);
-  readonly addChildLabel = input('Agregar subcategoría');
-  readonly reorder = output<CategoryReorder>();
+  /** Label of the row that adds an item; no row without it. */
+  readonly addLabel = input<string | null>(null);
+  /** An entry was chosen, to open its sheet or screen. */
+  readonly opened = output<string>();
+  readonly add = output<void>();
+  /** Ids in their new order after a move. */
+  readonly reorder = output<readonly string[]>();
 
   protected readonly instructionsId = `cc-category-list-help-${nextListId++}`;
   protected readonly instructions = UI_TEXT.dragToReorder;
 
-  protected dropped(
-    parentId: string | null,
-    siblings: readonly CategoryListEntry[],
-    event: CdkDragDrop<unknown>,
-  ): void {
-    this.move(parentId, siblings, event.previousIndex, event.currentIndex);
+  protected dropped(event: CdkDragDrop<unknown>): void {
+    this.move(event.previousIndex, event.currentIndex);
   }
 
-  protected onHandleKeydown(
-    event: KeyboardEvent,
-    parentId: string | null,
-    siblings: readonly CategoryListEntry[],
-    index: number,
-  ): void {
+  protected onHandleKeydown(event: KeyboardEvent, index: number): void {
     if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) {
       return;
     }
     event.preventDefault();
-    this.move(parentId, siblings, index, event.key === 'ArrowUp' ? index - 1 : index + 1);
+    this.move(index, event.key === 'ArrowUp' ? index - 1 : index + 1);
   }
 
-  private move(
-    parentId: string | null,
-    siblings: readonly CategoryListEntry[],
-    from: number,
-    to: number,
-  ): void {
-    if (to < 0 || to >= siblings.length || from === to) {
+  private move(from: number, to: number): void {
+    const ids = this.entries().map((entry) => entry.id);
+    if (to < 0 || to >= ids.length || from === to) {
       return;
     }
-    const ids = moveItem(
-      siblings.map((entry) => entry.id),
-      from,
-      to,
-    );
-    this.reorder.emit({ parentId, ids });
+    this.reorder.emit(moveItem(ids, from, to));
   }
 }

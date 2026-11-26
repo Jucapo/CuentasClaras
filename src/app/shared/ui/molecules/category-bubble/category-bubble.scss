@@ -1,0 +1,59 @@
+// Self-contained: while dragging, CDK moves a copy of the bubble to <body>.
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cc-space-1);
+  width: 100%;
+  min-width: 0;
+  padding: var(--cc-space-1);
+  border: none;
+  border-radius: var(--cc-radius-md);
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+}
+
+.interactive {
+  cursor: pointer;
+  transition: background-color var(--cc-transition-fast);
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+@media (hover: hover) {
+  .interactive:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+}
+
+:host(.selected) .bubble {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--mat-sys-label-large);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-badge-size-lg);
+  height: var(--cc-badge-size-lg);
+  border: var(--cc-swatch-ring-width) dashed var(--mat-sys-outline);
+  border-radius: var(--cc-radius-full);
+  color: var(--mat-sys-on-surface-variant);
+}

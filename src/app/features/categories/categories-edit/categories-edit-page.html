@@ -1,0 +1,57 @@
+<cc-list-detail-layout [detailOpen]="detailOpen()">
+  <div ccListPane class="list-pane">
+    <cc-flow-layout title="Editar categorías" closeIcon="back" (closed)="back()">
+      <cc-tabs
+        label="Clase de categorías"
+        [options]="kindTabs"
+        [value]="kind()"
+        (valueChange)="changeKind($event)"
+      >
+        <div class="content">
+          @if (loadError(); as error) {
+            <cc-message>{{ error }}</cc-message>
+          } @else {
+            @if (canEdit()) {
+              <p class="help">{{ help }}</p>
+            }
+            <cc-category-grid
+              mode="edit"
+              [label]="gridLabel()"
+              [centerLabel]="kindLabel()"
+              [items]="items()"
+              [addLabel]="canEdit() ? 'Nueva' : null"
+              [reorderable]="canEdit()"
+              [selectedId]="selectedId()"
+              (opened)="open($event)"
+              (add)="create()"
+              (reorder)="reorder($event)"
+            />
+            @if (archived().length > 0) {
+              <cc-disclosure class="archived" [label]="archivedLabel()">
+                <cc-category-list
+                  label="Categorías archivadas"
+                  [entries]="archived()"
+                  (opened)="open($event)"
+                />
+              </cc-disclosure>
+            }
+          }
+        </div>
+      </cc-tabs>
+    </cc-flow-layout>
+  </div>
+
+  <div ccDetailPane class="detail">
+    <router-outlet (activate)="onActivate($event)" (deactivate)="onDeactivate()" />
+  </div>
+
+  <div ccDetailEmpty class="empty-detail">
+    <cc-icon name="category" size="xl" />
+    <p class="empty-text">Elige una categoría para editarla, o crea una nueva.</p>
+    @if (canEdit()) {
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="create()">
+        Nueva categoría
+      </cc-button>
+    }
+  </div>
+</cc-list-detail-layout>
