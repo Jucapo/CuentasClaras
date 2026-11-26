@@ -1,0 +1,14 @@
+<main class="wizard-layout">
+  <section class="wizard-card">
+    <header class="wizard-header">
+      <cc-brand />
+      <div class="actions">
+        <ng-content select="[ccWizardActions]" />
+      </div>
+    </header>
+    @if (progress(); as progress) {
+      <p class="progress">{{ progress }}</p>
+    }
+    <ng-content />
+  </section>
+</main>
