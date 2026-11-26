@@ -37,12 +37,95 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-icon" description="sm · md · lg; con label es una imagen">
+      <app-catalog-entry
+        name="cc-icon"
+        description="sm · md · lg · relleno; con label es una imagen"
+      >
         <ng-template>
           <cc-icon name="savings" size="sm" />
           <cc-icon name="savings" />
           <cc-icon name="savings" size="lg" />
+          <cc-icon name="savings" size="lg" [filled]="true" />
           <cc-icon name="warning" label="Presupuesto excedido" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-icon-badge"
+        description="Ícono blanco sobre un color de la paleta · sm · md · lg"
+      >
+        <ng-template>
+          <cc-icon-badge icon="shopping_cart" color="green" size="sm" />
+          <cc-icon-badge icon="home" color="orange" />
+          <cc-icon-badge icon="credit_card" color="red" size="lg" label="Tarjeta" />
+          <cc-icon-badge icon="savings" color="teal" size="lg" />
+          <cc-icon-badge icon="pets" color="mustard" size="lg" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-color-swatch"
+        description="Normal, seleccionado, heredar y punto decorativo"
+      >
+        <ng-template>
+          <cc-color-swatch color="blue" label="Azul" />
+          <cc-color-swatch color="purple" label="Morado" [selected]="true" />
+          <cc-color-swatch [color]="null" label="Igual que la categoría" />
+          <cc-color-swatch color="amber" label="Ámbar" [decorative]="true" [small]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-amount" description="Positivo, deuda en rojo, USD y neutro">
+        <ng-template>
+          <cc-amount [amount]="123456790" currency="COP" />
+          <cc-amount [amount]="-50000000" currency="COP" />
+          <cc-amount [amount]="125050" currency="USD" />
+          <cc-amount [amount]="-1500" currency="COP" tone="neutral" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-money-field"
+        description="Con valor, con ayuda en USD y con error"
+        layout="column"
+      >
+        <ng-template>
+          <cc-money-field label="Saldo inicial" currency="COP" [formField]="demo.balance" />
+          <cc-money-field
+            label="Lo que debes"
+            currency="USD"
+            hint="Escríbelo en positivo."
+            [formField]="demo.debt"
+          />
+          <cc-money-field label="Monto" currency="COP" [formField]="demo.badAmount" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-currency-select" layout="column">
+        <ng-template>
+          <cc-currency-select label="Moneda" [formField]="demo.currency" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-date-field" layout="column">
+        <ng-template>
+          <cc-date-field label="Fecha del saldo" [formField]="demo.date" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-segmented-control"
+        description="Normal y a lo ancho"
+        layout="column"
+      >
+        <ng-template>
+          <cc-segmented-control label="Clase" [options]="kindOptions" [(value)]="kind" />
+          <cc-segmented-control
+            label="Clase"
+            [fullWidth]="true"
+            [options]="kindOptions"
+            [(value)]="kind"
+          />
         </ng-template>
       </app-catalog-entry>
 
@@ -65,7 +148,11 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-select" description="Con valor y con error" layout="column">
+      <app-catalog-entry
+        name="cc-select"
+        description="Con valor, con error y con grupos"
+        layout="column"
+      >
         <ng-template>
           <cc-select label="Moneda principal" [options]="currencies" [formField]="demo.currency" />
           <cc-select
@@ -73,6 +160,7 @@
             [options]="currencies"
             [formField]="demo.missingCurrency"
           />
+          <cc-select label="Tipo" [options]="groupedKinds" [formField]="demo.accountKind" />
         </ng-template>
       </app-catalog-entry>
 

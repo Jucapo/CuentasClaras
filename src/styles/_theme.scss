@@ -22,6 +22,11 @@ html {
   );
 }
 
+// Foreground on palette colors (icon badges, swatches): the palette guarantees 3:1 against white.
+:root {
+  --cc-on-palette: #fff;
+}
+
 // Toasts (ToastService) float above the bottom navigation instead of covering it.
 .mat-mdc-snack-bar-container.cc-toast {
   margin-bottom: calc(var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-2));

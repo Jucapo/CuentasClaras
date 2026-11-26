@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+}
+
+:host(.full-width) {
+  display: flex;
+
+  .group {
+    flex: 1 1 auto;
+  }
+
+  .segment {
+    flex: 1 1 0;
+  }
+}
+
+.segment {
+  min-height: var(--cc-touch-target-min);
+}

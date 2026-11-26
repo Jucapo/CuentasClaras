@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.field {
+  width: 100%;
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.symbol {
+  color: var(--mat-sys-on-surface-variant);
+}

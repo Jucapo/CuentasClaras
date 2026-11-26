@@ -3,11 +3,21 @@ import { apply, disabled, form, FormField, required } from '@angular/forms/signa
 import { NUMBER_FORMAT_DEFAULTS, SPACE_DEFAULTS } from '../../core/config/space.constants';
 import { NAV_ITEMS } from '../../core/layout/nav-items';
 import { APP_PATHS } from '../../core/routing/app-paths';
+import { Amount } from '../../shared/ui/atoms/amount/amount';
 import { Button } from '../../shared/ui/atoms/button/button';
+import { ColorSwatch } from '../../shared/ui/atoms/color-swatch/color-swatch';
+import { CurrencySelect } from '../../shared/ui/atoms/currency-select/currency-select';
+import { DateField } from '../../shared/ui/atoms/date-field/date-field';
+import { IconBadge } from '../../shared/ui/atoms/icon-badge/icon-badge';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Message } from '../../shared/ui/atoms/message/message';
+import { MoneyField } from '../../shared/ui/atoms/money-field/money-field';
 import { PasswordField } from '../../shared/ui/atoms/password-field/password-field';
+import {
+  SegmentedControl,
+  SegmentOption,
+} from '../../shared/ui/atoms/segmented-control/segmented-control';
 import { Select, SelectOption } from '../../shared/ui/atoms/select/select';
 import { Switch } from '../../shared/ui/atoms/switch/switch';
 import { TextField } from '../../shared/ui/atoms/text-field/text-field';
@@ -38,11 +48,18 @@ import { CatalogEntry } from './catalog-entry/catalog-entry';
   imports: [
     FormField,
     CatalogEntry,
+    Amount,
     Button,
+    ColorSwatch,
+    CurrencySelect,
+    DateField,
+    IconBadge,
     IconButton,
     Icon,
     Message,
+    MoneyField,
     PasswordField,
+    SegmentedControl,
     Select,
     Switch,
     TextField,
@@ -70,6 +87,17 @@ export class UiCatalogPage {
     { value: 'USD', label: 'Dólar estadounidense (USD)' },
   ];
 
+  protected readonly groupedKinds: readonly SelectOption<string>[] = [
+    { value: 'cash', label: 'Efectivo', group: 'Cuentas' },
+    { value: 'bank', label: 'Banco', group: 'Cuentas' },
+    { value: 'credit_card', label: 'Tarjeta de crédito', group: 'Deudas' },
+  ];
+  protected readonly kindOptions: readonly SegmentOption<string>[] = [
+    { value: 'expense', label: 'Gastos' },
+    { value: 'income', label: 'Ingresos' },
+  ];
+  protected readonly kind = signal('expense');
+
   private readonly model = signal({
     empty: '',
     filled: 'ana@example.com',
@@ -78,9 +106,14 @@ export class UiCatalogPage {
     password: '',
     currency: 'COP',
     missingCurrency: '',
+    accountKind: 'bank',
     decimals: true,
     budgets: false,
     lockedSwitch: true,
+    balance: 123456790 as number | null,
+    debt: null as number | null,
+    badAmount: null as number | null,
+    date: '2026-11-01',
   });
 
   /** Fields for the control demos; the invalid ones start touched so their errors show. */
@@ -88,6 +121,7 @@ export class UiCatalogPage {
     required(path.invalid, { message: 'Ingresa un correo.' });
     required(path.password, { message: 'Ingresa tu contraseña.' });
     required(path.missingCurrency, { message: 'Elige una moneda.' });
+    required(path.badAmount, { message: 'Ingresa un monto.' });
     disabled(path.locked);
     disabled(path.lockedSwitch);
   });
@@ -112,5 +146,6 @@ export class UiCatalogPage {
     this.demo.invalid().markAsTouched();
     this.demo.password().markAsTouched();
     this.demo.missingCurrency().markAsTouched();
+    this.demo.badAmount().markAsTouched();
   }
 }

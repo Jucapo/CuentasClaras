@@ -54,3 +54,34 @@ describe('Select', () => {
     expect(trigger().textContent).toContain('Dólar estadounidense');
   });
 });
+
+@Component({
+  imports: [Select, FormField],
+  template: `<cc-select label="Tipo" [options]="options" [formField]="f.kind" />`,
+})
+class GroupedHost {
+  readonly options: readonly SelectOption<string>[] = [
+    { value: 'cash', label: 'Efectivo', group: 'Cuentas' },
+    { value: 'bank', label: 'Banco', group: 'Cuentas' },
+    { value: 'loan', label: 'Préstamo', group: 'Deudas' },
+  ];
+  readonly model = signal({ kind: 'bank' });
+  readonly f = form(this.model);
+}
+
+describe('Select with groups', () => {
+  it('shows each group under its heading, in order', async () => {
+    const fixture = TestBed.createComponent(GroupedHost);
+    await fixture.whenStable();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLElement>('.mat-mdc-select-trigger')
+      ?.click();
+    await fixture.whenStable();
+
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('mat-optgroup'));
+    expect(
+      groups.map((group) => group.querySelector('.mat-mdc-optgroup-label')?.textContent?.trim()),
+    ).toEqual(['Cuentas', 'Deudas']);
+    expect(groups.map((group) => group.querySelectorAll('mat-option').length)).toEqual([2, 1]);
+  });
+});
