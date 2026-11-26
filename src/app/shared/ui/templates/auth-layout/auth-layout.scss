@@ -20,13 +20,5 @@
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: var(--cc-space-2);
   margin-bottom: var(--cc-space-5);
-  color: var(--mat-sys-primary);
-}
-
-.brand-name {
-  font: var(--mat-sys-title-large);
 }

@@ -10,8 +10,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: DEFAULT_HOME_PATH },
   {
     path: '',
-    loadComponent: () =>
-      import('./features/auth/auth-layout/auth-layout').then((m) => m.AuthLayout),
+    loadComponent: () => import('./features/auth/auth-frame/auth-frame').then((m) => m.AuthFrame),
     children: [
       {
         path: APP_PATHS.login,

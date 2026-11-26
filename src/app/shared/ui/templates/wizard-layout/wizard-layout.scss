@@ -1,0 +1,38 @@
+.wizard-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4)
+    calc(var(--cc-safe-area-bottom) + var(--cc-space-5));
+  background-color: var(--mat-sys-surface-container);
+}
+
+// Auto margins center the card without pushing it above the top edge when it is taller.
+.wizard-card {
+  width: 100%;
+  max-width: var(--cc-wizard-max-width);
+  margin-block: auto;
+  padding: var(--cc-space-5);
+  border-radius: var(--cc-radius-lg);
+  background-color: var(--mat-sys-surface);
+}
+
+.wizard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cc-space-3);
+  margin-bottom: var(--cc-space-5);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+}
+
+.progress {
+  margin: 0 0 var(--cc-space-2);
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}

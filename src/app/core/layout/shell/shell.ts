@@ -1,26 +1,17 @@
 import { Component, effect, inject } from '@angular/core';
-import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatRipple } from '@angular/material/core';
-import { MatIcon } from '@angular/material/icon';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
+import { Button } from '../../../shared/ui/atoms/button/button';
+import { IconButton } from '../../../shared/ui/atoms/icon-button/icon-button';
+import { AppShell } from '../../../shared/ui/templates/app-shell/app-shell';
 import { AuthService } from '../../auth/auth.service';
 import { APP_PATHS } from '../../routing/app-paths';
 import { NAV_ITEMS } from '../nav-items';
 
-/** Signed-in layout: header, routed content and bottom navigation. */
+/** Signed-in area: fills the app shell template and leaves it when the session ends. */
 @Component({
   selector: 'app-shell',
-  imports: [
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    MatButton,
-    MatIconButton,
-    MatIcon,
-    MatRipple,
-  ],
+  imports: [RouterOutlet, AppShell, Button, IconButton],
   templateUrl: './shell.html',
-  styleUrl: './shell.scss',
 })
 export class Shell {
   private readonly auth = inject(AuthService);

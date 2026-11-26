@@ -30,7 +30,7 @@ describe('app routes', () => {
     const { harness, url } = await navigate('/', false);
 
     expect(url).toBe('/iniciar-sesion?redirect=%2Fcategorias');
-    expect(harness.routeNativeElement?.querySelector('app-auth-layout form')).not.toBeNull();
+    expect(harness.routeNativeElement?.querySelector('cc-auth-layout form')).not.toBeNull();
   });
 
   it('opens the categories page for signed-in users at "/"', async () => {

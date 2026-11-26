@@ -1,0 +1,20 @@
+<header class="shell-header">
+  <div class="header-content">
+    <div class="total">
+      <span class="total-label">{{ totalLabel() }}</span>
+      <span class="total-value">{{ total() }}</span>
+    </div>
+    <div class="period" role="group" [attr.aria-label]="periodLabel()">
+      <ng-content select="[ccShellPeriod]" />
+    </div>
+    <div class="actions">
+      <ng-content select="[ccShellActions]" />
+    </div>
+  </div>
+</header>
+
+<main class="shell-content">
+  <ng-content />
+</main>
+
+<cc-bottom-nav class="bottom-nav" [items]="navItems()" [label]="navLabel()" />
