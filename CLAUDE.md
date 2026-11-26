@@ -49,6 +49,10 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - Los campos son controles de Signal Forms (`FormValueControl`) con `label` obligatorio; átomos y moléculas son presentacionales.
   - Nada de colores, tamaños, radios, sombras ni z-index sueltos (Stylelint lo bloquea): tema en `_theme.scss`, tokens en `_tokens.scss`.
   - Cada cambio de UI se revisa con los screenshots de `npm run e2e` (móvil y escritorio, claro y oscuro).
+- Flujos y layouts adaptativos (§13.5):
+  - Las plantillas cambian según `LayoutService` (compacta, mediana, expandida); los organismos son los mismos.
+  - Crear o editar es un flujo (`cc-flow-layout`, ruta con `data` flow y `unsavedChangesGuard`).
+  - Las selecciones van por `OverlayService`, y un sheet nunca abre otro: devuelve la intención.
 - Llaves: en el frontend solo la publishable key. La service role key solo en Edge Functions, nunca en el repo.
 - Commits pequeños en conventional commits. Los PRs se mergean con squash.
 

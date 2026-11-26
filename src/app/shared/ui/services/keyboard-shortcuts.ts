@@ -45,7 +45,10 @@ export function isEditableTarget(target: EventTarget | null): boolean {
     return false;
   }
   // jsdom has no isContentEditable, so the attribute is checked too.
-  if (target.isContentEditable || target.closest('[contenteditable="true"], [contenteditable=""]')) {
+  if (
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"], [contenteditable=""]')
+  ) {
     return true;
   }
   if (target instanceof HTMLInputElement) {

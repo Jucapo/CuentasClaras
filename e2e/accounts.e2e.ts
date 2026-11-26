@@ -55,9 +55,7 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await captureViewport(page, 'cuenta-saldo');
   await balance.getByRole('button', { name: 'Listo' }).click();
   await expect(balance).toBeHidden();
-  await expect(page.getByRole('button', { name: /^Lo que debes/ })).toContainText(
-    '$ 1,250,000.00',
-  );
+  await expect(page.getByRole('button', { name: /^Lo que debes/ })).toContainText('$ 1,250,000.00');
   await capture(page, 'cuenta-nueva');
 
   await page.getByRole('button', { name: 'Guardar' }).click();
@@ -105,7 +103,10 @@ test('an account gets a new color and becomes the default one', async ({ page, i
 
   await expect(page).toHaveURL(/\/cuentas$/);
   const saved = api.writes().find((write) => write.table === 'accounts');
-  expect(saved).toMatchObject({ method: 'PATCH', body: expect.objectContaining({ color: 'purple' }) });
+  expect(saved).toMatchObject({
+    method: 'PATCH',
+    body: expect.objectContaining({ color: 'purple' }),
+  });
   expect(api.rpcCalls('set_default_account')).toEqual([
     { target_space_id: '00000000-0000-4000-8000-00000000005e', target_account_id: 'acc-cash' },
   ]);
