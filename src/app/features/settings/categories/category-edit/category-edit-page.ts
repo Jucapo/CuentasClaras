@@ -60,7 +60,9 @@ export class CategoryEditPage {
   private readonly listPath = ['/', APP_PATHS.settings, SETTINGS_PATHS.categories];
   protected readonly existing = computed(() => {
     const id = this.id();
-    return id ? (this.categories.categories().find((category) => category.id === id) ?? null) : null;
+    return id
+      ? (this.categories.categories().find((category) => category.id === id) ?? null)
+      : null;
   });
   protected readonly notFound = computed(
     () => !!this.id() && this.categories.loaded() && !this.existing(),

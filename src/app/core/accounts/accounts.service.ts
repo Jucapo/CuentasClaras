@@ -37,7 +37,10 @@ export class AccountsService {
   }
 
   /** Creates an account in the active space and, if asked, makes it the user's default. */
-  async create(account: Omit<NewAccount, 'space_id'>, makeDefault: boolean): Promise<DataResult<string>> {
+  async create(
+    account: Omit<NewAccount, 'space_id'>,
+    makeDefault: boolean,
+  ): Promise<DataResult<string>> {
     const spaceId = this.spaces.activeSpace()?.id;
     if (!spaceId) {
       return actionFailed(GENERIC_DATA_ERROR_MESSAGE);

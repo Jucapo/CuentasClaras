@@ -2,10 +2,7 @@ import { Component, computed, effect, input, untracked } from '@angular/core';
 import { FieldTree, FormField } from '@angular/forms/signals';
 import { CATEGORY_KIND_LABELS } from '../../../../core/config/catalog.constants';
 import { CategoryKind } from '../../../../core/categories/category.models';
-import {
-  SegmentedControl,
-  SegmentOption,
-} from '../../atoms/segmented-control/segmented-control';
+import { SegmentedControl, SegmentOption } from '../../atoms/segmented-control/segmented-control';
 import { Select, SelectOption } from '../../atoms/select/select';
 import { TextField } from '../../atoms/text-field/text-field';
 import { ChipOption, ChipSelect } from '../../molecules/chip-select/chip-select';

@@ -5,7 +5,11 @@ import {
   ACCOUNT_KIND_OPTIONS,
   SELECTABLE_ACCOUNT_KINDS,
 } from '../../../../core/config/catalog.constants';
-import { ACCOUNT_KIND_GROUP, AccountKind } from '../../../../domain/accounts/account-kinds';
+import {
+  ACCOUNT_KIND_GROUP,
+  AccountGroup,
+  AccountKind,
+} from '../../../../domain/accounts/account-kinds';
 import { todayIsoDate } from '../../../../domain/dates/local-date';
 import { CurrencySelect } from '../../atoms/currency-select/currency-select';
 import { DateField } from '../../atoms/date-field/date-field';
@@ -17,9 +21,7 @@ import { ColorPicker } from '../../molecules/color-picker/color-picker';
 import { IconPicker } from '../../molecules/icon-picker/icon-picker';
 import { AccountFormValue, applyKindDefaults } from './account-form.model';
 
-const BALANCE_TEXT: Readonly<
-  Record<'accounts' | 'savings' | 'debts' | 'receivables' | 'assets', { label: string; hint: string }>
-> = {
+const BALANCE_TEXT: Readonly<Record<AccountGroup, { label: string; hint: string }>> = {
   accounts: { label: 'Saldo', hint: 'Lo que tenía la cuenta en la fecha del saldo.' },
   savings: { label: 'Saldo', hint: 'Lo que tenía el ahorro en la fecha del saldo.' },
   debts: { label: 'Lo que debes', hint: 'Escríbelo en positivo: la app lo cuenta como deuda.' },

@@ -33,7 +33,31 @@ import { NavItem } from '../../shared/ui/molecules/nav-item/nav-item';
 import { OverlayPanel } from '../../shared/ui/molecules/overlay-panel/overlay-panel';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
+import { CurrencyAmount } from '../../domain/money/money';
+import { AccountForm } from '../../shared/ui/organisms/account-form/account-form';
+import {
+  accountFormSchema,
+  AccountFormValue,
+  newAccountFormValue,
+} from '../../shared/ui/organisms/account-form/account-form.model';
+import { AccountList, AccountListGroup } from '../../shared/ui/organisms/account-list/account-list';
 import { BottomNav } from '../../shared/ui/organisms/bottom-nav/bottom-nav';
+import {
+  CategoryForm,
+  ParentCategoryOption,
+} from '../../shared/ui/organisms/category-form/category-form';
+import {
+  categoryFormSchema,
+  CategoryFormValue,
+  newCategoryFormValue,
+} from '../../shared/ui/organisms/category-form/category-form.model';
+import {
+  CategoryList,
+  CategoryListNode,
+} from '../../shared/ui/organisms/category-list/category-list';
+import { TagForm } from '../../shared/ui/organisms/tag-form/tag-form';
+import { tagFormSchema, TagFormValue } from '../../shared/ui/organisms/tag-form/tag-form.model';
+import { TagList, TagListEntry } from '../../shared/ui/organisms/tag-list/tag-list';
 import {
   NumberFormatForm,
   NumberFormatPreferences,
@@ -84,6 +108,12 @@ import { CatalogEntry } from './catalog-entry/catalog-entry';
     BottomNav,
     SpacePreferencesForm,
     NumberFormatForm,
+    AccountList,
+    AccountForm,
+    CategoryList,
+    CategoryForm,
+    TagList,
+    TagForm,
     AppShell,
     AuthLayout,
     WizardLayout,
@@ -152,6 +182,124 @@ export class UiCatalogPage {
   }>({ icon: 'shopping_cart', color: 'green', subColor: null, tags: ['fixed'], noTags: [] });
   /** Fields of the picker demos. */
   protected readonly pickers = form(this.pickersModel);
+
+  protected readonly accountGroups: readonly AccountListGroup[] = [
+    {
+      id: 'accounts',
+      label: 'Cuentas',
+      totals: [{ currency: 'COP', amount: 264300000 }],
+      accounts: [
+        {
+          id: 'a1',
+          name: 'Efectivo',
+          icon: 'payments',
+          color: 'green',
+          balance: 10000000,
+          currency: 'COP',
+        },
+        {
+          id: 'a2',
+          name: 'Bancolombia',
+          icon: 'account_balance',
+          color: 'amber',
+          balance: 254300000,
+          currency: 'COP',
+          notes: 'Predeterminada',
+        },
+      ],
+    },
+    {
+      id: 'savings',
+      label: 'Ahorros',
+      totals: [
+        { currency: 'COP', amount: 50000000 },
+        { currency: 'USD', amount: 120000 },
+      ],
+      accounts: [
+        {
+          id: 'a3',
+          name: 'Caja menor',
+          icon: 'savings',
+          color: 'teal',
+          balance: 50000000,
+          currency: 'COP',
+        },
+        {
+          id: 'a4',
+          name: 'DollarApp',
+          icon: 'currency_exchange',
+          color: 'sky',
+          balance: 120000,
+          currency: 'USD',
+        },
+      ],
+    },
+    {
+      id: 'debts',
+      label: 'Deudas',
+      totals: [{ currency: 'COP', amount: -185000000 }],
+      accounts: [
+        {
+          id: 'a5',
+          name: 'Tarjeta Visa',
+          icon: 'credit_card',
+          color: 'red',
+          balance: -185000000,
+          currency: 'COP',
+          notes: 'Privada',
+        },
+      ],
+    },
+  ];
+  protected readonly accountTotals: readonly CurrencyAmount[] = [
+    { currency: 'COP', amount: 264300000 },
+  ];
+  protected readonly categoryNodes: readonly CategoryListNode[] = [
+    {
+      id: 'c1',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      children: [
+        { id: 'c2', name: 'Arriendo', icon: 'key', color: 'orange', subtitle: 'Fijos' },
+        { id: 'c3', name: 'Servicios públicos', icon: 'bolt', color: 'amber' },
+      ],
+      addChildLink: ['/', APP_PATHS.uiCatalog],
+    },
+    { id: 'c4', name: 'Mercado', icon: 'shopping_cart', color: 'green', children: [] },
+  ];
+  protected readonly parentCategories: readonly ParentCategoryOption[] = [
+    { id: 'c1', name: 'Hogar', kind: 'expense', color: 'orange' },
+    { id: 'c4', name: 'Mercado', kind: 'expense', color: 'green' },
+  ];
+  protected readonly tagEntries: readonly TagListEntry[] = [
+    { id: 'fixed', name: 'Fijos', color: 'indigo', subtitle: 'Por defecto en 2 categorías' },
+    { id: 'trips', name: 'Viajes', color: 'blue', subtitle: 'Archivada', archived: true },
+  ];
+  private readonly catalogFormsModel = signal<{
+    account: AccountFormValue;
+    category: CategoryFormValue;
+    tag: TagFormValue;
+  }>({
+    account: {
+      ...newAccountFormValue('COP', '2026-11-01', 'credit_card'),
+      name: 'Tarjeta Visa',
+      balance: 185000000,
+    },
+    category: {
+      ...newCategoryFormValue('expense', 'c1'),
+      name: 'Arriendo',
+      icon: 'key',
+      tagIds: ['fixed'],
+    },
+    tag: { name: 'Fijos', color: 'indigo' },
+  });
+  /** Fields of the organism form demos. */
+  protected readonly catalogForms = form(this.catalogFormsModel, (path) => {
+    apply(path.account, accountFormSchema);
+    apply(path.category, categoryFormSchema);
+    apply(path.tag, tagFormSchema);
+  });
 
   private readonly preferencesModel = signal<{
     space: SpacePreferences;

@@ -23,7 +23,9 @@ export class SpacesApi {
   async fetchMemberships(userId: string): Promise<DataResult<SpaceMembership[]>> {
     const { data, error, status } = await this.client
       .from('space_members')
-      .select('role, joined_at, default_account_id, spaces(id, name, icon, color, space_settings(*))')
+      .select(
+        'role, joined_at, default_account_id, spaces(id, name, icon, color, space_settings(*))',
+      )
       .eq('user_id', userId)
       .order('joined_at');
     if (error) {

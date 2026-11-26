@@ -45,7 +45,9 @@ export class TagEditPage {
     const id = this.id();
     return id ? (this.tags.tags().find((tag) => tag.id === id) ?? null) : null;
   });
-  protected readonly notFound = computed(() => !!this.id() && this.tags.loaded() && !this.existing());
+  protected readonly notFound = computed(
+    () => !!this.id() && this.tags.loaded() && !this.existing(),
+  );
   protected readonly archived = computed(() => !!this.existing()?.archived_at);
   protected readonly title = computed(() =>
     this.id() ? (this.existing()?.name ?? 'Etiqueta') : 'Nueva etiqueta',

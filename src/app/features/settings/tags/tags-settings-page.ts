@@ -28,9 +28,7 @@ export class TagsSettingsPage {
   private readonly listPath = ['/', APP_PATHS.settings, SETTINGS_PATHS.tags];
   protected readonly newLink = [...this.listPath, NEW_ITEM_PATH];
 
-  protected readonly active = computed(() =>
-    this.tags.activeTags().map((tag) => this.entry(tag)),
-  );
+  protected readonly active = computed(() => this.tags.activeTags().map((tag) => this.entry(tag)));
   protected readonly archived = computed(() =>
     this.tags
       .tags()

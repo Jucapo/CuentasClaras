@@ -93,7 +93,11 @@ describe('account form model', () => {
 
   describe('validation', () => {
     function validate(value: Partial<AccountFormValue>) {
-      const model = signal({ ...newAccountFormValue('COP', '2026-11-01'), name: 'Nequi', ...value });
+      const model = signal({
+        ...newAccountFormValue('COP', '2026-11-01'),
+        name: 'Nequi',
+        ...value,
+      });
       const f = TestBed.runInInjectionContext(() =>
         form(model, (path) => apply(path, accountFormSchema)),
       );
@@ -114,9 +118,7 @@ describe('account form model', () => {
       expect(validate({ name: 'x'.repeat(61) }).messages).toContain(
         ACCOUNT_FORM_MESSAGES.nameTooLong,
       );
-      expect(validate({ balance: null }).messages).toContain(
-        ACCOUNT_FORM_MESSAGES.balanceRequired,
-      );
+      expect(validate({ balance: null }).messages).toContain(ACCOUNT_FORM_MESSAGES.balanceRequired);
       expect(validate({ balanceDate: '' }).messages).toContain(ACCOUNT_FORM_MESSAGES.dateRequired);
       expect(validate({ balanceDate: '2999-01-01' }).messages).toContain(
         ACCOUNT_FORM_MESSAGES.dateInFuture,

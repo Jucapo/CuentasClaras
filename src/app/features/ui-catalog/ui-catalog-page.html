@@ -420,6 +420,57 @@
           <cc-number-format-form [fields]="preferencesDemo.numberFormat" />
         </ng-template>
       </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-account-list"
+        description="Grupos con su total por moneda y total general"
+        layout="column"
+      >
+        <ng-template>
+          <cc-account-list [groups]="accountGroups" [totals]="accountTotals" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-account-form"
+        description="Cuentas y asistente; tipo deuda: el saldo se escribe en positivo"
+        layout="column"
+      >
+        <ng-template>
+          <cc-account-form [fields]="catalogForms.account" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-list"
+        description="Con subcategorías, arrastre y enlace para agregar"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-list [nodes]="categoryNodes" [reorderable]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-form"
+        description="Subcategoría que hereda el color de su categoría"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-form
+            [fields]="catalogForms.category"
+            [parents]="parentCategories"
+            [tagOptions]="tagOptions"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-tag-list + cc-tag-form" layout="column">
+        <ng-template>
+          <cc-tag-list [tags]="tagEntries" />
+          <cc-tag-form [fields]="catalogForms.tag" />
+        </ng-template>
+      </app-catalog-entry>
     </div>
   </cc-section>
 

@@ -7,7 +7,12 @@
       [link]="tag.link"
       [muted]="!!tag.archived"
     >
-      <cc-color-swatch ccListItemLeading [color]="tag.color" [label]="tag.name" [decorative]="true" />
+      <cc-color-swatch
+        ccListItemLeading
+        [color]="tag.color"
+        [label]="tag.name"
+        [decorative]="true"
+      />
     </cc-list-item>
   }
 </div>

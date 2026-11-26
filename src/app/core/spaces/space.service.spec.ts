@@ -125,7 +125,12 @@ describe('SpaceService', () => {
     expect(await service.createSpace(input)).toEqual({ ok: true, value: 'space-new' });
 
     expect(api.createSpace).toHaveBeenCalledWith(input);
-    expect(service.activeSpace()).toEqual({ id: 'space-new', name: 'Casa', icon: 'home', color: 'green' });
+    expect(service.activeSpace()).toEqual({
+      id: 'space-new',
+      name: 'Casa',
+      icon: 'home',
+      color: 'green',
+    });
     expect(userSettings.update).toHaveBeenCalledWith({ last_space_id: 'space-new' });
   });
 

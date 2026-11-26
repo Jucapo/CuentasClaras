@@ -1,7 +1,9 @@
 <cc-page-header [title]="title()" [backLink]="backLink" backLabel="Volver a cuentas" />
 
 @if (notFound()) {
-  <cc-message>No encontramos esta cuenta. Puede que se haya eliminado o que sea privada.</cc-message>
+  <cc-message
+    >No encontramos esta cuenta. Puede que se haya eliminado o que sea privada.</cc-message
+  >
 } @else {
   <div class="content">
     @if (archived()) {
