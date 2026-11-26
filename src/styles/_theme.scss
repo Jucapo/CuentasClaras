@@ -1,0 +1,22 @@
+@use '@angular/material' as mat;
+
+// TODO: replace the provisional palettes with the final brand colors.
+// If the primary color changes, update `theme_color` in public/manifest.webmanifest and src/index.html.
+$primary-palette: mat.$spring-green-palette;
+$tertiary-palette: mat.$azure-palette;
+
+html {
+  // Follows the OS until the per-user theme setting arrives (F1).
+  color-scheme: light dark;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: $primary-palette,
+        tertiary: $tertiary-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}

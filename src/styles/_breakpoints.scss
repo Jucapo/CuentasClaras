@@ -1,0 +1,15 @@
+// Material 3 window size classes. Sass variables because media queries cannot read CSS custom properties.
+$bp-medium: 600px;
+$bp-wide: 840px;
+
+@mixin medium {
+  @media (min-width: $bp-medium) {
+    @content;
+  }
+}
+
+@mixin wide {
+  @media (min-width: $bp-wide) {
+    @content;
+  }
+}
