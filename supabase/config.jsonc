@@ -100,7 +100,8 @@
   },
 
   "realtime": {
-    "enabled": true,
+    // Off until a phase needs it: keeps the local stack light.
+    "enabled": false,
     // Bind realtime via either IPv4 or IPv6. (default: IPv4)
     // "ip_version": "IPv6",
     // The maximum length in bytes of HTTP request headers. (default: 4096)
@@ -131,7 +132,8 @@
   },
 
   "storage": {
-    "enabled": true,
+    // Off until a phase needs it: keeps the local stack light.
+    "enabled": false,
     // The maximum file size allowed (e.g. "5MB", "500KB").
     "file_size_limit": "50MiB",
 
@@ -450,7 +452,8 @@
   },
 
   "edge_runtime": {
-    "enabled": true,
+    // Off until the invitations Edge Function (F1f).
+    "enabled": false,
     // Supported request policies: `oneshot`, `per_worker`.
     // `per_worker` (default) — enables hot reload during local development.
     // `oneshot` — fallback mode if hot reload causes issues (e.g. in large repos or with symlinks).
@@ -466,7 +469,8 @@
   },
 
   "analytics": {
-    "enabled": true,
+    // Off on purpose: on Windows logflare/vector need the Docker daemon exposed on tcp://localhost:2375.
+    "enabled": false,
     "port": 54327,
     // Configure one of the supported backends: `postgres`, `bigquery`.
     "backend": "postgres"
