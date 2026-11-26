@@ -5,6 +5,9 @@ import { publicSignupGuard } from './core/auth/public-signup.guard';
 import { APP_PATHS, DEFAULT_HOME_PATH } from './core/routing/app-paths';
 
 export const routes: Routes = [
+  // Must stay first: an empty-path parent with a component matches "/" even when none of its
+  // children do, so without this redirect "/" would render the auth layout with an empty outlet.
+  { path: '', pathMatch: 'full', redirectTo: DEFAULT_HOME_PATH },
   {
     path: '',
     loadComponent: () =>
@@ -48,7 +51,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./core/layout/shell/shell').then((m) => m.Shell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: DEFAULT_HOME_PATH },
       {
         path: APP_PATHS.accounts,
         title: 'Cuentas',
@@ -85,5 +87,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: DEFAULT_HOME_PATH },
 ];
