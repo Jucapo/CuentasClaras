@@ -1,0 +1,50 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "rules": {
+    "custom-property-empty-line-before": null,
+    "color-no-hex": true,
+    "color-named": "never",
+    "function-disallowed-list": [
+      "rgb",
+      "rgba",
+      "hsl",
+      "hsla",
+      "hwb",
+      "lab",
+      "lch",
+      "oklab",
+      "oklch"
+    ],
+    "unit-disallowed-list": ["px"],
+    "declaration-property-value-disallowed-list": {
+      "/^(margin|padding|gap|row-gap|column-gap|inset|top|right|bottom|left)/": [
+        "/\\d(\\.\\d+)?(rem|em|ch|pt)\\b/"
+      ],
+      "/^(width|height|min-width|min-height|max-width|max-height|flex-basis)$/": [
+        "/\\d(\\.\\d+)?(rem|em|ch|pt)\\b/"
+      ],
+      "/^(border-radius|font|font-size|line-height|letter-spacing|outline-offset)/": [
+        "/\\d(\\.\\d+)?(rem|em|ch|pt)\\b/"
+      ],
+      "box-shadow": ["/^(?!var\\(|none$).*/"],
+      "z-index": ["/^-?\\d+$/"],
+      "/^(transition|animation)/": ["/\\d(\\.\\d+)?m?s\\b/"]
+    },
+    "selector-class-pattern": [
+      "^[a-z][a-z0-9]*(-[a-z0-9]+)*(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+      { "message": "Use kebab-case class names (BEM-style modifiers with --)." }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/**/*.scss"],
+      "rules": {
+        "color-no-hex": null,
+        "color-named": null,
+        "function-disallowed-list": null,
+        "unit-disallowed-list": null,
+        "declaration-property-value-disallowed-list": null
+      }
+    }
+  ]
+}

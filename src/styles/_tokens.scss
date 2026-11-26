@@ -1,5 +1,7 @@
-// App-level design tokens. Colors and typography come from Material system tokens (--mat-sys-*).
+// App-level design tokens: the only place for sizes, spacing, radii, shadows and motion.
+// Colors and typography come from the Material 3 system tokens (--mat-sys-*) set in _theme.scss.
 :root {
+  // Spacing scale.
   --cc-space-1: 0.25rem;
   --cc-space-2: 0.5rem;
   --cc-space-3: 0.75rem;
@@ -7,21 +9,57 @@
   --cc-space-5: 1.5rem;
   --cc-space-6: 2rem;
 
+  // Corner radii.
   --cc-radius-sm: 0.5rem;
   --cc-radius-md: 0.75rem;
   --cc-radius-lg: 1rem;
   --cc-radius-full: 999px;
 
+  // Borders.
+  --cc-border-width: 1px;
+
+  // Layout widths.
   --cc-content-max-width: 45rem;
   --cc-auth-card-max-width: 26rem;
+  --cc-wizard-max-width: 36rem;
+  --cc-catalog-panel-min-width: 18rem;
 
+  // App chrome.
   --cc-header-height: 4rem;
   --cc-bottom-nav-height: 4.5rem;
   --cc-nav-indicator-width: 4rem;
   --cc-nav-indicator-height: 2rem;
 
-  --cc-transition-fast: 150ms ease;
+  // Icons and touch targets (spec §13.4: at least 44px).
+  --cc-icon-size-sm: 1.25rem;
+  --cc-icon-size-md: 1.5rem;
+  --cc-icon-size-lg: 2rem;
+  --cc-touch-target-min: 2.75rem;
 
+  // Elevation: aliases of the Material 3 shadow levels.
+  --cc-elevation-0: var(--mat-sys-level0);
+  --cc-elevation-1: var(--mat-sys-level1);
+  --cc-elevation-2: var(--mat-sys-level2);
+  --cc-elevation-3: var(--mat-sys-level3);
+
+  // Motion.
+  --cc-duration-short: 150ms;
+  --cc-duration-medium: 250ms;
+  --cc-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --cc-transition-fast: var(--cc-duration-short) var(--cc-easing-standard);
+
+  // Stacking.
+  --cc-z-app-bar: 2;
+
+  // Device safe areas.
   --cc-safe-area-top: env(safe-area-inset-top, 0px);
   --cc-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+// Spec §13.4: micro-interactions respect the reduced motion preference.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cc-duration-short: 0ms;
+    --cc-duration-medium: 0ms;
+  }
 }
