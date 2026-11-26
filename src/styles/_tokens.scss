@@ -31,6 +31,13 @@
   --cc-bottom-nav-height: 4.5rem;
   --cc-nav-indicator-width: 4rem;
   --cc-nav-indicator-height: 2rem;
+  --cc-nav-rail-width: 5.5rem;
+  --cc-nav-rail-expanded-width: 15rem;
+  --cc-nav-rail-item-height: 3.5rem;
+
+  // List and detail side by side (expanded window class).
+  --cc-list-pane-width: 24rem;
+  --cc-list-detail-max-width: 72rem;
 
   // Icons and touch targets (spec §13.4: at least 44px).
   --cc-icon-size-sm: 1.25rem;

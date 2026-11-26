@@ -1,20 +1,26 @@
-<header class="shell-header">
-  <div class="header-content">
-    <div class="total">
-      <span class="total-label">{{ totalLabel() }}</span>
-      <span class="total-value">{{ total() }}</span>
+@if (!layout.isCompact()) {
+  <cc-nav-rail
+    class="nav-rail"
+    [items]="navItems()"
+    [label]="navLabel()"
+    [expanded]="layout.isExpanded()"
+  />
+}
+<div class="main-column">
+  <header class="shell-header" [hidden]="hideChrome()">
+    <div class="header-content">
+      <div class="total">
+        <span class="total-label">{{ totalLabel() }}</span>
+        <span class="total-value">{{ total() }}</span>
+      </div>
+      <div class="period" role="group" [attr.aria-label]="periodLabel()">
+        <ng-content select="[ccShellPeriod]" />
+      </div>
+      <div class="actions"><ng-content select="[ccShellActions]" /></div>
     </div>
-    <div class="period" role="group" [attr.aria-label]="periodLabel()">
-      <ng-content select="[ccShellPeriod]" />
-    </div>
-    <div class="actions">
-      <ng-content select="[ccShellActions]" />
-    </div>
-  </div>
-</header>
-
-<main class="shell-content">
-  <ng-content />
-</main>
-
-<cc-bottom-nav class="bottom-nav" [items]="navItems()" [label]="navLabel()" />
+  </header>
+  <main class="shell-content" [class.immersive]="hideChrome()"><ng-content /></main>
+</div>
+@if (layout.isCompact() && !hideChrome()) {
+  <cc-bottom-nav class="bottom-nav" [items]="navItems()" [label]="navLabel()" />
+}

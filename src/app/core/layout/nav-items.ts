@@ -1,7 +1,7 @@
-import { NavLink } from '../../shared/ui/organisms/bottom-nav/bottom-nav';
+import { NavLink } from '../../shared/ui/molecules/nav-item/nav-item';
 import { APP_PATHS } from '../routing/app-paths';
 
-/** Bottom navigation tabs, in display order. */
+/** Main navigation destinations, in display order. */
 export const NAV_ITEMS: readonly NavLink[] = [
   { path: APP_PATHS.accounts, label: 'Cuentas', icon: 'account_balance_wallet' },
   { path: APP_PATHS.categories, label: 'Categorías', icon: 'donut_large' },

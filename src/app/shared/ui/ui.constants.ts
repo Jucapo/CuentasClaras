@@ -24,8 +24,11 @@ export const MONEY_PARSE_MESSAGES = {
   too_large: 'El monto es demasiado grande.',
 } as const;
 
-/** From this width overlays open as dialogs instead of bottom sheets; matches $bp-medium. */
-export const OVERLAY_DESKTOP_QUERY = '(min-width: 600px)';
+/** Longest wait for the browser to drop a closed overlay's history entry. */
+export const OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS = 500;
+
+/** Minimum widths (px) of the Material 3 window size classes; match src/styles/_breakpoints.scss. */
+export const WINDOW_BREAKPOINTS = { medium: 600, expanded: 840 } as const;
 
 /** Diameter of the spinner shown inside a loading button; matches --cc-icon-size-sm. */
 export const BUTTON_SPINNER_DIAMETER = 20;

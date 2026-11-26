@@ -1,16 +1,7 @@
 import { Component, input } from '@angular/core';
-import { IconName } from '../../icons/icon-glyphs';
-import { NavItem } from '../../molecules/nav-item/nav-item';
+import { NavItem, NavLink } from '../../molecules/nav-item/nav-item';
 
-/** Destination of the bottom navigation. */
-export interface NavLink {
-  /** Route path segment (no leading slash). */
-  readonly path: string;
-  readonly label: string;
-  readonly icon: IconName;
-}
-
-/** Bottom tab bar of the app. */
+/** Bottom tab bar of the app, for the compact window class. */
 @Component({
   selector: 'cc-bottom-nav',
   imports: [NavItem],

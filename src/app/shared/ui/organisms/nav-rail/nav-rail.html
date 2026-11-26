@@ -1,0 +1,14 @@
+<nav class="nav-rail" [attr.aria-label]="label()">
+  <ul class="nav-list">
+    @for (item of items(); track item.path) {
+      <li>
+        <cc-nav-item
+          [link]="['/', item.path]"
+          [label]="item.label"
+          [icon]="item.icon"
+          [layout]="expanded() ? 'inline' : 'stacked'"
+        />
+      </li>
+    }
+  </ul>
+</nav>
