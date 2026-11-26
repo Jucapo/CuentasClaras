@@ -1,0 +1,19 @@
+@if (decorative()) {
+  <span class="dot" aria-hidden="true"></span>
+} @else {
+  <button
+    type="button"
+    class="swatch"
+    [class.inherits]="inherits()"
+    [attr.aria-label]="label()"
+    [attr.aria-pressed]="selected()"
+  >
+    <span class="dot">
+      @if (selected()) {
+        <cc-icon name="check" size="sm" />
+      } @else if (inherits()) {
+        <cc-icon name="format_color_reset" size="sm" />
+      }
+    </span>
+  </button>
+}

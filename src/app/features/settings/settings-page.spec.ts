@@ -5,6 +5,7 @@ import { ActionResult } from '../../core/action-result';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   SpaceMembership,
+  SpacePatch,
   SpaceSettingsPatch,
   UserSettings,
   UserSettingsPatch,
@@ -19,7 +20,7 @@ describe('SettingsPage', () => {
   let fixture: ComponentFixture<SettingsPage>;
   const active = signal<SpaceMembership | null>(null);
   const settings = signal<UserSettings | null>(null);
-  const renameActiveSpace = vi.fn<(name: string) => Promise<ActionResult>>();
+  const updateActiveSpace = vi.fn<(patch: SpacePatch) => Promise<ActionResult>>();
   const updateActiveSettings = vi.fn<(patch: SpaceSettingsPatch) => Promise<ActionResult>>();
   const update = vi.fn<(patch: UserSettingsPatch) => Promise<ActionResult>>();
   const signOut = vi.fn<() => Promise<void>>();
@@ -29,7 +30,7 @@ describe('SettingsPage', () => {
     const home = membershipFixture('space-home', 'Hogar', role);
     active.set({ ...home, settings: { ...home.settings, month_start_day: 28 } });
     settings.set(userSettingsFixture({ theme: 'dark' }));
-    for (const mock of [renameActiveSpace, updateActiveSettings, update]) {
+    for (const mock of [updateActiveSpace, updateActiveSettings, update]) {
       mock.mockReset().mockResolvedValue({ ok: true });
     }
     signOut.mockReset().mockResolvedValue();
@@ -48,7 +49,7 @@ describe('SettingsPage', () => {
             active,
             activeSpace: computed(() => active()?.space ?? null),
             canConfigure: computed(() => active()?.role === 'owner'),
-            renameActiveSpace,
+            updateActiveSpace,
             updateActiveSettings,
           },
         },
@@ -91,7 +92,7 @@ describe('SettingsPage', () => {
 
     await submit('Espacio');
 
-    expect(renameActiveSpace).toHaveBeenCalledWith('Casa');
+    expect(updateActiveSpace).toHaveBeenCalledWith({ name: 'Casa' });
     expect(updateActiveSettings).toHaveBeenCalledWith({
       main_currency: 'COP',
       month_start_day: 28,
@@ -100,11 +101,11 @@ describe('SettingsPage', () => {
     expect(show).toHaveBeenCalledWith('Espacio guardado.');
   });
 
-  it('does not rename the space when the name did not change', async () => {
+  it('does not update the space when its name, icon and color did not change', async () => {
     await setup();
     await submit('Espacio');
 
-    expect(renameActiveSpace).not.toHaveBeenCalled();
+    expect(updateActiveSpace).not.toHaveBeenCalled();
     expect(updateActiveSettings).toHaveBeenCalled();
   });
 

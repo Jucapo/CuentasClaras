@@ -3,6 +3,7 @@ import { MatRipple } from '@angular/material/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon } from '../../atoms/icon/icon';
 import { LinkCommands } from '../../atoms/button/button';
+import { IconName } from '../../icons/icon-glyphs';
 
 /** Tab of the bottom navigation: icon, label and an indicator while its route is active. */
 @Component({
@@ -14,6 +15,5 @@ import { LinkCommands } from '../../atoms/button/button';
 export class NavItem {
   readonly link = input.required<LinkCommands>();
   readonly label = input.required<string>();
-  /** Material Symbols ligature. */
-  readonly icon = input.required<string>();
+  readonly icon = input.required<IconName>();
 }

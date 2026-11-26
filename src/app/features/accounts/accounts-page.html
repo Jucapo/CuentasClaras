@@ -1,1 +1,36 @@
-<cc-page-header title="Cuentas" />
+<cc-page-header title="Cuentas">
+  @if (canEdit()) {
+    <cc-button icon="add" variant="tonal" [link]="newAccountLink">Nueva</cc-button>
+  }
+</cc-page-header>
+
+<div class="content">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <cc-section
+      title="Aún no tienes cuentas"
+      description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
+    >
+      @if (canEdit()) {
+        <cc-button icon="add" [link]="newAccountLink">Agregar una cuenta</cc-button>
+      }
+    </cc-section>
+  } @else {
+    <cc-account-list [groups]="groups()" [totals]="totals()" />
+  }
+
+  @if (archivedCount() > 0) {
+    <cc-button
+      class="toggle"
+      variant="text"
+      [icon]="showArchived() ? 'expand_less' : 'expand_more'"
+      (click)="showArchived.set(!showArchived())"
+    >
+      Archivadas ({{ archivedCount() }})
+    </cc-button>
+    @if (showArchived()) {
+      <cc-account-list [groups]="archivedGroups()" />
+    }
+  }
+</div>

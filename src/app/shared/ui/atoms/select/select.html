@@ -9,8 +9,18 @@
     (selectionChange)="value.set($event.value)"
     (openedChange)="onOpenedChange($event)"
   >
-    @for (option of options(); track option.value) {
-      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+    @for (section of sections(); track $index) {
+      @if (section.group; as group) {
+        <mat-optgroup [label]="group">
+          @for (option of section.options; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-optgroup>
+      } @else {
+        @for (option of section.options; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      }
     }
   </mat-select>
   @if (errorMessage(); as message) {

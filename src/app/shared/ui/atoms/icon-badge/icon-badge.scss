@@ -1,0 +1,21 @@
+:host {
+  --cc-badge-size: var(--cc-badge-size-md);
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-badge-size);
+  height: var(--cc-badge-size);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--cc-badge-color);
+  color: var(--cc-on-palette);
+}
+
+:host(.size-sm) {
+  --cc-badge-size: var(--cc-badge-size-sm);
+}
+
+:host(.size-lg) {
+  --cc-badge-size: var(--cc-badge-size-lg);
+}

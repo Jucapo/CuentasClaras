@@ -1,5 +1,16 @@
+@use 'breakpoints';
+
 .sections {
   display: flex;
   flex-direction: column;
   gap: var(--cc-space-4);
+}
+
+.pair {
+  display: grid;
+  gap: var(--cc-space-1) var(--cc-space-3);
+
+  @include breakpoints.medium {
+    grid-template-columns: 1fr 1fr;
+  }
 }

@@ -1,0 +1,10 @@
+<cc-picker-trigger
+  [label]="label()"
+  [valueText]="valueText()"
+  [hint]="hint() ?? null"
+  [error]="errorMessage()"
+  [disabled]="disabled()"
+  (activate)="open()"
+>
+  <cc-icon-badge [icon]="value()" [color]="color()" />
+</cc-picker-trigger>

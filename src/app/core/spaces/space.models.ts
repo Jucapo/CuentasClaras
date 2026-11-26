@@ -36,10 +36,29 @@ export type UserSettingsPatch = Pick<
   'theme' | 'number_format' | 'show_decimals' | 'home_screen' | 'last_space_id'
 >;
 
-/** A space the current user belongs to, with their role and its settings. */
+/** Name, icon and color of a space. */
+export interface SpaceSummary {
+  readonly id: string;
+  readonly name: string;
+  /** Icon catalog key. */
+  readonly icon: string;
+  /** Palette key. */
+  readonly color: string;
+}
+
+/** What the owner can change of a space itself (its settings are separate). */
+export interface SpacePatch {
+  name?: string;
+  icon?: string;
+  color?: string;
+}
+
+/** A space the current user belongs to, with their role, default account and its settings. */
 export interface SpaceMembership {
-  readonly space: { readonly id: string; readonly name: string };
+  readonly space: SpaceSummary;
   readonly role: MemberRole;
+  /** The member's default account in this space (spec §3.1), if any. */
+  readonly defaultAccountId: string | null;
   readonly settings: SpaceSettings;
 }
 

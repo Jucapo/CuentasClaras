@@ -4,6 +4,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
+import { iconGlyph } from '../../icons/icon-glyphs';
 import { UI_TEXT } from '../../ui.constants';
 import { FormControlBase } from '../form-control-base';
 
@@ -22,6 +23,9 @@ export class PasswordField extends FormControlBase implements FormValueControl<s
   protected readonly revealed = signal(false);
   protected readonly toggleLabel = computed(() =>
     this.revealed() ? UI_TEXT.hidePassword : UI_TEXT.showPassword,
+  );
+  protected readonly toggleGlyph = computed(() =>
+    iconGlyph(this.revealed() ? 'visibility_off' : 'visibility'),
   );
 
   private readonly inputElement = viewChild.required<ElementRef<HTMLInputElement>>('input');

@@ -1,0 +1,37 @@
+@if (totals().length > 0) {
+  <div class="summary">
+    <span class="summary-label">{{ totalLabel() }}</span>
+    <span class="summary-amounts">
+      @for (total of totals(); track total.currency) {
+        <cc-amount class="summary-amount" [amount]="total.amount" [currency]="total.currency" />
+      }
+    </span>
+  </div>
+}
+
+@for (group of groups(); track group.id) {
+  <section class="group" [attr.aria-label]="group.label">
+    <header class="group-header">
+      <h2 class="group-title">{{ group.label }}</h2>
+      <span class="group-totals">
+        @for (total of group.totals; track total.currency) {
+          <cc-amount [amount]="total.amount" [currency]="total.currency" />
+        }
+      </span>
+    </header>
+    <div role="list">
+      @for (account of group.accounts; track account.id) {
+        <cc-account-row
+          [name]="account.name"
+          [icon]="account.icon"
+          [color]="account.color"
+          [balance]="account.balance"
+          [currency]="account.currency"
+          [notes]="account.notes"
+          [link]="account.link"
+          [archived]="!!account.archived"
+        />
+      }
+    </div>
+  </section>
+}

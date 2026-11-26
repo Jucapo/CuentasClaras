@@ -1,0 +1,37 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  <div ccOverlayToolbar class="toolbar">
+    <cc-text-field type="search" [label]="text.searchIcons" [(value)]="query" />
+    @if (!query()) {
+      <nav class="shortcuts" aria-label="Grupos de íconos">
+        @for (group of groups(); track group.id) {
+          <button type="button" class="shortcut" (click)="jumpTo(group.id)">
+            {{ group.label }}
+          </button>
+        }
+      </nav>
+    }
+  </div>
+
+  @for (group of groups(); track group.id) {
+    <section #section class="group" [attr.data-group]="group.id">
+      <h3 class="group-title">{{ group.label }}</h3>
+      <div class="grid">
+        @for (icon of group.icons; track icon.name) {
+          <button
+            type="button"
+            class="cell"
+            [class.selected]="icon.name === data.selected"
+            [attr.aria-label]="icon.label"
+            [attr.aria-pressed]="icon.name === data.selected"
+            [attr.data-icon]="icon.name"
+            (click)="pick(icon.name)"
+          >
+            <cc-icon-badge [icon]="icon.name" [color]="data.color" />
+          </button>
+        }
+      </div>
+    </section>
+  } @empty {
+    <p class="empty">{{ text.noIconsFound }}</p>
+  }
+</cc-overlay-panel>

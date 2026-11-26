@@ -1,0 +1,11 @@
+<header class="header">
+  <h2 class="title" [id]="titleId">{{ title() }}</h2>
+  @if (!hideClose()) {
+    <cc-icon-button icon="close" [label]="closeLabel" (click)="closed.emit()" />
+  }
+</header>
+<div class="toolbar"><ng-content select="[ccOverlayToolbar]" /></div>
+<div class="body" [attr.aria-labelledby]="titleId" role="group">
+  <ng-content />
+</div>
+<div class="actions"><ng-content select="[ccOverlayActions]" /></div>

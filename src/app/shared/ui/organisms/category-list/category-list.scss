@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.instructions {
+  margin: 0 0 var(--cc-space-2);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.roots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}
+
+.node {
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--cc-space-2) var(--cc-space-2) var(--cc-list-indent);
+}
+
+.child {
+  border-radius: var(--cc-radius-sm);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.add-child {
+  color: var(--mat-sys-primary);
+}
+
+.handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-target-min);
+  height: var(--cc-touch-target-min);
+  padding: 0;
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: grab;
+  touch-action: none;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+// Dragged copy and the gap it leaves (CDK classes).
+.cdk-drag-preview {
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: var(--cc-elevation-3);
+}
+
+.cdk-drag-placeholder {
+  opacity: var(--cc-disabled-opacity);
+}
+
+.cdk-drag-animating,
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform var(--cc-transition-fast);
+}

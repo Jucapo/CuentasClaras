@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(65);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -10,6 +10,12 @@ select table_privs_are('public', 'spaces', 'anon', array[]::text[], 'anon has no
 select table_privs_are('public', 'space_members', 'anon', array[]::text[], 'anon has no access to space_members');
 select table_privs_are('public', 'space_settings', 'anon', array[]::text[], 'anon has no access to space_settings');
 select table_privs_are('public', 'user_settings', 'anon', array[]::text[], 'anon has no access to user_settings');
+select table_privs_are('public', 'accounts', 'anon', array[]::text[], 'anon has no access to accounts');
+select table_privs_are('public', 'categories', 'anon', array[]::text[], 'anon has no access to categories');
+select table_privs_are('public', 'tags', 'anon', array[]::text[], 'anon has no access to tags');
+select table_privs_are('public', 'category_default_tags', 'anon', array[]::text[],
+  'anon has no access to category_default_tags');
+select table_privs_are('public', 'account_balances', 'anon', array[]::text[], 'anon has no access to account_balances');
 
 -- ── authenticated: read, plus column-level updates ───────────────────────────
 select table_privs_are('public', 'profiles', 'authenticated', array['SELECT'], 'authenticated reads profiles');
@@ -17,6 +23,16 @@ select table_privs_are('public', 'spaces', 'authenticated', array['SELECT'], 'au
 select table_privs_are('public', 'space_members', 'authenticated', array['SELECT'], 'authenticated reads space_members');
 select table_privs_are('public', 'space_settings', 'authenticated', array['SELECT'], 'authenticated reads space_settings');
 select table_privs_are('public', 'user_settings', 'authenticated', array['SELECT'], 'authenticated reads user_settings');
+select table_privs_are('public', 'accounts', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes accounts (RLS decides which)');
+select table_privs_are('public', 'categories', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes categories (RLS decides which)');
+select table_privs_are('public', 'tags', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes tags (RLS decides which)');
+select table_privs_are('public', 'category_default_tags', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and removes default tags (RLS decides which)');
+select table_privs_are('public', 'account_balances', 'authenticated', array['SELECT'],
+  'authenticated reads the balances view');
 
 select column_privs_are('public', 'profiles', 'display_name', 'authenticated', array['SELECT', 'UPDATE'],
   'the display name is editable');
@@ -31,7 +47,25 @@ select column_privs_are('public', 'space_members', 'role', 'authenticated', arra
 select column_privs_are('public', 'space_members', 'space_id', 'authenticated', array['SELECT'],
   'the membership space is read-only');
 select column_privs_are('public', 'space_members', 'default_account_id', 'authenticated', array['SELECT'],
-  'the default account is read-only until F1b');
+  'the default account only changes through set_default_account');
+select column_privs_are('public', 'spaces', 'icon', 'authenticated', array['SELECT', 'UPDATE'],
+  'the space icon is editable');
+select column_privs_are('public', 'accounts', 'name', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the account name is set on insert and editable');
+select column_privs_are('public', 'accounts', 'space_id', 'authenticated', array['SELECT', 'INSERT'],
+  'an account never moves to another space');
+select column_privs_are('public', 'accounts', 'owner_id', 'authenticated', array['SELECT'],
+  'nobody picks or changes the owner of an account');
+select column_privs_are('public', 'accounts', 'archived_at', 'authenticated', array['SELECT', 'UPDATE'],
+  'accounts are archived by update, never created archived');
+select column_privs_are('public', 'categories', 'kind', 'authenticated', array['SELECT', 'INSERT'],
+  'the kind of a category is set once');
+select column_privs_are('public', 'categories', 'parent_id', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'a subcategory can move to another parent');
+select column_privs_are('public', 'tags', 'color', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the tag color is editable');
+select column_privs_are('public', 'category_default_tags', 'tag_id', 'authenticated', array['SELECT', 'INSERT'],
+  'default tag links are never edited in place');
 select column_privs_are('public', 'space_settings', 'month_start_day', 'authenticated', array['SELECT', 'UPDATE'],
   'the month start day is editable');
 select column_privs_are('public', 'space_settings', 'space_id', 'authenticated', array['SELECT'],
@@ -52,6 +86,16 @@ select table_privs_are('public', 'space_settings', 'service_role', array['SELECT
   'service_role has CRUD on space_settings');
 select table_privs_are('public', 'user_settings', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
   'service_role has CRUD on user_settings');
+select table_privs_are('public', 'accounts', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on accounts');
+select table_privs_are('public', 'categories', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on categories');
+select table_privs_are('public', 'tags', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on tags');
+select table_privs_are('public', 'category_default_tags', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on category_default_tags');
+select table_privs_are('public', 'account_balances', 'service_role', array['SELECT'],
+  'service_role reads the balances view');
 
 -- ── Functions ────────────────────────────────────────────────────────────────
 select function_privs_are('public', 'create_space', array['text', 'text', 'integer', 'weekday'], 'anon',
@@ -62,6 +106,26 @@ select function_privs_are('private', 'is_space_member', array['uuid'], 'anon',
   array[]::text[], 'anon cannot call the membership helper');
 select function_privs_are('private', 'handle_new_user', array[]::text[], 'authenticated',
   array[]::text[], 'nobody calls the sign-up trigger function directly');
+select function_privs_are('public', 'set_default_account', array['uuid', 'uuid'], 'anon',
+  array[]::text[], 'anon cannot call set_default_account');
+select function_privs_are('public', 'set_default_account', array['uuid', 'uuid'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls set_default_account');
+select function_privs_are('public', 'reorder_categories', array['uuid[]'], 'anon',
+  array[]::text[], 'anon cannot call reorder_categories');
+select function_privs_are('public', 'reorder_categories', array['uuid[]'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls reorder_categories');
+select function_privs_are('private', 'is_space_editor', array['uuid'], 'anon',
+  array[]::text[], 'anon cannot call the editor helper');
+select function_privs_are('private', 'can_see_account', array['uuid'], 'anon',
+  array[]::text[], 'anon cannot call the account visibility helper');
+select function_privs_are('private', 'account_group_of', array['account_kind'], 'anon',
+  array[]::text[], 'anon cannot call the account group helper');
+select function_privs_are('private', 'set_account_defaults', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the account defaults trigger function directly');
+select function_privs_are('private', 'clear_unreachable_default_account', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the default account cleanup directly');
+select function_privs_are('private', 'check_category_hierarchy', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the category hierarchy check directly');
 select ok(
   not has_schema_privilege('anon', 'private', 'USAGE'),
   'the private schema is not reachable for anon'

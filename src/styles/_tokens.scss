@@ -38,6 +38,29 @@
   --cc-icon-size-lg: 2rem;
   --cc-touch-target-min: 2.75rem;
 
+  // Icon badges (white icon on a palette color) and color swatches.
+  --cc-badge-size-sm: 2rem;
+  --cc-badge-size-md: 2.5rem;
+  --cc-badge-size-lg: 3.5rem;
+  --cc-swatch-size: 2.25rem;
+  --cc-swatch-ring-width: 2px;
+
+  // Two rings (surface gap, then on-surface) mark the selected swatch.
+  --cc-swatch-selected-ring:
+    0 0 0 var(--cc-swatch-ring-width) var(--mat-sys-surface),
+    0 0 0 calc(var(--cc-swatch-ring-width) * 2) var(--mat-sys-on-surface);
+
+  // Material 3 opacity of disabled content.
+  --cc-disabled-opacity: 0.38;
+
+  // Pickers and lists.
+  --cc-picker-cell-size: 3rem;
+  --cc-picker-dialog-width: 34rem;
+  --cc-picker-panel-max-height: 70dvh;
+  --cc-list-item-min-height: 3.5rem;
+  --cc-list-indent: 3rem;
+  --cc-confirm-dialog-width: 26rem;
+
   // Elevation: aliases of the Material 3 shadow levels.
   --cc-elevation-0: var(--mat-sys-level0);
   --cc-elevation-1: var(--mat-sys-level1);

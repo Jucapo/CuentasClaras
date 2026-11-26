@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { iconGlyph } from '../../icons/icon-glyphs';
 import { Icon } from './icon';
 
 @Component({
   imports: [Icon],
   template: `
     <cc-icon name="savings" />
-    <cc-icon name="warning" size="lg" label="Presupuesto excedido" />
+    <cc-icon name="warning" size="lg" label="Presupuesto excedido" [filled]="true" />
   `,
 })
 class Host {}
@@ -27,8 +28,15 @@ describe('Icon', () => {
     const [decorative] = icons();
     expect(decorative.getAttribute('aria-hidden')).toBe('true');
     expect(decorative.getAttribute('role')).toBeNull();
-    expect(decorative.textContent?.trim()).toBe('savings');
+    expect(decorative.getAttribute('data-icon')).toBe('savings');
+    expect(decorative.textContent?.trim()).toBe(iconGlyph('savings'));
     expect(decorative.classList).toContain('size-md');
+    expect(decorative.classList).not.toContain('filled');
+  });
+
+  it('can be filled', () => {
+    const [, filled] = icons();
+    expect(filled.classList).toContain('filled');
   });
 
   it('becomes an image with an accessible name when labelled', () => {

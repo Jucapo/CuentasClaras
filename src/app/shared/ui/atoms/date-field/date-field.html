@@ -1,0 +1,23 @@
+<mat-form-field class="field">
+  <mat-label>{{ label() }}</mat-label>
+  <input
+    #input
+    matInput
+    type="date"
+    [id]="controlId"
+    [value]="value()"
+    [disabled]="disabled()"
+    [required]="required()"
+    [errorStateMatcher]="errorStateMatcher"
+    [attr.name]="name() || null"
+    [attr.min]="minDate() ?? null"
+    [attr.max]="maxDate() ?? null"
+    (input)="onInput($event)"
+    (blur)="touch.emit()"
+  />
+  @if (errorMessage(); as message) {
+    <mat-error>{{ message }}</mat-error>
+  } @else if (hint(); as hint) {
+    <mat-hint>{{ hint }}</mat-hint>
+  }
+</mat-form-field>

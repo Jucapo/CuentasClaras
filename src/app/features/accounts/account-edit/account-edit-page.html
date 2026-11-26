@@ -1,0 +1,49 @@
+<cc-page-header [title]="title()" [backLink]="backLink" backLabel="Volver a cuentas" />
+
+@if (notFound()) {
+  <cc-message
+    >No encontramos esta cuenta. Puede que se haya eliminado o que sea privada.</cc-message
+  >
+} @else {
+  <div class="content">
+    @if (archived()) {
+      <cc-message tone="info">
+        Esta cuenta está archivada: no aparece al registrar movimientos.
+      </cc-message>
+    }
+    <cc-form label="Cuenta" [form]="form">
+      <cc-account-form [fields]="form" />
+      @if (canEdit()) {
+        <cc-form-actions align="end" [error]="error()">
+          <cc-button type="submit" loadingLabel="Guardando" [loading]="form().submitting()">
+            Guardar
+          </cc-button>
+        </cc-form-actions>
+      }
+    </cc-form>
+
+    @if (existing() && canEdit()) {
+      <cc-form-actions align="start" [error]="actionError()">
+        <cc-button
+          variant="outlined"
+          [icon]="archived() ? 'unarchive' : 'archive'"
+          [disabled]="busy()"
+          (click)="toggleArchived()"
+        >
+          {{ archived() ? 'Desarchivar' : 'Archivar' }}
+        </cc-button>
+        @if (!inUse()) {
+          <cc-button
+            variant="text"
+            icon="delete"
+            [danger]="true"
+            [disabled]="busy()"
+            (click)="remove()"
+          >
+            Eliminar
+          </cc-button>
+        }
+      </cc-form-actions>
+    }
+  </div>
+}

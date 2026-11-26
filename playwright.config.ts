@@ -15,6 +15,8 @@ export default defineConfig({
     baseURL: BASE_URL,
     locale: 'es-CO',
     trace: 'retain-on-failure',
+    // Screenshots never catch a dialog or sheet halfway through its animation.
+    contextOptions: { reducedMotion: 'reduce' },
   },
   // Uses the locally installed Google Chrome; no Playwright browser downloads.
   // Spec §13.4: every screen is checked on mobile and desktop, in light and dark.

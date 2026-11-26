@@ -1,0 +1,48 @@
+:host {
+  display: inline-flex;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-target-min);
+  height: var(--cc-touch-target-min);
+  padding: 0;
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  cursor: pointer;
+  transition: box-shadow var(--cc-transition-fast);
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+    outline-offset: var(--cc-swatch-ring-width);
+  }
+
+  &[aria-pressed='true'] .dot {
+    box-shadow: var(--cc-swatch-selected-ring);
+  }
+}
+
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-swatch-size);
+  height: var(--cc-swatch-size);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--cc-swatch-color);
+  color: var(--cc-on-palette);
+}
+
+.inherits .dot {
+  border: var(--cc-border-width) dashed var(--mat-sys-outline);
+  background-color: transparent;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+:host(.small) .dot {
+  width: var(--cc-icon-size-sm);
+  height: var(--cc-icon-size-sm);
+}

@@ -1,5 +1,8 @@
 import { NETWORK_ERROR_MESSAGE } from '../auth/auth-error-messages';
 
+/** foreign_key_violation: a delete blocked by rows that still use the record (e.g. movements). */
+export const FOREIGN_KEY_VIOLATION = '23503';
+
 const MESSAGES_BY_CODE: Readonly<Partial<Record<string, string>>> = {
   // insufficient_privilege: RLS, a missing grant or a rule enforced by a function.
   '42501': 'No tienes permiso para hacer este cambio.',
@@ -7,6 +10,7 @@ const MESSAGES_BY_CODE: Readonly<Partial<Record<string, string>>> = {
   '23514': 'Revisa los datos: hay un valor que no es válido.',
   // unique_violation.
   '23505': 'Ya existe un registro con esos datos.',
+  [FOREIGN_KEY_VIOLATION]: 'Este registro está en uso, así que no se puede eliminar.',
 };
 
 /** Shown for database errors without a specific message. */

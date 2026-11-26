@@ -19,6 +19,12 @@ describe('dataErrorMessage', () => {
     );
   });
 
+  it('explains a delete blocked by records that still use the row', () => {
+    expect(dataErrorMessage({ code: '23503' }, 409)).toBe(
+      'Este registro está en uso, así que no se puede eliminar.',
+    );
+  });
+
   it('falls back to the generic or the given message for other errors', () => {
     expect(dataErrorMessage({ code: 'PGRST116' }, 406)).toBe(GENERIC_DATA_ERROR_MESSAGE);
     expect(dataErrorMessage({ code: 'XX000' }, 500, LOAD_ERROR_MESSAGE)).toBe(LOAD_ERROR_MESSAGE);

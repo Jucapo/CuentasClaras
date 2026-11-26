@@ -13,6 +13,10 @@
   --cc-icon-size: var(--cc-icon-size-lg);
 }
 
+:host(.filled) {
+  --cc-icon-fill: 1;
+}
+
 .icon {
   width: var(--cc-icon-size);
   height: var(--cc-icon-size);

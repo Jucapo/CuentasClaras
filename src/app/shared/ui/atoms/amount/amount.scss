@@ -1,0 +1,8 @@
+:host {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+:host(.negative) {
+  color: var(--mat-sys-error);
+}

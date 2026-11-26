@@ -1,0 +1,9 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-4);
+}
+
+.toggle {
+  align-self: flex-start;
+}

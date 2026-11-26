@@ -12,7 +12,9 @@
           "/index.html",
           "/manifest.webmanifest",
           "/*.css",
-          "/*.js"
+          "/*.js",
+          "/fonts/*.woff2",
+          "/media/*.woff2"
         ]
       }
     },
@@ -22,14 +24,6 @@
       "updateMode": "prefetch",
       "resources": {
         "files": ["/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"]
-      }
-    },
-    {
-      "name": "fonts",
-      "installMode": "lazy",
-      "updateMode": "lazy",
-      "resources": {
-        "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"]
       }
     }
   ]

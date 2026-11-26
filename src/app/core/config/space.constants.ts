@@ -1,3 +1,4 @@
+import { formatMoney } from '../../domain/money/money';
 import { NumberFormat, ThemePreference, Weekday } from '../spaces/space.models';
 
 /** Theme choices in display order (spec §13.2). */
@@ -24,6 +25,9 @@ export const SPACE_DEFAULTS = {
   weekStart: 'monday',
 } as const satisfies { mainCurrency: string; monthStartDay: number; weekStart: Weekday };
 
+/** Icon and color of a space; the same as the database defaults of `spaces`. */
+export const SPACE_APPEARANCE_DEFAULTS = { icon: 'home', color: 'green' } as const;
+
 /** Defaults of the number format preference; the same as the database defaults. */
 export const NUMBER_FORMAT_DEFAULTS = {
   numberFormat: 'comma_dot',
@@ -41,23 +45,15 @@ export const WEEKDAYS: readonly { readonly value: Weekday; readonly label: strin
   { value: 'sunday', label: 'Domingo' },
 ];
 
-/** Thousands and decimal separators of each number format. */
-export const NUMBER_FORMAT_SEPARATORS: Readonly<
-  Record<NumberFormat, { readonly thousands: string; readonly decimal: string }>
-> = {
-  comma_dot: { thousands: ',', decimal: '.' },
-  dot_comma: { thousands: '.', decimal: ',' },
-  space_comma: { thousands: ' ', decimal: ',' },
-};
+/** Sample amount (minor units) used to preview a number format: -$ 1,234,567.90. */
+const NUMBER_FORMAT_SAMPLE = -123456790;
 
-/** Number formats in display order. */
-export const NUMBER_FORMATS: readonly NumberFormat[] = ['comma_dot', 'dot_comma', 'space_comma'];
-
-/** Sample amount, e.g. "-$ 1,234,567.90", used to preview a number format. */
+/** Sample amount, e.g. "-$ 1,234,567.90", formatted the way the app would show it. */
 export function numberFormatExample(format: NumberFormat, showDecimals: boolean): string {
-  const { thousands, decimal } = NUMBER_FORMAT_SEPARATORS[format];
-  const integer = ['1', '234', '567'].join(thousands);
-  return `-$ ${integer}${showDecimals ? `${decimal}90` : ''}`;
+  return formatMoney(NUMBER_FORMAT_SAMPLE, SPACE_DEFAULTS.mainCurrency, {
+    numberFormat: format,
+    showDecimals,
+  });
 }
 
 /** "Peso colombiano (COP)": the Spanish currency name followed by its code. */

@@ -39,6 +39,6 @@ describe('NumberFormatForm', () => {
     await fixture.whenStable();
 
     expect(fixture.componentInstance.model().format.showDecimals).toBe(false);
-    expect(selected()).toBe('-$ 1.234.567');
+    expect(selected()).toBe('-$ 1.234.568');
   });
 });

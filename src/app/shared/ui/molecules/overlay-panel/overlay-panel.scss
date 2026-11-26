@@ -1,0 +1,39 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--cc-picker-panel-max-height);
+  gap: var(--cc-space-3);
+  padding: var(--cc-space-4) var(--cc-space-4) calc(var(--cc-space-4) + var(--cc-safe-area-bottom));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cc-space-2);
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.toolbar:empty,
+.actions:empty {
+  display: none;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--cc-space-2);
+}

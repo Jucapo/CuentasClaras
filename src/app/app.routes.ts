@@ -2,7 +2,13 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
-import { APP_PATHS, DEFAULT_HOME_PATH, ONBOARDING_STEP_PATHS } from './core/routing/app-paths';
+import {
+  APP_PATHS,
+  DEFAULT_HOME_PATH,
+  NEW_ITEM_PATH,
+  ONBOARDING_STEP_PATHS,
+  SETTINGS_PATHS,
+} from './core/routing/app-paths';
 import { noSpaceGuard, spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
 import { ONBOARDING_STEP_DATA_KEY, ONBOARDING_STEPS } from './features/onboarding/onboarding-steps';
@@ -78,6 +84,22 @@ export const routes: Routes = [
           import('./features/accounts/accounts-page').then((m) => m.AccountsPage),
       },
       {
+        path: `${APP_PATHS.accounts}/${NEW_ITEM_PATH}`,
+        title: 'Nueva cuenta',
+        loadComponent: () =>
+          import('./features/accounts/account-edit/account-edit-page').then(
+            (m) => m.AccountEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.accounts}/:id`,
+        title: 'Cuenta',
+        loadComponent: () =>
+          import('./features/accounts/account-edit/account-edit-page').then(
+            (m) => m.AccountEditPage,
+          ),
+      },
+      {
         path: APP_PATHS.categories,
         title: 'Categorías',
         loadComponent: () =>
@@ -104,6 +126,48 @@ export const routes: Routes = [
         title: 'Configuración',
         loadComponent: () =>
           import('./features/settings/settings-page').then((m) => m.SettingsPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}`,
+        title: 'Categorías',
+        loadComponent: () =>
+          import('./features/settings/categories/categories-settings-page').then(
+            (m) => m.CategoriesSettingsPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/${NEW_ITEM_PATH}`,
+        title: 'Nueva categoría',
+        loadComponent: () =>
+          import('./features/settings/categories/category-edit/category-edit-page').then(
+            (m) => m.CategoryEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/:id`,
+        title: 'Categoría',
+        loadComponent: () =>
+          import('./features/settings/categories/category-edit/category-edit-page').then(
+            (m) => m.CategoryEditPage,
+          ),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}`,
+        title: 'Etiquetas',
+        loadComponent: () =>
+          import('./features/settings/tags/tags-settings-page').then((m) => m.TagsSettingsPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/${NEW_ITEM_PATH}`,
+        title: 'Nueva etiqueta',
+        loadComponent: () =>
+          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/:id`,
+        title: 'Etiqueta',
+        loadComponent: () =>
+          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
       },
     ],
   },

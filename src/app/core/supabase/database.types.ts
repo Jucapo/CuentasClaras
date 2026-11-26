@@ -3,6 +3,171 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_group: Database['public']['Enums']['account_group'];
+          archived_at: string | null;
+          color: string;
+          created_at: string;
+          currency: string;
+          icon: string;
+          id: string;
+          include_in_space_by_default: boolean;
+          include_in_total: boolean;
+          initial_balance: number;
+          initial_balance_date: string;
+          kind: Database['public']['Enums']['account_kind'];
+          name: string;
+          owner_id: string;
+          sort_order: number;
+          space_id: string;
+          visibility: Database['public']['Enums']['account_visibility'];
+        };
+        ComputedFields: never;
+        Insert: {
+          account_group?: never;
+          archived_at?: string | null;
+          color: string;
+          created_at?: string;
+          currency: string;
+          icon: string;
+          id?: string;
+          include_in_space_by_default?: boolean;
+          include_in_total: boolean;
+          initial_balance?: number;
+          initial_balance_date: string;
+          kind: Database['public']['Enums']['account_kind'];
+          name: string;
+          owner_id?: string;
+          sort_order: number;
+          space_id: string;
+          visibility?: Database['public']['Enums']['account_visibility'];
+        };
+        Update: {
+          account_group?: never;
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          currency?: string;
+          icon?: string;
+          id?: string;
+          include_in_space_by_default?: boolean;
+          include_in_total?: boolean;
+          initial_balance?: number;
+          initial_balance_date?: string;
+          kind?: Database['public']['Enums']['account_kind'];
+          name?: string;
+          owner_id?: string;
+          sort_order?: number;
+          space_id?: string;
+          visibility?: Database['public']['Enums']['account_visibility'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'accounts_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'accounts_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      categories: {
+        Row: {
+          archived_at: string | null;
+          color: string | null;
+          created_at: string;
+          icon: string;
+          id: string;
+          kind: Database['public']['Enums']['category_kind'];
+          name: string;
+          parent_id: string | null;
+          sort_order: number;
+          space_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          color?: string | null;
+          created_at?: string;
+          icon: string;
+          id?: string;
+          kind: Database['public']['Enums']['category_kind'];
+          name: string;
+          parent_id?: string | null;
+          sort_order: number;
+          space_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          color?: string | null;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          kind?: Database['public']['Enums']['category_kind'];
+          name?: string;
+          parent_id?: string | null;
+          sort_order?: number;
+          space_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'categories_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'categories_space_id_parent_id_fkey';
+            columns: ['space_id', 'parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['space_id', 'id'];
+          },
+        ];
+      };
+      category_default_tags: {
+        Row: {
+          category_id: string;
+          space_id: string;
+          tag_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          category_id: string;
+          space_id: string;
+          tag_id: string;
+        };
+        Update: {
+          category_id?: string;
+          space_id?: string;
+          tag_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'category_default_tags_space_id_category_id_fkey';
+            columns: ['space_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'category_default_tags_space_id_tag_id_fkey';
+            columns: ['space_id', 'tag_id'];
+            isOneToOne: false;
+            referencedRelation: 'tags';
+            referencedColumns: ['space_id', 'id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -49,6 +214,20 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'space_members_default_account_fkey';
+            columns: ['space_id', 'default_account_id'];
+            isOneToOne: false;
+            referencedRelation: 'account_balances';
+            referencedColumns: ['space_id', 'account_id'];
+          },
+          {
+            foreignKeyName: 'space_members_default_account_fkey';
+            columns: ['space_id', 'default_account_id'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['space_id', 'id'];
+          },
           {
             foreignKeyName: 'space_members_space_id_fkey';
             columns: ['space_id'];
@@ -109,21 +288,27 @@ export type Database = {
       };
       spaces: {
         Row: {
+          color: string;
           created_at: string;
           created_by: string | null;
+          icon: string;
           id: string;
           name: string;
         };
         ComputedFields: never;
         Insert: {
+          color?: string;
           created_at?: string;
           created_by?: string | null;
+          icon?: string;
           id?: string;
           name: string;
         };
         Update: {
+          color?: string;
           created_at?: string;
           created_by?: string | null;
+          icon?: string;
           id?: string;
           name?: string;
         };
@@ -134,6 +319,42 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['user_id'];
+          },
+        ];
+      };
+      tags: {
+        Row: {
+          archived_at: string | null;
+          color: string;
+          created_at: string;
+          id: string;
+          name: string;
+          space_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          color: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          space_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          space_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tags_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
           },
         ];
       };
@@ -182,7 +403,42 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      account_balances: {
+        Row: {
+          account_id: string;
+          balance: number;
+          currency: string;
+          initial_balance: number;
+          movements_total: number | null;
+          space_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id?: string | null;
+          balance?: number | null;
+          currency?: string | null;
+          initial_balance?: number | null;
+          movements_total?: never;
+          space_id?: string | null;
+        };
+        Update: {
+          account_id?: string | null;
+          balance?: number | null;
+          currency?: string | null;
+          initial_balance?: number | null;
+          movements_total?: never;
+          space_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'accounts_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Functions: {
       create_space: {
@@ -194,8 +450,26 @@ export type Database = {
         };
         Returns: string;
       };
+      reorder_categories: { Args: { category_ids: string[] }; Returns: undefined };
+      set_default_account: {
+        Args: { target_account_id: string; target_space_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
+      account_group: 'accounts' | 'savings' | 'debts' | 'receivables' | 'assets';
+      account_kind:
+        | 'cash'
+        | 'bank'
+        | 'wallet'
+        | 'savings'
+        | 'credit_card'
+        | 'loan'
+        | 'simple_debt'
+        | 'receivable'
+        | 'asset';
+      account_visibility: 'shared' | 'private';
+      category_kind: 'expense' | 'income';
       home_screen: 'accounts' | 'categories' | 'transactions' | 'budget' | 'summary';
       member_role: 'owner' | 'editor' | 'viewer';
       number_format: 'comma_dot' | 'dot_comma' | 'space_comma';
@@ -313,6 +587,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_group: ['accounts', 'savings', 'debts', 'receivables', 'assets'],
+      account_kind: [
+        'cash',
+        'bank',
+        'wallet',
+        'savings',
+        'credit_card',
+        'loan',
+        'simple_debt',
+        'receivable',
+        'asset',
+      ],
+      account_visibility: ['shared', 'private'],
+      category_kind: ['expense', 'income'],
       home_screen: ['accounts', 'categories', 'transactions', 'budget', 'summary'],
       member_role: ['owner', 'editor', 'viewer'],
       number_format: ['comma_dot', 'dot_comma', 'space_comma'],

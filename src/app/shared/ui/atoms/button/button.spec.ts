@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { iconGlyph } from '../../icons/icon-glyphs';
 import { Button } from './button';
 
 @Component({
@@ -40,7 +41,8 @@ describe('Button', () => {
   it('renders a native button with its type, icon and label', () => {
     expect(button().type).toBe('submit');
     expect(button().textContent).toContain('Guardar');
-    expect(button().querySelector('mat-icon')?.textContent).toBe('save');
+    expect(button().querySelector('mat-icon')?.getAttribute('data-icon')).toBe('save');
+    expect(button().querySelector('mat-icon')?.textContent).toBe(iconGlyph('save'));
   });
 
   it('reports clicks on the host', () => {

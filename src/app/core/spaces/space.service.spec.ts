@@ -13,8 +13,9 @@ describe('SpaceService', () => {
   const api = {
     fetchMemberships: vi.fn(),
     createSpace: vi.fn(),
-    renameSpace: vi.fn(),
+    updateSpace: vi.fn(),
     updateSettings: vi.fn(),
+    setDefaultAccount: vi.fn(),
   };
   const userSettings = {
     settings,
@@ -124,7 +125,12 @@ describe('SpaceService', () => {
     expect(await service.createSpace(input)).toEqual({ ok: true, value: 'space-new' });
 
     expect(api.createSpace).toHaveBeenCalledWith(input);
-    expect(service.activeSpace()).toEqual({ id: 'space-new', name: 'Casa' });
+    expect(service.activeSpace()).toEqual({
+      id: 'space-new',
+      name: 'Casa',
+      icon: 'home',
+      color: 'green',
+    });
     expect(userSettings.update).toHaveBeenCalledWith({ last_space_id: 'space-new' });
   });
 
@@ -144,19 +150,59 @@ describe('SpaceService', () => {
     expect(userSettings.update).not.toHaveBeenCalled();
   });
 
-  it('renames the active space and updates its settings in place', async () => {
+  it('updates the active space and its settings in place', async () => {
     await service.ensureLoaded();
-    api.renameSpace.mockResolvedValue({ ok: true });
+    api.updateSpace.mockResolvedValue({ ok: true });
     const saved = spaceSettingsFixture({ space_id: 'space-home', month_start_day: 28 });
     api.updateSettings.mockResolvedValue({ ok: true, value: saved });
 
-    expect(await service.renameActiveSpace('Casa')).toEqual({ ok: true });
+    expect(await service.updateActiveSpace({ name: 'Casa', color: 'teal' })).toEqual({ ok: true });
     expect(await service.updateActiveSettings({ month_start_day: 28 })).toEqual({ ok: true });
 
-    expect(api.renameSpace).toHaveBeenCalledWith('space-home', 'Casa');
+    expect(api.updateSpace).toHaveBeenCalledWith('space-home', { name: 'Casa', color: 'teal' });
+    expect(service.activeSpace()?.color).toBe('teal');
     expect(api.updateSettings).toHaveBeenCalledWith('space-home', { month_start_day: 28 });
     expect(service.activeSpace()?.name).toBe('Casa');
     expect(service.activeSettings()?.month_start_day).toBe(28);
+  });
+
+  it('lets owners and editors edit, but not viewers', async () => {
+    const editor = membershipFixture('space-editor', 'Hogar de Ana', 'editor');
+    api.fetchMemberships.mockResolvedValue({ ok: true, value: [home, personal, editor] });
+    await service.ensureLoaded();
+    expect(service.canEdit()).toBe(true);
+
+    await service.select('space-editor');
+    expect(service.canEdit()).toBe(true);
+    expect(service.canConfigure()).toBe(false);
+
+    await service.select('space-personal');
+    expect(service.canEdit()).toBe(false);
+  });
+
+  it('saves the default account of the active space', async () => {
+    await service.ensureLoaded();
+    api.setDefaultAccount.mockResolvedValue({ ok: true });
+
+    expect(await service.setDefaultAccount('account-1')).toEqual({ ok: true });
+    expect(api.setDefaultAccount).toHaveBeenCalledWith('space-home', 'account-1');
+    expect(service.defaultAccountId()).toBe('account-1');
+
+    service.forgetDefaultAccount('other');
+    expect(service.defaultAccountId()).toBe('account-1');
+    service.forgetDefaultAccount('account-1');
+    expect(service.defaultAccountId()).toBeNull();
+  });
+
+  it('keeps the default account when the database rejects it', async () => {
+    await service.ensureLoaded();
+    api.setDefaultAccount.mockResolvedValue({ ok: false, message: 'No tienes permiso' });
+
+    expect(await service.setDefaultAccount('account-1')).toEqual({
+      ok: false,
+      message: 'No tienes permiso',
+    });
+    expect(service.defaultAccountId()).toBeNull();
   });
 
   it('forgets the spaces when the session ends', async () => {

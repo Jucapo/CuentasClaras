@@ -23,6 +23,14 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry name="cc-button · peligro" description="Acciones destructivas">
+        <ng-template>
+          <cc-button [danger]="true">Eliminar</cc-button>
+          <cc-button variant="outlined" icon="delete" [danger]="true">Eliminar</cc-button>
+          <cc-button variant="text" [danger]="true">Eliminar</cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-button · ancho completo">
         <ng-template>
           <cc-button [fullWidth]="true">Entrar</cc-button>
@@ -37,12 +45,95 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-icon" description="sm · md · lg; con label es una imagen">
+      <app-catalog-entry
+        name="cc-icon"
+        description="sm · md · lg · relleno; con label es una imagen"
+      >
         <ng-template>
           <cc-icon name="savings" size="sm" />
           <cc-icon name="savings" />
           <cc-icon name="savings" size="lg" />
+          <cc-icon name="savings" size="lg" [filled]="true" />
           <cc-icon name="warning" label="Presupuesto excedido" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-icon-badge"
+        description="Ícono blanco sobre un color de la paleta · sm · md · lg"
+      >
+        <ng-template>
+          <cc-icon-badge icon="shopping_cart" color="green" size="sm" />
+          <cc-icon-badge icon="home" color="orange" />
+          <cc-icon-badge icon="credit_card" color="red" size="lg" label="Tarjeta" />
+          <cc-icon-badge icon="savings" color="teal" size="lg" />
+          <cc-icon-badge icon="pets" color="mustard" size="lg" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-color-swatch"
+        description="Normal, seleccionado, heredar y punto decorativo"
+      >
+        <ng-template>
+          <cc-color-swatch color="blue" label="Azul" />
+          <cc-color-swatch color="purple" label="Morado" [selected]="true" />
+          <cc-color-swatch [color]="null" label="Igual que la categoría" />
+          <cc-color-swatch color="amber" label="Ámbar" [decorative]="true" [small]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-amount" description="Positivo, deuda en rojo, USD y neutro">
+        <ng-template>
+          <cc-amount [amount]="123456790" currency="COP" />
+          <cc-amount [amount]="-50000000" currency="COP" />
+          <cc-amount [amount]="125050" currency="USD" />
+          <cc-amount [amount]="-1500" currency="COP" tone="neutral" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-money-field"
+        description="Con valor, con ayuda en USD y con error"
+        layout="column"
+      >
+        <ng-template>
+          <cc-money-field label="Saldo inicial" currency="COP" [formField]="demo.balance" />
+          <cc-money-field
+            label="Lo que debes"
+            currency="USD"
+            hint="Escríbelo en positivo."
+            [formField]="demo.debt"
+          />
+          <cc-money-field label="Monto" currency="COP" [formField]="demo.badAmount" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-currency-select" layout="column">
+        <ng-template>
+          <cc-currency-select label="Moneda" [formField]="demo.currency" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-date-field" layout="column">
+        <ng-template>
+          <cc-date-field label="Fecha del saldo" [formField]="demo.date" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-segmented-control"
+        description="Normal y a lo ancho"
+        layout="column"
+      >
+        <ng-template>
+          <cc-segmented-control label="Clase" [options]="kindOptions" [(value)]="kind" />
+          <cc-segmented-control
+            label="Clase"
+            [fullWidth]="true"
+            [options]="kindOptions"
+            [(value)]="kind"
+          />
         </ng-template>
       </app-catalog-entry>
 
@@ -65,7 +156,11 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-select" description="Con valor y con error" layout="column">
+      <app-catalog-entry
+        name="cc-select"
+        description="Con valor, con error y con grupos"
+        layout="column"
+      >
         <ng-template>
           <cc-select label="Moneda principal" [options]="currencies" [formField]="demo.currency" />
           <cc-select
@@ -73,6 +168,7 @@
             [options]="currencies"
             [formField]="demo.missingCurrency"
           />
+          <cc-select label="Tipo" [options]="groupedKinds" [formField]="demo.accountKind" />
         </ng-template>
       </app-catalog-entry>
 
@@ -168,6 +264,118 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-page-header · volver"
+        description="Con enlace para volver a la lista"
+        layout="column"
+      >
+        <ng-template>
+          <cc-page-header title="Nueva cuenta" [backLink]="['/', paths.uiCatalog]" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-icon-picker"
+        description="Abre el catálogo: bottom sheet en móvil, diálogo en escritorio"
+        layout="column"
+      >
+        <ng-template>
+          <cc-icon-picker
+            label="Ícono"
+            [color]="pickers.color().value()"
+            [formField]="pickers.icon"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-color-picker"
+        description="Color propio y subcategoría que hereda"
+        layout="column"
+      >
+        <ng-template>
+          <cc-color-picker label="Color" [formField]="pickers.color" />
+          <cc-color-picker label="Color" inheritFrom="orange" [formField]="pickers.subColor" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-chip-select"
+        description="Selección múltiple con color y vacía"
+        layout="column"
+      >
+        <ng-template>
+          <cc-chip-select
+            label="Etiquetas por defecto"
+            [options]="tagOptions"
+            [formField]="pickers.tags"
+          />
+          <cc-chip-select
+            label="Etiquetas por defecto"
+            emptyText="Aún no hay etiquetas: créalas en Configuración."
+            [options]="[]"
+            [formField]="pickers.noTags"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-list-item + cc-account-row"
+        description="Con enlace, atenuado y cuenta con saldo"
+        layout="column"
+      >
+        <ng-template>
+          <div role="list">
+            <cc-account-row
+              name="Bancolombia"
+              icon="account_balance"
+              color="amber"
+              currency="COP"
+              notes="Predeterminada"
+              [balance]="254300000"
+              [link]="['/', paths.uiCatalog]"
+            />
+            <cc-account-row
+              name="Tarjeta Visa"
+              icon="credit_card"
+              color="red"
+              currency="COP"
+              notes="Privada · No suma en el total"
+              [balance]="-185000000"
+              [link]="['/', paths.uiCatalog]"
+            />
+          </div>
+          <cc-list-item title="Etiquetas" subtitle="3 activas" [link]="['/', paths.uiCatalog]">
+            <cc-icon ccListItemLeading name="label" />
+          </cc-list-item>
+          <cc-list-item title="Viajes" subtitle="Archivada" [muted]="true">
+            <cc-color-swatch
+              ccListItemLeading
+              color="blue"
+              label="Azul"
+              [decorative]="true"
+              [small]="true"
+            />
+          </cc-list-item>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-overlay-panel"
+        description="Contenido de diálogos y bottom sheets (pickers y confirmación)"
+        layout="column"
+      >
+        <ng-template>
+          <cc-overlay-panel title="¿Eliminar Hogar?" [hideClose]="true">
+            <p>También se eliminarán sus 2 subcategorías: Arriendo y Servicios.</p>
+            <ng-container ccOverlayActions>
+              <cc-button variant="text">Cancelar</cc-button>
+              <cc-button [danger]="true">Eliminar</cc-button>
+            </ng-container>
+          </cc-overlay-panel>
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-nav-item" description="Activo (ruta actual) e inactivo">
         <ng-template>
           <cc-nav-item label="Catálogo" icon="palette" [link]="['/', paths.uiCatalog]" />
@@ -210,6 +418,57 @@
       >
         <ng-template>
           <cc-number-format-form [fields]="preferencesDemo.numberFormat" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-account-list"
+        description="Grupos con su total por moneda y total general"
+        layout="column"
+      >
+        <ng-template>
+          <cc-account-list [groups]="accountGroups" [totals]="accountTotals" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-account-form"
+        description="Cuentas y asistente; tipo deuda: el saldo se escribe en positivo"
+        layout="column"
+      >
+        <ng-template>
+          <cc-account-form [fields]="catalogForms.account" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-list"
+        description="Con subcategorías, arrastre y enlace para agregar"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-list [nodes]="categoryNodes" [reorderable]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-form"
+        description="Subcategoría que hereda el color de su categoría"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-form
+            [fields]="catalogForms.category"
+            [parents]="parentCategories"
+            [tagOptions]="tagOptions"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-tag-list + cc-tag-form" layout="column">
+        <ng-template>
+          <cc-tag-list [tags]="tagEntries" />
+          <cc-tag-form [fields]="catalogForms.tag" />
         </ng-template>
       </app-catalog-entry>
     </div>
