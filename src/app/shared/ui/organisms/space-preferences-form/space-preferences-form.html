@@ -1,0 +1,24 @@
+<cc-text-field
+  label="Nombre del espacio"
+  placeholder="Hogar"
+  hint="Por ejemplo: Hogar o Personal."
+  autocomplete="off"
+  [formField]="fields().name"
+/>
+<cc-select
+  label="Moneda principal"
+  hint="Los totales se muestran en esta moneda."
+  [options]="currencyOptions"
+  [formField]="fields().mainCurrency"
+/>
+<cc-select
+  label="Primer día del mes"
+  [hint]="monthHint()"
+  [options]="monthDayOptions"
+  [formField]="fields().monthStartDay"
+/>
+<cc-select
+  label="Primer día de la semana"
+  [options]="weekdayOptions"
+  [formField]="fields().weekStart"
+/>

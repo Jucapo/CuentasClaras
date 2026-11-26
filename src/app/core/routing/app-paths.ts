@@ -16,6 +16,11 @@ export const APP_PATHS = {
   uiCatalog: 'ui',
 } as const;
 
+/** Child paths of the setup wizard, one per step. */
+export const ONBOARDING_STEP_PATHS = {
+  space: 'espacio',
+} as const;
+
 /** Screen opened at `/` after signing in. */
 export const DEFAULT_HOME_PATH = APP_PATHS.categories;
 
