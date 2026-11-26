@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { PageHeader } from '../../shared/ui/page-header/page-header';
+import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 
 /** Accounts, savings, debts and net worth. */
 @Component({

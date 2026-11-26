@@ -4,7 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_PATHS } from '../../core/routing/app-paths';
-import { PageHeader } from '../../shared/ui/page-header/page-header';
+import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 
 /** User and space settings. For now only shows the session and signs out. */
 @Component({

@@ -1,0 +1,28 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+  margin-top: var(--cc-space-2);
+}
+
+.primary {
+  display: grid;
+  gap: var(--cc-space-2);
+}
+
+:host(.align-end) .primary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--cc-space-2) var(--cc-space-4);
+}
+
+.secondary:empty {
+  display: none;
+}

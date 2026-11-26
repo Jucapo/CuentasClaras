@@ -1,0 +1,9 @@
+@if (error(); as message) {
+  <cc-message tone="error">{{ message }}</cc-message>
+}
+<div class="primary">
+  <ng-content />
+</div>
+<div class="secondary">
+  <ng-content select="[ccSecondaryAction]" />
+</div>

@@ -1,0 +1,24 @@
+:host {
+  display: inline-flex;
+}
+
+:host(.full-width) {
+  display: flex;
+  width: 100%;
+}
+
+.button {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: var(--cc-touch-target-min);
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
