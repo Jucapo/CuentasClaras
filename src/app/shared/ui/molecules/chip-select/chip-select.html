@@ -1,0 +1,32 @@
+<span class="label" [id]="labelId">{{ label() }}</span>
+@if (options().length > 0) {
+  <mat-chip-listbox
+    multiple
+    [attr.aria-labelledby]="labelId"
+    [value]="value()"
+    [disabled]="disabled()"
+    (change)="onChange($event)"
+  >
+    @for (option of options(); track option.value) {
+      <mat-chip-option [value]="option.value">
+        @if (option.color; as color) {
+          <cc-color-swatch
+            matChipAvatar
+            [color]="color"
+            [label]="option.label"
+            [decorative]="true"
+            [small]="true"
+          />
+        }
+        {{ option.label }}
+      </mat-chip-option>
+    }
+  </mat-chip-listbox>
+} @else if (emptyText()) {
+  <p class="support">{{ emptyText() }}</p>
+}
+@if (errorMessage(); as message) {
+  <p class="support error" role="alert">{{ message }}</p>
+} @else if (hint(); as hint) {
+  <p class="support">{{ hint }}</p>
+}

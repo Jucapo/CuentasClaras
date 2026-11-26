@@ -1,3 +1,6 @@
+@if (backLink(); as commands) {
+  <cc-icon-button class="back" icon="arrow_back" [label]="backLabel()" [link]="commands" />
+}
 <div class="titles">
   <h1 class="title">{{ title() }}</h1>
   @if (subtitle(); as subtitle) {

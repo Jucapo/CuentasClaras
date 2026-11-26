@@ -24,5 +24,8 @@ export const MONEY_PARSE_MESSAGES = {
   too_large: 'El monto es demasiado grande.',
 } as const;
 
+/** From this width overlays open as dialogs instead of bottom sheets; matches $bp-medium. */
+export const OVERLAY_DESKTOP_QUERY = '(min-width: 600px)';
+
 /** Diameter of the spinner shown inside a loading button; matches --cc-icon-size-sm. */
 export const BUTTON_SPINNER_DIAMETER = 20;

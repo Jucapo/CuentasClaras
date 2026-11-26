@@ -1,0 +1,23 @@
+<ng-content select="[ccListItemStart]" />
+@if (link(); as commands) {
+  <a class="main" matRipple [routerLink]="commands">
+    <ng-container [ngTemplateOutlet]="content" />
+    <cc-icon class="chevron" name="chevron_right" size="sm" />
+  </a>
+} @else {
+  <div class="main">
+    <ng-container [ngTemplateOutlet]="content" />
+  </div>
+}
+<ng-content select="[ccListItemEnd]" />
+
+<ng-template #content>
+  <span class="leading"><ng-content select="[ccListItemLeading]" /></span>
+  <span class="texts">
+    <span class="title">{{ title() }}</span>
+    @if (subtitle(); as subtitle) {
+      <span class="subtitle">{{ subtitle }}</span>
+    }
+  </span>
+  <span class="trailing"><ng-content select="[ccListItemTrailing]" /></span>
+</ng-template>

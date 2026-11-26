@@ -2,6 +2,15 @@
   display: inline-flex;
 }
 
+:host(.danger) {
+  --mat-button-filled-container-color: var(--mat-sys-error);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+  --mat-button-outlined-label-text-color: var(--mat-sys-error);
+  --mat-button-text-label-text-color: var(--mat-sys-error);
+  --mat-button-tonal-container-color: var(--mat-sys-error-container);
+  --mat-button-tonal-label-text-color: var(--mat-sys-on-error-container);
+}
+
 :host(.full-width) {
   display: flex;
   width: 100%;

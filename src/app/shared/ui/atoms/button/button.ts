@@ -19,7 +19,7 @@ export type LinkCommands = string | readonly unknown[];
   imports: [NgTemplateOutlet, RouterLink, MatButton, MatIcon, MatProgressSpinner],
   templateUrl: './button.html',
   styleUrl: './button.scss',
-  host: { '[class.full-width]': 'fullWidth()' },
+  host: { '[class.full-width]': 'fullWidth()', '[class.danger]': 'danger()' },
 })
 export class Button {
   readonly variant = input<ButtonVariant>('filled');
@@ -33,6 +33,8 @@ export class Button {
   readonly loadingLabel = input<string>();
   readonly disabled = input(false);
   readonly fullWidth = input(false);
+  /** Error colors, for destructive actions such as deleting. */
+  readonly danger = input(false);
 
   protected readonly spinnerDiameter = BUTTON_SPINNER_DIAMETER;
   // A bare mat-icon (not cc-icon) keeps Material's spacing for icons inside buttons.

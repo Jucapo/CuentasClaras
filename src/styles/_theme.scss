@@ -27,6 +27,20 @@ html {
   --cc-on-palette: #fff;
 }
 
+// Overlays (OverlayService): dialogs on wide screens, bottom sheets on phones.
+.cdk-overlay-pane.cc-overlay-dialog.cc-overlay-picker {
+  width: min(var(--cc-picker-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
+}
+
+.cdk-overlay-pane.cc-overlay-dialog.cc-overlay-confirm {
+  width: min(var(--cc-confirm-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
+}
+
+.cc-overlay-sheet .mat-bottom-sheet-container {
+  max-height: var(--cc-picker-panel-max-height);
+  padding: 0;
+}
+
 // Toasts (ToastService) float above the bottom navigation instead of covering it.
 .mat-mdc-snack-bar-container.cc-toast {
   margin-bottom: calc(var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-2));

@@ -21,10 +21,16 @@ import {
 import { Select, SelectOption } from '../../shared/ui/atoms/select/select';
 import { Switch } from '../../shared/ui/atoms/switch/switch';
 import { TextField } from '../../shared/ui/atoms/text-field/text-field';
+import { AccountRow } from '../../shared/ui/molecules/account-row/account-row';
 import { Brand } from '../../shared/ui/molecules/brand/brand';
+import { ChipOption, ChipSelect } from '../../shared/ui/molecules/chip-select/chip-select';
+import { ColorPicker } from '../../shared/ui/molecules/color-picker/color-picker';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
 import { Form } from '../../shared/ui/molecules/form/form';
+import { IconPicker } from '../../shared/ui/molecules/icon-picker/icon-picker';
+import { ListItem } from '../../shared/ui/molecules/list-item/list-item';
 import { NavItem } from '../../shared/ui/molecules/nav-item/nav-item';
+import { OverlayPanel } from '../../shared/ui/molecules/overlay-panel/overlay-panel';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import { BottomNav } from '../../shared/ui/organisms/bottom-nav/bottom-nav';
@@ -63,10 +69,16 @@ import { CatalogEntry } from './catalog-entry/catalog-entry';
     Select,
     Switch,
     TextField,
+    AccountRow,
     Brand,
+    ChipSelect,
+    ColorPicker,
     Form,
     FormActions,
+    IconPicker,
+    ListItem,
     NavItem,
+    OverlayPanel,
     PageHeader,
     Section,
     BottomNav,
@@ -125,6 +137,21 @@ export class UiCatalogPage {
     disabled(path.locked);
     disabled(path.lockedSwitch);
   });
+
+  protected readonly tagOptions: readonly ChipOption[] = [
+    { value: 'fixed', label: 'Fijos', color: 'indigo' },
+    { value: 'health', label: 'Salud', color: 'red' },
+    { value: 'kids', label: 'Emiliano', color: 'sky' },
+  ];
+  private readonly pickersModel = signal<{
+    icon: string;
+    color: string | null;
+    subColor: string | null;
+    tags: readonly string[];
+    noTags: readonly string[];
+  }>({ icon: 'shopping_cart', color: 'green', subColor: null, tags: ['fixed'], noTags: [] });
+  /** Fields of the picker demos. */
+  protected readonly pickers = form(this.pickersModel);
 
   private readonly preferencesModel = signal<{
     space: SpacePreferences;

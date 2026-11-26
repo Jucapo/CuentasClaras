@@ -50,6 +50,9 @@
     0 0 0 var(--cc-swatch-ring-width) var(--mat-sys-surface),
     0 0 0 calc(var(--cc-swatch-ring-width) * 2) var(--mat-sys-on-surface);
 
+  // Material 3 opacity of disabled content.
+  --cc-disabled-opacity: 0.38;
+
   // Pickers and lists.
   --cc-picker-cell-size: 3rem;
   --cc-picker-dialog-width: 34rem;
