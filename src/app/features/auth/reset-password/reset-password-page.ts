@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { PASSWORD_MIN_LENGTH } from '../../../core/auth/auth.constants';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SNACK_BAR_DURATION_MS } from '../../../core/config/app.constants';
 import { APP_PATHS } from '../../../core/routing/app-paths';
 import { AUTH_VALIDATION_MESSAGES, matchesPassword } from '../auth-validation';
 
@@ -63,7 +64,9 @@ export class ResetPasswordPage {
             this.errorMessage.set(result.message);
             return;
           }
-          this.snackBar.open('Contraseña actualizada.');
+          this.snackBar.open('Contraseña actualizada.', undefined, {
+            duration: SNACK_BAR_DURATION_MS,
+          });
           await this.router.navigateByUrl('/');
         },
       },
