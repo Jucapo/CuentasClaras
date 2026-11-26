@@ -1,19 +1,24 @@
 <button
   type="button"
-  class="trigger"
+  class="row"
   aria-haspopup="dialog"
   [class.invalid]="!!error()"
   [disabled]="disabled()"
   [attr.aria-describedby]="error() || hint() ? supportId : null"
   (click)="activate.emit()"
-  (blur)="blurred.emit()"
 >
-  <span class="preview"><ng-content /></span>
+  <span class="leading">
+    @if (icon(); as icon) {
+      <cc-icon class="icon" [name]="icon" />
+    } @else {
+      <ng-content />
+    }
+  </span>
   <span class="texts">
     <span class="label">{{ label() }}</span>
     <span class="value">{{ valueText() }}</span>
   </span>
-  <cc-icon class="chevron" name="expand_more" />
+  <cc-icon class="chevron" name="chevron_right" size="sm" />
 </button>
 @if (error(); as error) {
   <p class="support error" role="alert" [id]="supportId">{{ error }}</p>

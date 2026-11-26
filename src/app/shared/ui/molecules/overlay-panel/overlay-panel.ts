@@ -5,8 +5,9 @@ import { UI_TEXT } from '../../ui.constants';
 let nextPanelId = 0;
 
 /**
- * Layout of a dialog or bottom sheet: title with a close button, an optional toolbar
- * (`[ccOverlayToolbar]`), a scrolling body and optional actions (`[ccOverlayActions]`).
+ * Layout of a dialog or bottom sheet: close button, title and an optional main action
+ * (`[ccOverlayHeaderAction]`, e.g. "Listo"), an optional toolbar (`[ccOverlayToolbar]`), a
+ * scrolling body and optional actions at the end (`[ccOverlayActions]`).
  */
 @Component({
   selector: 'cc-overlay-panel',

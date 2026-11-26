@@ -5,13 +5,25 @@ export const UI_TEXT = {
   invalidField: 'Revisa este campo.',
   searchIcons: 'Buscar ícono',
   noIconsFound: 'No hay íconos con esa búsqueda.',
-  pickIcon: 'Elegir ícono',
-  pickColor: 'Elegir color',
+  appearanceTitle: 'Ícono y color',
+  changeAppearance: 'Cambiar ícono y color',
+  iconTab: 'Ícono',
+  colorTab: 'Color',
+  colorGrid: 'Colores',
   inheritColor: 'Igual que la categoría',
   close: 'Cerrar',
+  back: 'Volver',
   cancel: 'Cancelar',
+  done: 'Listo',
+  save: 'Guardar',
+  moreOptions: 'Más opciones',
   dragToReorder: 'Arrastra para reordenar. Con el teclado: Alt y las flechas.',
+  gridEditHelp: 'Toca una categoría para editarla. Mantén presionada para moverla.',
+  gridEditHelpKeyboard: 'Con el teclado: Alt y las flechas para moverla.',
 } as const;
+
+/** How long a touch must be held before a drag starts, so scrolling a grid keeps working. */
+export const TOUCH_DRAG_DELAY_MS = 300;
 
 /** Why a typed amount was rejected, keyed by the domain's MoneyParseError. */
 export const MONEY_PARSE_MESSAGES = {

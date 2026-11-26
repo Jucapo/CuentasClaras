@@ -1,0 +1,34 @@
+:host {
+  display: block;
+}
+
+// Each pane scrolls on its own; the height leaves room for the shell header and padding.
+:host(.side-by-side) {
+  display: grid;
+  grid-template-columns: var(--cc-list-pane-width) minmax(0, 1fr);
+  gap: var(--cc-space-4);
+  height: calc(100dvh - var(--cc-header-height) - var(--cc-safe-area-top) - 2 * var(--cc-space-4));
+
+  .list-pane,
+  .detail-pane {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .detail-pane {
+    border-radius: var(--cc-radius-lg);
+    background-color: var(--mat-sys-surface-container-low);
+  }
+}
+
+.detail,
+.detail-empty {
+  min-height: 100%;
+}
+
+.detail-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cc-space-6);
+}

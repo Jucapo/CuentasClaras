@@ -1,0 +1,11 @@
+<div class="list-pane" [hidden]="!showList()">
+  <ng-content select="[ccListPane]" />
+</div>
+<div class="detail-pane" [hidden]="!showDetail()">
+  <div class="detail" [hidden]="!detailOpen()">
+    <ng-content select="[ccDetailPane]" />
+  </div>
+  <div class="detail-empty" [hidden]="detailOpen()">
+    <ng-content select="[ccDetailEmpty]" />
+  </div>
+</div>

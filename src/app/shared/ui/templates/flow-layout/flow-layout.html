@@ -1,0 +1,12 @@
+<header class="top-bar">
+  <cc-icon-button
+    [icon]="closeButton().icon"
+    [label]="closeButton().label"
+    shortcut="Escape"
+    (click)="closed.emit()"
+  />
+  <h1 class="title">{{ title() }}</h1>
+  <div class="action"><ng-content select="[ccFlowAction]" /></div>
+</header>
+<div class="hero"><ng-content select="[ccFlowHero]" /></div>
+<div class="body"><ng-content /></div>

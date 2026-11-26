@@ -19,3 +19,7 @@
 :host(.size-lg) {
   --cc-badge-size: var(--cc-badge-size-lg);
 }
+
+:host(.size-xl) {
+  --cc-badge-size: var(--cc-badge-size-xl);
+}

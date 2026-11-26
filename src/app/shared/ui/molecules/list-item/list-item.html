@@ -1,9 +1,28 @@
 <ng-content select="[ccListItemStart]" />
 @if (link(); as commands) {
-  <a class="main" matRipple [routerLink]="commands" [queryParams]="queryParams()">
+  <a
+    class="main"
+    matRipple
+    [class.selected]="selected()"
+    [attr.aria-current]="selected() ? 'true' : null"
+    [routerLink]="commands"
+    [queryParams]="queryParams()"
+  >
     <ng-container [ngTemplateOutlet]="content" />
     <cc-icon class="chevron" name="chevron_right" size="sm" />
   </a>
+} @else if (actionable()) {
+  <button
+    type="button"
+    class="main"
+    matRipple
+    aria-haspopup="dialog"
+    [class.selected]="selected()"
+    (click)="activate.emit()"
+  >
+    <ng-container [ngTemplateOutlet]="content" />
+    <cc-icon class="chevron" name="chevron_right" size="sm" />
+  </button>
 } @else {
   <div class="main">
     <ng-container [ngTemplateOutlet]="content" />

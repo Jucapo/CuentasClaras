@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="toggle"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="contentId"
+  (click)="open.set(!open())"
+>
+  <span class="label">{{ label() }}</span>
+  <cc-icon [name]="open() ? 'expand_less' : 'expand_more'" />
+</button>
+<div class="content" [id]="contentId" [hidden]="!open()">
+  <ng-content />
+</div>
