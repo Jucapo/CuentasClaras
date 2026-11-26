@@ -9,16 +9,17 @@
   >
     @for (option of options(); track option.value) {
       <mat-chip-option [value]="option.value">
-        @if (option.color; as color) {
-          <cc-color-swatch
-            matChipAvatar
-            [color]="color"
-            [label]="option.label"
-            [decorative]="true"
-            [small]="true"
-          />
-        }
-        {{ option.label }}
+        <span class="chip-label">
+          @if (option.color; as color) {
+            <cc-color-swatch
+              [color]="color"
+              [label]="option.label"
+              [decorative]="true"
+              [small]="true"
+            />
+          }
+          {{ option.label }}
+        </span>
       </mat-chip-option>
     }
   </mat-chip-listbox>
