@@ -1,0 +1,15 @@
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-5);
+  max-width: var(--cc-catalog-max-width);
+  margin-inline: auto;
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4)
+    calc(var(--cc-safe-area-bottom) + var(--cc-space-6));
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-6);
+}
