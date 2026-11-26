@@ -4,7 +4,8 @@ describe('space constants', () => {
   it('previews each number format with and without decimals', () => {
     expect(numberFormatExample('comma_dot', true)).toBe('-$ 1,234,567.90');
     expect(numberFormatExample('dot_comma', true)).toBe('-$ 1.234.567,90');
-    expect(numberFormatExample('space_comma', false)).toBe('-$ 1 234 567');
+    // Without decimals the sample rounds, exactly as amounts are shown.
+    expect(numberFormatExample('space_comma', false)).toBe('-$ 1 234 568');
   });
 
   it('names currencies in Spanish with their code', () => {

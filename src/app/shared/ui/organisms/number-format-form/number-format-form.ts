@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { FieldTree, FormField } from '@angular/forms/signals';
-import { NUMBER_FORMATS, numberFormatExample } from '../../../../core/config/space.constants';
+import { numberFormatExample } from '../../../../core/config/space.constants';
+import { NUMBER_FORMATS } from '../../../../domain/money/number-format';
 import { NumberFormat } from '../../../../core/spaces/space.models';
 import { Select, SelectOption } from '../../atoms/select/select';
 import { Switch } from '../../atoms/switch/switch';
