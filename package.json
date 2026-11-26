@@ -10,7 +10,8 @@
     "test:watch": "ng test --watch",
     "lint": "ng lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "supabase:types": "supabase gen types typescript --remote --schema public > src/app/core/supabase/database.types.ts"
   },
   "private": true,
   "packageManager": "npm@11.20.0",
@@ -37,6 +38,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^31.0.0",
     "prettier": "^3.8.1",
+    "supabase": "^3.4.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.72.2",
     "vitest": "^5.0.0"

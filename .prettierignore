@@ -3,7 +3,8 @@ coverage/
 .angular/
 node_modules/
 package-lock.json
+docs/finanzas-spec.md
 supabase/.temp/
 supabase/.branches/
+supabase/config.jsonc
 src/app/core/supabase/database.types.ts
-docs/finanzas-spec.md
