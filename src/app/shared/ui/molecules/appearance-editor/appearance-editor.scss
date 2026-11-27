@@ -10,3 +10,12 @@
   justify-content: center;
   padding-block: var(--cc-space-2);
 }
+
+// Inside a longer sheet the grids scroll in their own area; the icon toolbar sticks to its top.
+:host(.bounded) {
+  cc-icon-grid,
+  cc-color-grid {
+    max-height: var(--cc-appearance-inline-height);
+    overflow-y: auto;
+  }
+}

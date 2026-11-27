@@ -73,6 +73,9 @@
   --cc-picker-dialog-width: 48rem;
   --cc-picker-panel-max-height: 88dvh;
   --cc-icon-groups-width: 11rem;
+
+  // Height of the icon or color grid inside a longer sheet (subcategory, tag), which scrolls.
+  --cc-appearance-inline-height: 40dvh;
   --cc-list-indent: 3rem;
   --cc-money-row-value-width: 11rem;
   --cc-confirm-dialog-width: 26rem;

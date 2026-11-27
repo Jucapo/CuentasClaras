@@ -81,14 +81,14 @@ cc-fab {
   padding: 0;
 }
 
-// Surface of each overlay (Material 3: sheets on surface-container-low, dialogs on -high), for
-// what sticks inside them, e.g. the toolbar of the icon picker.
+// Surface of each overlay, as Angular Material paints it (sheets on surface-container-low, dialogs
+// on surface), for what sticks inside them, e.g. the toolbar of the icon picker.
 .cc-overlay-sheet {
   --cc-overlay-surface: var(--mat-sys-surface-container-low);
 }
 
 .cc-overlay-dialog {
-  --cc-overlay-surface: var(--mat-sys-surface-container-high);
+  --cc-overlay-surface: var(--mat-sys-surface);
 }
 
 .cc-overlay-sheet.cc-overlay-entry .mat-bottom-sheet-container {

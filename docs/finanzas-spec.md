@@ -481,7 +481,7 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
   - El progreso (`onboarding_step`, pasos completados en orden) se guarda al completar cada paso; revisar un paso anterior no lo hace retroceder. Se puede abrir cualquier paso hasta el pendiente; con el asistente completo, todos.
   - Mientras el asistente no esté completo y nunca se haya pospuesto, entrar a la app lo retoma en el paso pendiente (también si se cerró la app a mitad de camino).
   - "Terminar más tarde" lleva a la app y guarda `onboarding_postponed_at`: desde ahí la app no vuelve a abrirlo sola, en ningún dispositivo. Mientras no esté completo, la pantalla de inicio muestra la tarjeta "Completa tu configuración · Faltan N pasos · Continuar" y Configuración, "Completar configuración inicial".
-  - Los pasos opcionales dicen "Saltar" mientras no tienen nada y "Continuar" cuando sí.
+  - Los pasos opcionales dicen "Saltar" mientras no tienen nada y "Continuar" cuando sí. En Presupuesto basta un monto distinto de 0 escrito en cualquier fila, aunque todavía no se haya guardado.
   - "Continuar", "Atrás" y "Terminar más tarde" esperan a que terminen los guardados pendientes de las filas del paso. Si alguno falla, no navegan y muestran el error.
   - Terminar el paso 7 guarda `onboarding_completed_at`. Configuración → "Revisar configuración inicial" lo vuelve a abrir en el resumen; terminar otra vez conserva la primera fecha.
   - Solo el propietario ve el asistente, la tarjeta y la fila de Configuración, porque la configuración del espacio es suya.
@@ -755,7 +755,7 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
   - Color: grilla de tono × intensidad (en angosto, una fila por tono; en ancho, una columna por tono); en subcategorías, la primera opción es "Igual que la categoría".
 - Se abre tocando el badge grande del encabezado de cada flujo. El ✓ ("Listo") aplica los dos valores; la ✕ los descarta (overlay con confirmación, §13.5).
 - En móvil se abre como bottom sheet; en pantallas medianas y grandes, como diálogo.
-- Dentro de un sheet (p. ej. el de subcategoría) va en línea (`cc-appearance-editor`), porque un sheet no abre otro.
+- Dentro de un sheet (p. ej. el de subcategoría) va en línea (`cc-appearance-editor`), porque un sheet no abre otro. En línea, la grilla de íconos o de colores tiene su propio alto con scroll, para que lo que sigue en el sheet (Más opciones, las categorías de una etiqueta) quede a mano.
 
 **Fuente única:** el catálogo de íconos y la paleta viven cada uno en un solo archivo, y de ahí salen tanto los pickers como los estilos.
 

@@ -15,6 +15,12 @@
   min-width: 0;
 }
 
+// The 80 colors scroll in their own area, so the categories and actions below stay at hand.
+.colors {
+  max-height: var(--cc-appearance-inline-height);
+  overflow-y: auto;
+}
+
 .grid-title {
   margin: 0;
   font: var(--mat-sys-title-small);
