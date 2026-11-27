@@ -1,12 +1,34 @@
-<header class="header">
-  @if (!hideClose()) {
-    <cc-icon-button icon="close" [label]="closeLabel" (click)="closed.emit()" />
-  }
-  <h2 class="title" [id]="titleId">{{ title() }}</h2>
-  <div class="header-action"><ng-content select="[ccOverlayHeaderAction]" /></div>
-</header>
+@if (floating()) {
+  <h2 class="cc-visually-hidden" [id]="titleId">{{ title() }}</h2>
+} @else {
+  <header class="header">
+    @if (!hideClose()) {
+      <cc-icon-button icon="close" [label]="closeLabel" (click)="closed.emit()" />
+    }
+    <h2 class="title" [id]="titleId">{{ title() }}</h2>
+    <div class="header-action"><ng-content select="[ccOverlayHeaderAction]" /></div>
+  </header>
+}
 <div class="toolbar"><ng-content select="[ccOverlayToolbar]" /></div>
 <div class="body" [attr.aria-labelledby]="titleId" role="group">
   <ng-content />
 </div>
 <div class="actions"><ng-content select="[ccOverlayActions]" /></div>
+@if (confirmLabel(); as label) {
+  <cc-icon-button
+    class="floating-close"
+    icon="close"
+    [label]="closeLabel"
+    [tooltip]="true"
+    (click)="closed.emit()"
+  />
+  <cc-fab
+    class="floating-confirm"
+    icon="check"
+    shortcut="Control+S Meta+S"
+    [label]="label"
+    [loading]="confirming()"
+    [loadingLabel]="confirmingLabel()"
+    (click)="confirm()"
+  />
+}

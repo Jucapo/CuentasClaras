@@ -1,0 +1,10 @@
+:host {
+  display: inline-flex;
+}
+
+// The icon font only sizes glyphs through font-size: match Material's 24px FAB icon.
+.icon {
+  width: var(--cc-icon-size-md);
+  height: var(--cc-icon-size-md);
+  font-size: var(--cc-icon-size-md);
+}

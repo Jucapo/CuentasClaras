@@ -1,0 +1,23 @@
+<button
+  matFab
+  type="button"
+  class="fab"
+  [disabled]="disabled() || loading()"
+  [matTooltip]="label()"
+  [attr.aria-label]="label()"
+  [attr.aria-busy]="loading() || null"
+  [attr.aria-keyshortcuts]="shortcut() ?? null"
+>
+  @if (loading()) {
+    <mat-progress-spinner
+      class="spinner"
+      mode="indeterminate"
+      [diameter]="spinnerDiameter"
+      [attr.aria-label]="loadingLabel() ?? null"
+    />
+  } @else {
+    <mat-icon class="icon" [fontSet]="iconFont" aria-hidden="true" [attr.data-icon]="icon()">{{
+      glyph()
+    }}</mat-icon>
+  }
+</button>

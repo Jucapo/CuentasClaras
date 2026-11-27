@@ -120,6 +120,12 @@
 
   // Stacking.
   --cc-z-app-bar: 2;
+  --cc-z-overlay-control: 1;
+
+  // Overlays with a confirmation (spec §13.5): room the content leaves for the floating ✕ (beside
+  // the first row) and ✓ (under the last one, a 56px FAB plus its margin).
+  --cc-overlay-close-clearance: calc(var(--cc-touch-target-min) + var(--cc-space-2));
+  --cc-overlay-confirm-clearance: calc(3.5rem + var(--cc-space-5));
 
   // Device safe areas.
   --cc-safe-area-top: env(safe-area-inset-top, 0px);

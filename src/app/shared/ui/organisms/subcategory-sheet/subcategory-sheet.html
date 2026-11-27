@@ -1,13 +1,11 @@
-<cc-overlay-panel [title]="data.title" (closed)="close()">
-  <cc-button
-    ccOverlayHeaderAction
-    loadingLabel="Guardando"
-    [loading]="form().submitting()"
-    (click)="done()"
-  >
-    {{ text.done }}
-  </cc-button>
-
+<cc-overlay-panel
+  [title]="data.title"
+  [confirmLabel]="text.done"
+  confirmingLabel="Guardando"
+  [confirming]="form().submitting()"
+  (closed)="close()"
+  (confirmed)="done()"
+>
   <cc-form label="Subcategoría" [form]="form">
     <div class="identity">
       <cc-icon-badge size="lg" [icon]="form.icon().value()" [color]="shownColor()" />

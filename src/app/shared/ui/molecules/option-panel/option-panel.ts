@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Button } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Icon } from '../../atoms/icon/icon';
 import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
@@ -41,7 +40,7 @@ interface OptionGroup<T> {
 /** Focused sheet or dialog to pick one or several options (spec §13.5). */
 @Component({
   selector: 'cc-option-panel',
-  imports: [OverlayPanel, Button, IconBadge, Icon],
+  imports: [OverlayPanel, IconBadge, Icon],
   templateUrl: './option-panel.html',
   styleUrl: './option-panel.scss',
 })

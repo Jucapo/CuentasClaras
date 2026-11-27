@@ -1,4 +1,8 @@
-<cc-overlay-panel [title]="data.title" (closed)="close()">
-  <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
+<cc-overlay-panel
+  [title]="data.title"
+  [confirmLabel]="text.done"
+  (closed)="close()"
+  (confirmed)="done()"
+>
   <cc-appearance-editor [(icon)]="icon" [(color)]="color" [inheritFrom]="data.inheritFrom" />
 </cc-overlay-panel>

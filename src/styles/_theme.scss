@@ -42,6 +42,23 @@ cc-tabs {
   );
 }
 
+// cc-fab: the main action in primary colors (the ✓ of overlays, spec §13.5), its spinner included.
+cc-fab {
+  @include mat.fab-overrides(
+    (
+      container-shape: var(--cc-radius-full),
+      container-color: var(--mat-sys-primary),
+      foreground-color: var(--mat-sys-on-primary),
+      state-layer-color: var(--mat-sys-on-primary),
+    )
+  );
+  @include mat.progress-spinner-overrides(
+    (
+      active-indicator-color: var(--mat-sys-on-primary),
+    )
+  );
+}
+
 // Overlays (OverlayService): dialogs on wide screens, bottom sheets on phones.
 .cdk-overlay-pane.cc-overlay-dialog.cc-overlay-picker {
   width: min(var(--cc-picker-dialog-width), calc(100vw - 2 * var(--cc-space-4)));

@@ -2,6 +2,13 @@
   display: block;
 }
 
+// The first rows stay clear of the floating ✕ (spec §13.5).
+.top {
+  display: flex;
+  flex-direction: column;
+  padding: var(--cc-space-2) var(--cc-overlay-close-clearance) 0 0;
+}
+
 .reason {
   margin: 0 0 var(--cc-space-3);
   font: var(--mat-sys-body-medium);

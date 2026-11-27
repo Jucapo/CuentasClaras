@@ -10,6 +10,7 @@ import { Button } from '../../shared/ui/atoms/button/button';
 import { ColorSwatch } from '../../shared/ui/atoms/color-swatch/color-swatch';
 import { CurrencySelect } from '../../shared/ui/atoms/currency-select/currency-select';
 import { DateField } from '../../shared/ui/atoms/date-field/date-field';
+import { Fab } from '../../shared/ui/atoms/fab/fab';
 import { DecimalField } from '../../shared/ui/atoms/decimal-field/decimal-field';
 import { Donut, DonutSegment } from '../../shared/ui/atoms/donut/donut';
 import { IconBadge } from '../../shared/ui/atoms/icon-badge/icon-badge';
@@ -151,6 +152,7 @@ interface WindowClassDemo {
     ColorSwatch,
     CurrencySelect,
     DateField,
+    Fab,
     Donut,
     IconBadge,
     IconButton,

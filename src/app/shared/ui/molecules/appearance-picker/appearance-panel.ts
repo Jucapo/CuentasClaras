@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-import { Button } from '../../atoms/button/button';
 import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
 import { AppearanceEditor } from '../appearance-editor/appearance-editor';
@@ -18,10 +17,10 @@ export interface AppearancePanelData extends Appearance {
   readonly inheritFrom: string | null;
 }
 
-/** Sheet or dialog of `cc-appearance-picker`: "Listo" applies icon and color, closing discards. */
+/** Sheet or dialog of `cc-appearance-picker`: ✓ applies icon and color, ✕ discards them. */
 @Component({
   selector: 'cc-appearance-panel',
-  imports: [OverlayPanel, AppearanceEditor, Button],
+  imports: [OverlayPanel, AppearanceEditor],
   templateUrl: './appearance-panel.html',
 })
 export class AppearancePanel {

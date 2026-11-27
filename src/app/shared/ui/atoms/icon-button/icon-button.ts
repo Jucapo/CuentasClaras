@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
 import { ICON_FONT_CLASS } from '../../ui.constants';
@@ -9,7 +10,7 @@ import { LinkCommands } from '../button/button';
 /** Icon-only button; `label` is its accessible name. Renders a link when it gets `link`. */
 @Component({
   selector: 'cc-icon-button',
-  imports: [RouterLink, RouterLinkActive, MatIconButton, MatIcon],
+  imports: [RouterLink, RouterLinkActive, MatIconButton, MatIcon, MatTooltip],
   templateUrl: './icon-button.html',
   styleUrl: './icon-button.scss',
 })
@@ -23,6 +24,8 @@ export class IconButton {
   readonly disabled = input(false);
   /** Keyboard shortcut that triggers it, e.g. `N`; announced with aria-keyshortcuts and the title. */
   readonly shortcut = input<string>();
+  /** Shows `label` as a tooltip, for buttons whose icon alone may not say enough. */
+  readonly tooltip = input(false);
 
   protected readonly title = computed(() => {
     const shortcut = this.shortcut();

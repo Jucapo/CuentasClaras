@@ -45,6 +45,17 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-fab"
+        description="Acción principal flotante (el ✓ de los overlays con confirmación): normal, guardando y deshabilitada"
+      >
+        <ng-template>
+          <cc-fab icon="check" label="Listo" />
+          <cc-fab icon="check" label="Listo" loadingLabel="Guardando" [loading]="true" />
+          <cc-fab icon="check" label="Listo" [disabled]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-icon-button · atajo" description="Anuncia su tecla (N)">
         <ng-template>
           <cc-icon-button icon="add" label="Nueva cuenta" shortcut="N" />

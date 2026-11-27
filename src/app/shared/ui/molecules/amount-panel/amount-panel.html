@@ -1,5 +1,9 @@
-<cc-overlay-panel [title]="data.title" (closed)="close()">
-  <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
+<cc-overlay-panel
+  [title]="data.title"
+  [confirmLabel]="text.done"
+  (closed)="close()"
+  (confirmed)="done()"
+>
   <cc-form [form]="form">
     <div class="fields">
       <cc-money-field

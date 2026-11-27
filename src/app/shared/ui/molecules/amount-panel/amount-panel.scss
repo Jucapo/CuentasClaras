@@ -6,8 +6,10 @@ cc-form {
   padding-top: var(--cc-space-2);
 }
 
+// The field stays clear of the floating ✕ (spec §13.5).
 .fields {
   display: flex;
   flex-direction: column;
   gap: var(--cc-space-3);
+  padding-inline-end: var(--cc-overlay-close-clearance);
 }

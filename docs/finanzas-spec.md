@@ -626,7 +626,7 @@ recurring_templates (fase 3)
 | F1b2 · Flujos móviles y diseño adaptativo | Layouts por clase de tamaño (navegación inferior o rail, lista y detalle lado a lado) y flujos cortos pensados primero para móvil (§13.5): crear cuenta por tipo, selector único de ícono y color, grilla de categorías con modo edición, pantalla de categoría, subcategorías y etiquetas en sheet. Reemplaza los formularios largos de la F1b. Sin cambios en la base de datos |
 | F1c · Asistente | Asistente de configuración inicial completo (§7), reutilizando los flujos de la F1b2; plantilla sugerida (Anexo A) |
 | F1d · Movimientos | Movimientos (gasto, ingreso, transferencia, ajuste), registro rápido con cuotas y tasa para TC, selector de periodos, pantalla de inicio Categorías, multimoneda con tasa manual |
-| F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
+| F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), overlays con confirmación (✕ y ✓ flotantes), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
 | F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
 | F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes |
@@ -682,7 +682,7 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
 | Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
 | Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
@@ -753,7 +753,7 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
     - Sugeridos, en orden y sin repetir: los íconos cuyas palabras clave coinciden con el nombre escrito; los usados recientemente en el espacio (íconos de las cuentas y categorías más nuevas); y los del contexto (cuenta → Finanzas; categoría de ingreso → Trabajo y Finanzas).
     - Sin scroll horizontal. En un contenedor angosto (móvil), arriba de la grilla queda fijo un botón con el grupo visible ("Hogar ▾", 44 px de alto) que abre el menú de grupos para saltar a cada sección. En uno ancho (escritorio), un menú lateral de grupos marca la sección visible.
   - Color: grilla de tono × intensidad (en angosto, una fila por tono; en ancho, una columna por tono); en subcategorías, la primera opción es "Igual que la categoría".
-- Se abre tocando el badge grande del encabezado de cada flujo. "Listo" aplica los dos valores; cerrar los descarta.
+- Se abre tocando el badge grande del encabezado de cada flujo. El ✓ ("Listo") aplica los dos valores; la ✕ los descarta (overlay con confirmación, §13.5).
 - En móvil se abre como bottom sheet; en pantallas medianas y grandes, como diálogo.
 - Dentro de un sheet (p. ej. el de subcategoría) va en línea (`cc-appearance-editor`), porque un sheet no abre otro.
 
@@ -806,6 +806,13 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 
 - Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
 - El atrás del sistema (Android o el navegador) cierra solo el overlay abierto, sin navegar.
+- **Overlays con confirmación (F1d2):** los sheets y diálogos que se confirman (ícono y color, subcategoría, etiqueta, opciones de selección múltiple, tasa de cambio y monto) siguen un mismo patrón, igual en sheet y en diálogo:
+  - Sin barra superior ni título visible: el contenido sube hasta el borde superior (en el selector, la vista previa del ícono).
+  - Una ✕ flotante en la esquina superior derecha descarta, como siempre.
+  - La acción principal es un botón flotante circular con ✓ en la esquina inferior derecha, siempre visible. El contenido con scroll deja espacio abajo para que el ✓ no tape la última fila.
+  - Mientras guarda, el ✓ muestra la carga y queda deshabilitado; un error se muestra dentro del overlay.
+  - Accesibilidad: el overlay conserva su nombre accesible (el título de antes); la ✕ y el ✓ tienen nombre y tooltip ("Cerrar", "Listo"). Enter y Ctrl/⌘+S confirman (Enter conserva su efecto sobre botones, casillas y listas).
+  - Los overlays sin confirmación (una opción, "¿Qué vas a crear?", periodo, confirmaciones) y las pantallas de flujo mantienen su barra.
 
 **Teclado y puntero** (mediana y expandida)
 

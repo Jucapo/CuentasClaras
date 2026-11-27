@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
-import { Button } from '../../atoms/button/button';
 import { MoneyField } from '../../atoms/money-field/money-field';
 import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
@@ -32,7 +31,7 @@ export interface AmountPanelResult {
  */
 @Component({
   selector: 'cc-amount-panel',
-  imports: [OverlayPanel, Form, MoneyField, FormField, Button],
+  imports: [OverlayPanel, Form, MoneyField, FormField],
   templateUrl: './amount-panel.html',
   styleUrl: './amount-panel.scss',
 })

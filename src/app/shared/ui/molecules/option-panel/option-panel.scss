@@ -6,6 +6,11 @@
   & + & {
     margin-top: var(--cc-space-3);
   }
+
+  // A multiple choice has no bar: its list starts under the floating ✕ (spec §13.5).
+  &.below-close {
+    padding-top: var(--cc-overlay-close-clearance);
+  }
 }
 
 .group-title {

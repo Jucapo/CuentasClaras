@@ -17,6 +17,8 @@
     matIconButton
     type="button"
     [disabled]="disabled()"
+    [matTooltip]="label()"
+    [matTooltipDisabled]="!tooltip()"
     [attr.aria-label]="label()"
     [attr.aria-keyshortcuts]="shortcut() ?? null"
     [attr.title]="title()"
