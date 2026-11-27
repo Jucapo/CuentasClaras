@@ -44,6 +44,21 @@ async function expectThemeColor(page: Page, color: string): Promise<void> {
 }
 
 /**
+ * Waits until the sheet of `inside` rests on the bottom edge. CDK places a sheet on the frame after
+ * it appears, and a busy page shows it at the top meanwhile; a sheet that slides back also moves.
+ */
+async function sheetSettled(inside: Locator): Promise<void> {
+  await expect
+    .poll(() =>
+      inside.evaluate((element) => {
+        const pane = element.closest('.cdk-overlay-pane');
+        return pane !== null && Math.round(pane.getBoundingClientRect().bottom) === innerHeight;
+      }),
+    )
+    .toBe(true);
+}
+
+/**
  * Drags from the middle of an element, down by `distance` pixels. `slow` moves like a finger that
  * takes its time, which is no flick.
  */
@@ -53,6 +68,8 @@ async function dragDown(
   distance: number,
   slow = false,
 ): Promise<void> {
+  // The mouse goes where the handle is, so the sheet has to be in its place first.
+  await sheetSettled(target);
   const box = await target.boundingBox();
   if (!box) {
     throw new Error('Nothing to drag');
@@ -275,8 +292,13 @@ test('dragging the handle closes a sheet, and asks first when something changed'
   // Far enough, it closes.
   await dragDown(page, handle, 320);
   await expect(sheet).toBeHidden();
+  // Its history entry leaves after its exit; the next sheet starts from a clean history.
+  await expect
+    .poll(() => page.evaluate(() => JSON.stringify(history.state ?? {})))
+    .not.toContain('"ccOverlay"');
 
   await page.getByRole('button', { name: /^Mercado/ }).click();
+  await sheetSettled(handle);
   await sheet.locator('[data-key="5"]').click();
   await dragDown(page, handle, 320);
   await expect(sheet.getByRole('heading', { name: '¿Descartar los cambios?' })).toBeVisible();
