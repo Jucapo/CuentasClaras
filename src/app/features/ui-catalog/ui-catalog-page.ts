@@ -10,7 +10,8 @@ import { Button } from '../../shared/ui/atoms/button/button';
 import { ColorSwatch } from '../../shared/ui/atoms/color-swatch/color-swatch';
 import { CurrencySelect } from '../../shared/ui/atoms/currency-select/currency-select';
 import { DateField } from '../../shared/ui/atoms/date-field/date-field';
-import { Donut } from '../../shared/ui/atoms/donut/donut';
+import { DecimalField } from '../../shared/ui/atoms/decimal-field/decimal-field';
+import { Donut, DonutSegment } from '../../shared/ui/atoms/donut/donut';
 import { IconBadge } from '../../shared/ui/atoms/icon-badge/icon-badge';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Icon } from '../../shared/ui/atoms/icon/icon';
@@ -35,7 +36,25 @@ import {
 import { AppearanceEditor } from '../../shared/ui/molecules/appearance-editor/appearance-editor';
 import { AppearancePicker } from '../../shared/ui/molecules/appearance-picker/appearance-picker';
 import { Brand } from '../../shared/ui/molecules/brand/brand';
+import { AmountDisplay } from '../../shared/ui/molecules/amount-display/amount-display';
 import { CategoryBubble } from '../../shared/ui/molecules/category-bubble/category-bubble';
+import { ChipChoice } from '../../shared/ui/molecules/chip-choice/chip-choice';
+import { Keypad } from '../../shared/ui/molecules/keypad/keypad';
+import { PeriodChip } from '../../shared/ui/molecules/period-chip/period-chip';
+import {
+  ExchangeRateSheet,
+  ExchangeRateSheetData,
+} from '../../shared/ui/organisms/exchange-rate-sheet/exchange-rate-sheet';
+import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-panel/period-panel';
+import {
+  QuickEntrySheet,
+  QuickEntrySheetData,
+} from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
+import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry.model';
+import {
+  TransactionList,
+  TransactionListGroup,
+} from '../../shared/ui/organisms/transaction-list/transaction-list';
 import { ChipOption, ChipSelect } from '../../shared/ui/molecules/chip-select/chip-select';
 import { ColorGrid } from '../../shared/ui/molecules/color-grid/color-grid';
 import { Disclosure } from '../../shared/ui/molecules/disclosure/disclosure';
@@ -117,6 +136,12 @@ interface WindowClassDemo {
 @Component({
   selector: 'app-ui-catalog-page',
   imports: [
+    DecimalField,
+    AmountDisplay,
+    ChipChoice,
+    Keypad,
+    PeriodChip,
+    TransactionList,
     FormField,
     CatalogEntry,
     FixedLayout,
@@ -355,6 +380,106 @@ export class UiCatalogPage {
     { id: 'c10', name: 'Educación', icon: 'school', color: 'indigo' },
     { id: 'c11', name: 'Otros', icon: 'more_horiz', color: 'gray' },
   ];
+  protected readonly gridItemsWithAmounts: readonly CategoryGridItem[] = [
+    {
+      id: 'c1',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      amount: 180000000,
+      remaining: 20000000,
+      progress: 0.9,
+    },
+    {
+      id: 'c4',
+      name: 'Mercado',
+      icon: 'shopping_cart',
+      color: 'green',
+      amount: 32050000,
+      remaining: 87950000,
+      progress: 0.27,
+    },
+    { id: 'c5', name: 'Transporte', icon: 'directions_car', color: 'blue', amount: 2500000 },
+    {
+      id: 'c7',
+      name: 'Ocio',
+      icon: 'sports_esports',
+      color: 'purple',
+      amount: 61000000,
+      remaining: -11000000,
+      progress: 1.22,
+    },
+    { id: 'c8', name: 'Mascotas', icon: 'pets', color: 'mustard', amount: 0 },
+  ];
+  protected readonly gridTotals = [
+    { label: 'Gastos', amount: 275550000 },
+    { label: 'Ingresos', amount: 650000000 },
+  ];
+  protected readonly donutSegments: readonly DonutSegment[] = [
+    { value: 180000000, color: 'orange' },
+    { value: 32050000, color: 'green' },
+    { value: 61000000, color: 'purple' },
+  ];
+  protected readonly rateDemo = signal<number | null>(4150.25);
+  protected readonly percentDemo = signal<number | null>(1.89);
+  protected readonly chipChoice = signal<string | null>('c2');
+  protected readonly subcategoryChips: readonly ChipOption[] = [
+    { value: 'c1', label: 'Hogar' },
+    { value: 'c2', label: 'Arriendo' },
+    { value: 'c3', label: 'Servicios públicos' },
+    { value: 'c12', label: 'Mantenimiento' },
+    { value: 'c13', label: 'Aseo' },
+  ];
+  protected readonly transactionGroups: readonly TransactionListGroup[] = [
+    {
+      title: 'Hoy',
+      items: [
+        {
+          id: 't1',
+          title: 'Mercado',
+          subtitle: 'Mercado de la semana',
+          icon: 'shopping_cart',
+          color: 'green',
+          amount: -32050000,
+          currency: 'COP',
+          editable: true,
+        },
+        {
+          id: 't2',
+          title: 'Transferencia a DollarApp',
+          icon: 'swap_horiz',
+          color: null,
+          amount: -41000000,
+          currency: 'COP',
+          editable: true,
+        },
+      ],
+    },
+    {
+      title: 'Ayer',
+      items: [
+        {
+          id: 't3',
+          title: 'Salario',
+          icon: 'work',
+          color: 'teal',
+          amount: 650000000,
+          currency: 'COP',
+          editable: true,
+        },
+        {
+          id: 't4',
+          title: 'Hogar › Arriendo',
+          subtitle: 'Fijos · 3 cuotas',
+          icon: 'key',
+          color: 'orange',
+          amount: -180000000,
+          currency: 'COP',
+          editable: false,
+        },
+      ],
+    },
+  ];
   protected readonly subcategoryEntries: readonly CategoryListEntry[] = [
     { id: 'c2', name: 'Arriendo', icon: 'key', color: 'orange', subtitle: 'Fijos' },
     { id: 'c3', name: 'Servicios públicos', icon: 'bolt', color: 'amber' },
@@ -534,6 +659,109 @@ export class UiCatalogPage {
         ],
         tagOptions: this.tagOptions,
         actions: { archived: false, canDelete: true },
+        save: async () => ACTION_OK,
+      },
+    });
+  }
+
+  protected openQuickEntry(type: QuickEntryValue['type']): void {
+    const value: QuickEntryValue = {
+      type,
+      expression: type === 'adjustment' ? '5000' : '12000+3500',
+      toExpression: '',
+      categoryId: type === 'expense' ? 'c2' : null,
+      accountId: 'a1',
+      toAccountId: type === 'transfer' ? 'a3' : '',
+      date: '2026-11-26',
+      tagIds: type === 'expense' ? ['t1'] : [],
+      note: '',
+      includeInSpace: false,
+      installments: 1,
+      monthlyRatePercent: 0,
+      adjustmentDirection: 'increase',
+    };
+    void this.overlay.open<unknown, QuickEntrySheetData>(QuickEntrySheet, {
+      label: 'Registro rápido',
+      size: 'entry',
+      autoFocus: 'cc-amount-display .display',
+      data: {
+        mode: type === 'adjustment' ? 'edit' : 'create',
+        title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
+        accounts: [
+          {
+            id: 'a1',
+            name: 'Bancolombia',
+            currency: 'COP',
+            isCard: false,
+            isPrivate: false,
+            includeInSpaceByDefault: false,
+            group: 'Cuentas',
+          },
+          {
+            id: 'a2',
+            name: 'Nequi',
+            currency: 'COP',
+            isCard: false,
+            isPrivate: true,
+            includeInSpaceByDefault: true,
+            group: 'Cuentas',
+          },
+          {
+            id: 'a3',
+            name: 'DollarApp',
+            currency: 'USD',
+            isCard: false,
+            isPrivate: false,
+            includeInSpaceByDefault: false,
+            group: 'Ahorros',
+          },
+          {
+            id: 'a4',
+            name: 'Tarjeta Visa',
+            currency: 'COP',
+            isCard: true,
+            isPrivate: false,
+            includeInSpaceByDefault: false,
+            group: 'Deudas',
+          },
+        ],
+        category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
+        subcategories:
+          type === 'expense'
+            ? [
+                { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
+                { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
+              ]
+            : [],
+        tags: this.tagOptions,
+        today: '2026-11-26',
+        value,
+        save: async () => ACTION_OK,
+      },
+    });
+  }
+
+  protected openPeriodPanel(): void {
+    void this.overlay.open<unknown, PeriodPanelData>(PeriodPanel, {
+      label: 'Periodo',
+      data: {
+        period: { kind: 'month', anchor: '2026-11-01' },
+        settings: { monthStartDay: 1, weekStart: 'monday' },
+        today: '2026-11-26',
+      },
+    });
+  }
+
+  protected openRate(): void {
+    void this.overlay.open<unknown, ExchangeRateSheetData>(ExchangeRateSheet, {
+      label: 'Tasa US$ → $',
+      autoFocus: 'input',
+      data: {
+        title: 'Nueva tasa US$ → $',
+        currency: 'USD',
+        mainCurrency: 'COP',
+        reason: 'Tienes cuentas en US$. Para sumarlas en los totales hace falta la tasa de cambio.',
+        value: { date: '2026-11-26', rate: 4150.25 },
         save: async () => ACTION_OK,
       },
     });
