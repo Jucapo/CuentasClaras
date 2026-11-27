@@ -23,11 +23,18 @@ export class ToastService {
     });
   }
 
-  /** Shows a message with an action, e.g. "Deshacer"; resolves true if the user took it. */
-  async showWithAction(message: string, action: string): Promise<boolean> {
+  /**
+   * Shows a message with an action, e.g. "Deshacer"; resolves true if the user took it. A
+   * `persistent` one stays until the user acts or another toast takes its place.
+   */
+  async showWithAction(
+    message: string,
+    action: string,
+    { persistent = false } = {},
+  ): Promise<boolean> {
     const { MatSnackBar } = await import('@angular/material/snack-bar');
     const ref = this.injector.get(MatSnackBar).open(message, action, {
-      duration: SNACK_BAR_ACTION_DURATION_MS,
+      duration: persistent ? undefined : SNACK_BAR_ACTION_DURATION_MS,
       panelClass: TOAST_PANEL_CLASS,
     });
     const { dismissedByAction } = await firstValueFrom(ref.afterDismissed());

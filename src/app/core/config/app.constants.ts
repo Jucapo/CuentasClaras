@@ -18,3 +18,13 @@ export const SNACK_BAR_DURATION_MS = 4000;
 
 /** How long a notification with an action (e.g. "Deshacer") stays visible. */
 export const SNACK_BAR_ACTION_DURATION_MS = 6000;
+
+/** How often an open app asks the service worker for a new version (besides on coming back). */
+export const APP_UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
+/** The notice of a new version of the app (spec §7). */
+export const APP_UPDATE_TEXT = {
+  ready: 'Nueva versión disponible',
+  reload: 'Recargar',
+  broken: 'La app necesita recargarse para seguir funcionando.',
+} as const;
