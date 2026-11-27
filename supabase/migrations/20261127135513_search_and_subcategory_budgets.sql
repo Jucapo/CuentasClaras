@@ -102,7 +102,9 @@ grant execute on function public.search_transactions(
 -- ── RPC: totales de lo filtrado ───────────────────────────────────────────────
 -- Ingresos, gastos y neto de lo que devuelve search_transactions con los mismos argumentos, en la
 -- moneda principal con la tasa de la fecha de cada movimiento (§4.6). Transferencias y ajustes no
--- suman. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es miembro.
+-- suman. Sin filtro de estado solo suma lo confirmado, como category_totals: lo pendiente se lista
+-- pero no suma. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es
+-- miembro.
 create function public.transaction_totals(
   target_space_id uuid,
   from_date date default null,
@@ -139,6 +141,7 @@ as $$
       filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
     ) t
     where t.type in ('expense', 'income')
+      and (coalesce(cardinality(filter_statuses), 0) > 0 or t.status = 'confirmed')
     group by t.type, t.currency, t.date
   ),
   converted as (

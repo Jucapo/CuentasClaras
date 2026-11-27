@@ -230,7 +230,7 @@ export async function mockDataApi(
         json:
           name === 'search_transactions'
             ? withEmbeds(found)
-            : transactionTotals(ledger, found, spaceSettings),
+            : transactionTotals(ledger, found, spaceSettings, body),
       });
     }
     return route.fulfill({ status: 204 });
@@ -761,13 +761,19 @@ function searchTransactions(
 }
 
 /** Plays the part of transaction_totals over what search_transactions found. */
-function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row) {
+/** Like the RPC: without a status filter only what is confirmed adds up, as in category_totals. */
+function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row, args: Row) {
   const main = String(settings['main_currency']);
   const totals = { income: 0, expense: 0 };
   const missing = new Set<string>();
+  const statuses = args['filter_statuses'];
+  const anyStatus = Array.isArray(statuses) && statuses.length > 0;
   for (const movement of found) {
     const type = movement['type'];
     if (type !== 'income' && type !== 'expense') {
+      continue;
+    }
+    if (!anyStatus && movement['status'] !== 'confirmed') {
       continue;
     }
     const converted = convert(
