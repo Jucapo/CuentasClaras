@@ -42,7 +42,9 @@ export class TagsStep {
   protected readonly step = ONBOARDING_STEPS[4];
   protected readonly loadError = this.tags.loadError;
   protected readonly entries = computed(() =>
-    this.tags.activeTags().map((tag) => tagListEntry(tag, this.categories.categoriesWithTag(tag.id))),
+    this.tags
+      .activeTags()
+      .map((tag) => tagListEntry(tag, this.categories.categoriesWithTag(tag.id))),
   );
   protected readonly isEmpty = computed(() => this.tags.loaded() && this.entries().length === 0);
   /** Suggested tags that do not exist yet. */

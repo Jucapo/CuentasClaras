@@ -96,18 +96,9 @@ import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/l
 import { WizardLayout } from '../../shared/ui/templates/wizard-layout/wizard-layout';
 import { WizardStep } from '../../shared/ui/templates/wizard-step/wizard-step';
 import { Checkbox } from '../../shared/ui/atoms/checkbox/checkbox';
-import {
-  StepProgress,
-  StepProgressState,
-} from '../../shared/ui/atoms/step-progress/step-progress';
-import {
-  WizardStepItem,
-  WizardSteps,
-} from '../../shared/ui/molecules/wizard-steps/wizard-steps';
-import {
-  BudgetList,
-  BudgetListEntry,
-} from '../../shared/ui/organisms/budget-list/budget-list';
+import { StepProgress, StepProgressState } from '../../shared/ui/atoms/step-progress/step-progress';
+import { WizardStepItem, WizardSteps } from '../../shared/ui/molecules/wizard-steps/wizard-steps';
+import { BudgetList, BudgetListEntry } from '../../shared/ui/organisms/budget-list/budget-list';
 import {
   CategoryChecklist,
   CategoryChecklistNode,

@@ -69,7 +69,7 @@
 
   .card {
     flex: 0 1 auto;
-    overflow: hidden;
+    overflow: clip;
     border-radius: var(--cc-radius-lg);
     background-color: var(--mat-sys-surface);
   }
@@ -98,8 +98,7 @@
     gap: var(--cc-space-5);
     width: var(--cc-wizard-side-width);
     height: 100dvh;
-    padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4)
-      var(--cc-space-5);
+    padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4) var(--cc-space-5);
   }
 
   .side-steps {
@@ -114,6 +113,10 @@
 
   .card {
     max-width: var(--cc-content-max-width);
+    margin-inline: auto;
+
+    // Clip, not hidden: the sticky bar of an open flow keeps sticking to the window.
+    overflow: clip;
     border-radius: var(--cc-radius-lg);
     background-color: var(--mat-sys-surface);
   }

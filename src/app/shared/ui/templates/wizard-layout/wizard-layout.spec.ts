@@ -30,7 +30,10 @@ describe('WizardLayout', () => {
 
   async function render(windowClass: WindowClass) {
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: LayoutService, useValue: fixedLayout(windowClass) }],
+      providers: [
+        provideRouter([]),
+        { provide: LayoutService, useValue: fixedLayout(windowClass) },
+      ],
     });
     fixture = TestBed.createComponent(Host);
     await fixture.whenStable();

@@ -46,9 +46,7 @@ export class CategoriesPage {
 
   /** "Completa tu configuración · Faltan N pasos · Continuar" while the wizard is pending. */
   protected readonly onboardingLink = ['/', APP_PATHS.welcome];
-  protected readonly pendingText = computed(() =>
-    pendingStepsText(this.onboarding.pendingSteps()),
-  );
+  protected readonly pendingText = computed(() => pendingStepsText(this.onboarding.pendingSteps()));
 
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly loadError = this.categories.loadError;

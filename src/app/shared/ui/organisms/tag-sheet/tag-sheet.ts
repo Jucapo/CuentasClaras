@@ -12,10 +12,7 @@ import { Form } from '../../molecules/form/form';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
 import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
-import {
-  CategoryChecklist,
-  CategoryChecklistNode,
-} from '../category-checklist/category-checklist';
+import { CategoryChecklist, CategoryChecklistNode } from '../category-checklist/category-checklist';
 import { tagFormSchema, TagFormValue } from './tag-sheet.model';
 
 /** What the sheet asks the page to do after closing; `saved` means it already saved. */
@@ -85,7 +82,9 @@ export class TagSheet {
   });
 
   protected setCategories(ids: readonly string[], group: TagSheetCategoryGroup): void {
-    const own = new Set(group.nodes.flatMap((node) => [node.id, ...node.children.map((c) => c.id)]));
+    const own = new Set(
+      group.nodes.flatMap((node) => [node.id, ...node.children.map((c) => c.id)]),
+    );
     this.model.update((value) => ({
       ...value,
       categoryIds: [...value.categoryIds.filter((id) => !own.has(id)), ...ids],

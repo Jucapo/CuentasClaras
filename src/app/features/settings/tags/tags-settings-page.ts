@@ -34,7 +34,9 @@ export class TagsSettingsPage {
   protected readonly backLink = ['/', APP_PATHS.settings];
 
   protected readonly active = computed(() =>
-    this.tags.activeTags().map((tag) => tagListEntry(tag, this.categories.categoriesWithTag(tag.id))),
+    this.tags
+      .activeTags()
+      .map((tag) => tagListEntry(tag, this.categories.categoriesWithTag(tag.id))),
   );
   protected readonly archived = computed(() =>
     this.tags

@@ -125,15 +125,13 @@ export class CategoriesApi {
       }
     }
     if (added.length > 0) {
-      const { error, status } = await this.client
-        .from('category_default_tags')
-        .insert(
-          added.map((categoryId) => ({
-            space_id: spaceId,
-            category_id: categoryId,
-            tag_id: tagId,
-          })),
-        );
+      const { error, status } = await this.client.from('category_default_tags').insert(
+        added.map((categoryId) => ({
+          space_id: spaceId,
+          category_id: categoryId,
+          tag_id: tagId,
+        })),
+      );
       if (error) {
         return actionFailed(dataErrorMessage(error, status));
       }

@@ -15,7 +15,6 @@ import {
 import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
 import { spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
-import { ONBOARDING_ROUTES } from './features/onboarding/onboarding.routes';
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
@@ -66,7 +65,8 @@ export const routes: Routes = [
       import('./features/onboarding/onboarding-frame/onboarding-frame').then(
         (m) => m.OnboardingFrame,
       ),
-    children: ONBOARDING_ROUTES,
+    loadChildren: () =>
+      import('./features/onboarding/onboarding.routes').then((m) => m.ONBOARDING_ROUTES),
   },
   {
     path: '',

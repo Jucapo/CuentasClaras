@@ -3,13 +3,7 @@ import { APP_PATHS, ONBOARDING_STEP_PATHS } from '../routing/app-paths';
 
 /** Identifier of a step of the setup wizard (spec §7). */
 export type OnboardingStepId =
-  | 'space'
-  | 'accounts'
-  | 'income'
-  | 'expenses'
-  | 'tags'
-  | 'budget'
-  | 'summary';
+  'space' | 'accounts' | 'income' | 'expenses' | 'tags' | 'budget' | 'summary';
 
 /** One step of the setup wizard. */
 export interface OnboardingStep {

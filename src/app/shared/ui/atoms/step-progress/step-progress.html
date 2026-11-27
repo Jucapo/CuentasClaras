@@ -8,6 +8,10 @@
   [attr.aria-label]="label()"
 >
   @for (state of states(); track $index) {
-    <span class="segment" [class.done]="state === 'done'" [class.current]="state === 'current'"></span>
+    <span
+      class="segment"
+      [class.done]="state === 'done'"
+      [class.current]="state === 'current'"
+    ></span>
   }
 </div>

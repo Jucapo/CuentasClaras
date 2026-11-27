@@ -65,7 +65,19 @@ export interface DataApiMock {
   readonly writes: () => readonly RecordedWrite[];
   /** Bodies of the calls to an RPC, in order. */
   readonly rpcCalls: (name: string) => readonly unknown[];
+  /** The space settings as the app last saved them. */
+  readonly settings: () => Readonly<Record<string, unknown>>;
 }
+
+/** Where the setup wizard of the space starts (spec §7); complete unless said otherwise. */
+export interface OnboardingFixture {
+  readonly step: number;
+  readonly completedAt?: string | null;
+  readonly postponedAt?: string | null;
+}
+
+/** A space whose setup wizard is done, so the app opens straight away. */
+const COMPLETED_ONBOARDING: OnboardingFixture = { step: 7, completedAt: '2026-11-01T00:00:00Z' };
 
 const ACCOUNT_GROUPS: Readonly<Record<string, string>> = {
   cash: 'accounts',
@@ -82,7 +94,11 @@ const ACCOUNT_GROUPS: Readonly<Record<string, string>> = {
 /** Answers the REST calls of the app. Register after blockSupabase. */
 export async function mockDataApi(
   page: Page,
-  { withSpace = false, catalog }: { withSpace?: boolean; catalog?: CatalogFixture } = {},
+  {
+    withSpace = false,
+    catalog,
+    onboarding = COMPLETED_ONBOARDING,
+  }: { withSpace?: boolean; catalog?: CatalogFixture; onboarding?: OnboardingFixture } = {},
 ): Promise<DataApiMock> {
   let hasSpace = withSpace;
   let createdSpace: Record<string, unknown> | null = null;
@@ -94,6 +110,18 @@ export async function mockDataApi(
     categories: structuredClone(catalog?.categories ?? []) as Row[],
     tags: structuredClone(catalog?.tags ?? []) as Row[],
     category_default_tags: structuredClone(catalog?.defaultTags ?? []) as Row[],
+    budgets: structuredClone(catalog?.budgets ?? []) as Row[],
+  };
+  const spaceSettings: Row = {
+    space_id: E2E_SPACE.id,
+    main_currency: 'COP',
+    month_start_day: 1,
+    week_start: 'monday',
+    budgets_enabled: true,
+    default_period: 'month',
+    onboarding_step: onboarding.step,
+    onboarding_completed_at: onboarding.completedAt ?? null,
+    onboarding_postponed_at: onboarding.postponedAt ?? null,
   };
   const userSettings = {
     user_id: E2E_USER.id,
@@ -105,8 +133,15 @@ export async function mockDataApi(
   };
 
   await page.route(`${SUPABASE_URL}/rest/v1/space_members?*`, (route) =>
-    route.fulfill({ json: hasSpace ? [membershipRow(defaultAccountId)] : [] }),
+    route.fulfill({ json: hasSpace ? [membershipRow(defaultAccountId, spaceSettings)] : [] }),
   );
+  await page.route(`${SUPABASE_URL}/rest/v1/space_settings?*`, async (route: Route) => {
+    const request = route.request();
+    if (request.method() === 'PATCH') {
+      Object.assign(spaceSettings, request.postDataJSON());
+    }
+    return route.fulfill({ json: [spaceSettings] });
+  });
   await page.route(`${SUPABASE_URL}/rest/v1/user_settings?*`, async (route: Route) => {
     const request = route.request();
     if (request.method() === 'PATCH') {
@@ -122,6 +157,9 @@ export async function mockDataApi(
     if (name === 'set_default_account') {
       defaultAccountId = (body['target_account_id'] as string | null) ?? null;
     }
+    if (name === 'create_category_tree') {
+      createCategoryTree(tables['categories'], body);
+    }
     if (name === 'reorder_categories') {
       (body['category_ids'] as string[]).forEach((id, index) => {
         const row = tables['categories'].find((category) => category.id === id);
@@ -136,6 +174,12 @@ export async function mockDataApi(
   await page.route(`${SUPABASE_URL}/rest/v1/rpc/create_space`, (route) => {
     createdSpace = route.request().postDataJSON();
     hasSpace = true;
+    // create_space records the first wizard step as done.
+    Object.assign(spaceSettings, {
+      onboarding_step: 1,
+      onboarding_completed_at: null,
+      onboarding_postponed_at: null,
+    });
     return route.fulfill({ json: E2E_SPACE.id });
   });
   await page.route(`${SUPABASE_URL}/rest/v1/account_balances?*`, (route) =>
@@ -147,16 +191,46 @@ export async function mockDataApi(
     }),
   );
   for (const table of Object.keys(tables)) {
-    await page.route(`${SUPABASE_URL}/rest/v1/${table}?*`, (route) =>
-      answerTable(route, table, tables[table], writes),
-    );
+    // An insert that selects nothing back has no query string at all.
+    for (const url of [`${SUPABASE_URL}/rest/v1/${table}`, `${SUPABASE_URL}/rest/v1/${table}?*`]) {
+      await page.route(url, (route) => answerTable(route, table, tables[table], writes));
+    }
   }
 
   return {
     createdSpace: () => createdSpace,
     writes: () => writes,
     rpcCalls: (name) => rpcCalls.get(name) ?? [],
+    settings: () => spaceSettings,
   };
+}
+
+/** Plays the part of create_category_tree: categories, then their subcategories. */
+function createCategoryTree(categories: Row[], body: Record<string, unknown>): void {
+  const tree = body['tree'] as { name: string; icon: string; color: string; children?: Row[] }[];
+  for (const parent of tree) {
+    const created = withDefaults('categories', categories, {
+      space_id: body['target_space_id'],
+      kind: body['category_kind'],
+      parent_id: null,
+      name: parent.name,
+      icon: parent.icon,
+      color: parent.color,
+    });
+    categories.push(created);
+    for (const child of parent.children ?? []) {
+      categories.push(
+        withDefaults('categories', categories, {
+          space_id: body['target_space_id'],
+          kind: body['category_kind'],
+          parent_id: created['id'],
+          name: child['name'],
+          icon: child['icon'],
+          color: null,
+        }),
+      );
+    }
+  }
 }
 
 let nextId = 1;
@@ -243,23 +317,14 @@ function withDefaults(table: string, rows: readonly Row[], item: Row): Row {
   return row;
 }
 
-function membershipRow(defaultAccountId: string | null) {
+function membershipRow(defaultAccountId: string | null, settings: Row) {
   return {
     role: 'owner',
     joined_at: '2026-01-01T00:00:00Z',
     default_account_id: defaultAccountId,
     spaces: {
       ...E2E_SPACE,
-      space_settings: {
-        space_id: E2E_SPACE.id,
-        main_currency: 'COP',
-        month_start_day: 1,
-        week_start: 'monday',
-        budgets_enabled: true,
-        default_period: 'month',
-        onboarding_step: 1,
-        onboarding_completed_at: null,
-      },
+      space_settings: { ...settings },
     },
   };
 }

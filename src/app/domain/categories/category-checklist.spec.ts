@@ -49,9 +49,7 @@ describe('category checklist', () => {
     });
 
     it('unchecks only the item', () => {
-      expect(toggleChecklistItem(nodes, ['home', 'rent'], 'home', false, false)).toEqual([
-        'rent',
-      ]);
+      expect(toggleChecklistItem(nodes, ['home', 'rent'], 'home', false, false)).toEqual(['rent']);
     });
   });
 

@@ -2,7 +2,10 @@ import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CategoriesService } from '../../../../core/categories/categories.service';
 import { CategoryKind } from '../../../../core/categories/category.models';
-import { CATEGORY_KIND_LABELS, CATEGORY_KIND_PARAM } from '../../../../core/config/catalog.constants';
+import {
+  CATEGORY_KIND_LABELS,
+  CATEGORY_KIND_PARAM,
+} from '../../../../core/config/catalog.constants';
 import { CATEGORY_TEMPLATE } from '../../../../core/config/category-template';
 import { ONBOARDING_STEPS, stepUrl } from '../../../../core/onboarding/onboarding-steps';
 import {

@@ -40,7 +40,8 @@ export class OnboardingFrame {
     return activeRouteData(this.router);
   });
   private readonly stepId = computed(
-    () => (this.routeData()[ROUTE_DATA_KEYS.onboardingStep] as OnboardingStepId | undefined) ?? null,
+    () =>
+      (this.routeData()[ROUTE_DATA_KEYS.onboardingStep] as OnboardingStepId | undefined) ?? null,
   );
   protected readonly immersive = computed(() => this.routeData()[ROUTE_DATA_KEYS.flow] === true);
   protected readonly progress = computed(() => stepProgress(this.stepId()));

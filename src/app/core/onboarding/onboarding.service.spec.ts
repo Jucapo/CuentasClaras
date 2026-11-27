@@ -41,14 +41,20 @@ describe('OnboardingService', () => {
   });
 
   it('stops resuming once postponed, but keeps reminding', () => {
-    const onboarding = setup({ onboarding_step: 3, onboarding_postponed_at: '2026-11-26T10:00:00Z' });
+    const onboarding = setup({
+      onboarding_step: 3,
+      onboarding_postponed_at: '2026-11-26T10:00:00Z',
+    });
 
     expect(onboarding.shouldResume()).toBe(false);
     expect(onboarding.showReminder()).toBe(true);
   });
 
   it('neither resumes nor reminds once complete', () => {
-    const onboarding = setup({ onboarding_step: 7, onboarding_completed_at: '2026-11-26T10:00:00Z' });
+    const onboarding = setup({
+      onboarding_step: 7,
+      onboarding_completed_at: '2026-11-26T10:00:00Z',
+    });
 
     expect(onboarding.shouldResume()).toBe(false);
     expect(onboarding.showReminder()).toBe(false);
@@ -106,7 +112,10 @@ describe('OnboardingService', () => {
   });
 
   it('keeps the first completion date after a review', async () => {
-    const onboarding = setup({ onboarding_step: 7, onboarding_completed_at: '2026-11-01T10:00:00Z' });
+    const onboarding = setup({
+      onboarding_step: 7,
+      onboarding_completed_at: '2026-11-01T10:00:00Z',
+    });
 
     await onboarding.finish();
 

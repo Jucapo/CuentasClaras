@@ -35,9 +35,7 @@ export const onboardingStepGuard: CanActivateChildFn = async (route) => {
     return true;
   }
   await spaces.ensureLoaded();
-  return canOpenStep(step, onboarding.progress())
-    ? true
-    : router.parseUrl(onboarding.resumeUrl());
+  return canOpenStep(step, onboarding.progress()) ? true : router.parseUrl(onboarding.resumeUrl());
 };
 
 /** `/bienvenida` opens the pending step, or the summary once the wizard is complete. */

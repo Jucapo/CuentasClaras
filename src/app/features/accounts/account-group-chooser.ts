@@ -1,8 +1,5 @@
 import { Params } from '@angular/router';
-import {
-  ACCOUNT_GROUP_CHOICES,
-  CreatableAccountGroup,
-} from '../../core/config/catalog.constants';
+import { ACCOUNT_GROUP_CHOICES, CreatableAccountGroup } from '../../core/config/catalog.constants';
 import { ACCOUNT_QUERY_PARAMS } from '../../core/routing/app-paths';
 import { OptionPanel, OptionPanelData } from '../../shared/ui/molecules/option-panel/option-panel';
 import { OverlayService } from '../../shared/ui/services/overlay.service';

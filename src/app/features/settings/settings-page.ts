@@ -88,7 +88,10 @@ export class SettingsPage {
   protected readonly onboardingLink = ['/', APP_PATHS.welcome];
   protected readonly onboardingRow = computed(() =>
     this.onboarding.isComplete()
-      ? { title: 'Revisar configuración inicial', subtitle: 'Vuelve a cualquier paso del asistente' }
+      ? {
+          title: 'Revisar configuración inicial',
+          subtitle: 'Vuelve a cualquier paso del asistente',
+        }
       : {
           title: 'Completar configuración inicial',
           subtitle: pendingStepsText(this.onboarding.pendingSteps()),

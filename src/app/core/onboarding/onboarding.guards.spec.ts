@@ -92,7 +92,10 @@ describe('onboarding guards', () => {
 
     it('opens every step once complete', async () => {
       settings.set(
-        spaceSettingsFixture({ onboarding_step: 7, onboarding_completed_at: '2026-11-26T10:00:00Z' }),
+        spaceSettingsFixture({
+          onboarding_step: 7,
+          onboarding_completed_at: '2026-11-26T10:00:00Z',
+        }),
       );
       expect(await run(onboardingStepGuard, 'budget')).toBe(true);
     });
@@ -110,7 +113,10 @@ describe('onboarding guards', () => {
 
     it('opens the summary once complete', async () => {
       settings.set(
-        spaceSettingsFixture({ onboarding_step: 7, onboarding_completed_at: '2026-11-26T10:00:00Z' }),
+        spaceSettingsFixture({
+          onboarding_step: 7,
+          onboarding_completed_at: '2026-11-26T10:00:00Z',
+        }),
       );
       expect(await run(resumeOnboardingGuard)).toBe('/bienvenida/resumen');
     });

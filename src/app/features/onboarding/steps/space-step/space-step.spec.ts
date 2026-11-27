@@ -1,10 +1,16 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { ActionResult, DataResult } from '../../../../core/action-result';
-import { NewSpace, UserSettings, UserSettingsPatch } from '../../../../core/spaces/space.models';
+import { OnboardingService } from '../../../../core/onboarding/onboarding.service';
+import {
+  NewSpace,
+  SpaceSettings,
+  UserSettings,
+  UserSettingsPatch,
+} from '../../../../core/spaces/space.models';
 import { SpaceService } from '../../../../core/spaces/space.service';
-import { userSettingsFixture } from '../../../../core/spaces/space.testing';
+import { spaceSettingsFixture, userSettingsFixture } from '../../../../core/spaces/space.testing';
 import { UserSettingsService } from '../../../../core/user-settings/user-settings.service';
 import { SpaceStep } from './space-step';
 
@@ -14,10 +20,19 @@ describe('SpaceStep', () => {
   const settings = signal<UserSettings | null>(null);
   const update = vi.fn<(patch: UserSettingsPatch) => Promise<ActionResult>>();
   const createSpace = vi.fn<(input: NewSpace) => Promise<DataResult<string>>>();
+  const saveActivePreferences = vi.fn().mockResolvedValue({ ok: true });
+  const completeStep = vi.fn().mockResolvedValue({ ok: true });
+  const spaceSettings = signal<SpaceSettings | null>(null);
 
-  async function setup(initialSettings: UserSettings | null = userSettingsFixture()) {
+  async function setup(
+    initialSettings: UserSettings | null = userSettingsFixture(),
+    space: SpaceSettings | null = null,
+  ) {
     calls = [];
     settings.set(initialSettings);
+    spaceSettings.set(space);
+    saveActivePreferences.mockClear();
+    completeStep.mockClear();
     update.mockReset().mockImplementation(async () => {
       calls.push('update');
       return { ok: true };
@@ -28,9 +43,24 @@ describe('SpaceStep', () => {
     });
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
+        // Any URL resolves: the steps after this one are not part of the test.
+        provideRouter([{ path: '**', children: [] }]),
         { provide: UserSettingsService, useValue: { settings, update } },
-        { provide: SpaceService, useValue: { createSpace } },
+        {
+          provide: SpaceService,
+          useValue: {
+            createSpace,
+            saveActivePreferences,
+            hasSpace: computed(() => spaceSettings() !== null),
+            activeSettings: spaceSettings,
+            activeSpace: computed(() =>
+              spaceSettings()
+                ? { id: 'space-1', name: 'Hogar', icon: 'home', color: 'green' }
+                : null,
+            ),
+          },
+        },
+        { provide: OnboardingService, useValue: { completeStep } },
       ],
     });
     fixture = TestBed.createComponent(SpaceStep);
@@ -69,7 +99,7 @@ describe('SpaceStep', () => {
     expect(createSpace).not.toHaveBeenCalled();
   });
 
-  it('saves the number format, then creates the space and enters the app', async () => {
+  it('saves the number format, then creates the space and goes to the next step', async () => {
     await setup();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
@@ -84,7 +114,24 @@ describe('SpaceStep', () => {
       monthStartDay: 1,
       weekStart: 'monday',
     });
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(completeStep).toHaveBeenCalledWith('space');
+    expect(navigate).toHaveBeenCalledWith('/bienvenida/cuentas');
+  });
+
+  it('saves changes to the space once it exists instead of creating another', async () => {
+    await setup(userSettingsFixture(), spaceSettingsFixture({ month_start_day: 28 }));
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    expect(element().querySelector<HTMLInputElement>('cc-text-field input')?.value).toBe('Hogar');
+    typeName('Casa');
+    await submit();
+
+    expect(createSpace).not.toHaveBeenCalled();
+    expect(saveActivePreferences).toHaveBeenCalledWith(
+      { name: 'Casa' },
+      { main_currency: 'COP', month_start_day: 28, week_start: 'monday' },
+    );
+    expect(navigate).toHaveBeenCalledWith('/bienvenida/cuentas');
   });
 
   it('starts from the number format the user already has', async () => {

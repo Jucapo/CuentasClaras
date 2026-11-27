@@ -138,20 +138,18 @@ export class TagFlow {
   private categoryGroups(): TagSheetCategoryGroup[] {
     return CATEGORY_KINDS.map((kind) => ({
       label: CATEGORY_KIND_LABELS[kind],
-      nodes: this.categories.tree(kind).map(
-        ({ category, children }): CategoryChecklistNode => ({
-          id: category.id,
-          name: category.name,
-          icon: category.icon,
-          color: category.color,
-          children: children.map((child) => ({
-            id: child.id,
-            name: child.name,
-            icon: child.icon,
-            color: child.color,
-          })),
-        }),
-      ),
+      nodes: this.categories.tree(kind).map(({ category, children }): CategoryChecklistNode => ({
+        id: category.id,
+        name: category.name,
+        icon: category.icon,
+        color: category.color,
+        children: children.map((child) => ({
+          id: child.id,
+          name: child.name,
+          icon: child.icon,
+          color: child.color,
+        })),
+      })),
     }));
   }
 }
