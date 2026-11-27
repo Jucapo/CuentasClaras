@@ -4,8 +4,10 @@
   min-height: 100dvh;
   background-color: var(--mat-sys-surface);
 
-  // No shell header above the wizard: a flow's bar sticks to the top.
+  // No shell header above the wizard: a flow's bar sticks to the top, and the system's status bar
+  // takes the page's surface (spec §13.2).
   --cc-flow-bar-top: 0;
+  --cc-bar-surface: var(--mat-sys-surface);
 }
 
 .top {

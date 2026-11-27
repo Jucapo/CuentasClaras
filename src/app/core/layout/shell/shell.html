@@ -1,11 +1,17 @@
 <cc-app-shell
+  [primary]="true"
   [navItems]="navItems"
-  navLabel="Navegación principal"
-  totalLabel="Total"
+  [navLabel]="text.navigation"
+  [totalLabel]="text.total"
   [total]="total()"
-  periodLabel="Periodo"
+  [loadingLabel]="text.loading"
+  [periodLabel]="text.period"
+  [menuLabel]="text.menu"
+  [userName]="userName()"
   [immersive]="routeFlags().flow"
+  [subscreen]="routeFlags().subscreen"
   [wideContent]="routeFlags().listDetail"
+  (menuOpened)="openMenu()"
 >
   <cc-period-chip
     ccShellPeriod
@@ -15,21 +21,6 @@
     (previous)="periods.previous()"
     (next)="periods.next()"
     (opened)="choosePeriod()"
-  />
-  @if (spaceIcon(); as icon) {
-    <cc-icon-button
-      ccShellActions
-      [icon]="icon"
-      [label]="spaceLabel()"
-      [tooltip]="true"
-      (click)="chooseSpace()"
-    />
-  }
-  <cc-icon-button
-    ccShellActions
-    icon="settings"
-    label="Configuración"
-    [link]="['/', paths.settings]"
   />
   <router-outlet />
 </cc-app-shell>

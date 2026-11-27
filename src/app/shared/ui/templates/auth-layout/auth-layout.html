@@ -1,7 +1,7 @@
 <main class="auth-layout">
   <section class="auth-card">
     <header class="brand">
-      <cc-brand />
+      <cc-brand [lead]="brandLead()" [heading]="brandLead() !== null" />
     </header>
     <ng-content />
   </section>

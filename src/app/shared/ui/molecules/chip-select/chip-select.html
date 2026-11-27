@@ -1,4 +1,4 @@
-<span class="label" [id]="labelId">{{ label() }}</span>
+<span class="label" [class.cc-visually-hidden]="hideLabel()" [id]="labelId">{{ label() }}</span>
 @if (options().length > 0) {
   <mat-chip-listbox
     multiple

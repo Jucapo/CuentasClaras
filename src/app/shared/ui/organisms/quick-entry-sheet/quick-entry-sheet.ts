@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { LayoutService } from '../../services/layout.service';
-import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
+import { OVERLAY_CONTAINER, OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import {
   QuickEntry,
   QuickEntryData,
@@ -25,9 +24,8 @@ export class QuickEntrySheet {
   protected readonly data = inject<QuickEntryData>(OVERLAY_DATA);
   private readonly handle = inject<OverlayHandle<QuickEntrySheetResult>>(OverlayHandle);
   /** The overlay type does not change while it is open: sheet in compact, dialog elsewhere. */
-  protected readonly layout: QuickEntryLayout = inject(LayoutService).isCompact()
-    ? 'sheet'
-    : 'dialog';
+  protected readonly layout: QuickEntryLayout =
+    inject(OVERLAY_CONTAINER) === 'sheet' ? 'sheet' : 'dialog';
 
   protected close(result: QuickEntryResult): void {
     this.handle.close(result === 'cancel' ? undefined : result);

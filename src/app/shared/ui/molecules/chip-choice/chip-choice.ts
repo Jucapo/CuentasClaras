@@ -7,7 +7,8 @@ import { Icon } from '../../atoms/icon/icon';
 import {
   colorOrFallback,
   paletteColor,
-  paletteForeground,
+  paletteLargeTextColor,
+  paletteOnColorText,
   paletteTextColor,
 } from '../../colors/color-palette';
 import { iconOrFallback } from '../../icons/icon-glyphs';
@@ -31,6 +32,7 @@ let nextChipChoiceId = 0;
     '[style.--cc-chip-accent]': 'accentColor()',
     '[style.--cc-chip-on-accent]': 'accentForeground()',
     '[style.--cc-chip-accent-text]': 'accentText()',
+    '[style.--cc-chip-accent-outline]': 'accentOutline()',
   },
 })
 export class ChipChoice extends FormControlBase implements FormValueControl<string | null> {
@@ -52,13 +54,19 @@ export class ChipChoice extends FormControlBase implements FormValueControl<stri
     const key = this.accentKey();
     return key ? paletteColor(key) : null;
   });
+  /** The label of the picked chip, over the color: AA for text (spec §7). */
   protected readonly accentForeground = computed(() => {
     const key = this.accentKey();
-    return key ? paletteForeground(key) : null;
+    return key ? paletteOnColorText(key) : null;
   });
   protected readonly accentText = computed(() => {
     const key = this.accentKey();
     return key ? paletteTextColor(key) : null;
+  });
+  /** The outline of the other chips: 3:1, the contrast of a control's border. */
+  protected readonly accentOutline = computed(() => {
+    const key = this.accentKey();
+    return key ? paletteLargeTextColor(key) : null;
   });
 
   protected onChange(event: MatChipListboxChange, listbox: MatChipListbox): void {

@@ -11,13 +11,12 @@
       <cc-color-swatch [color]="form.color().value()" [label]="text.colorTab" [decorative]="true" />
       <cc-text-field class="name" label="Nombre" [formField]="form.name" />
     </div>
-    <h3 class="grid-title">{{ text.colorTab }}</h3>
+    <h3 class="cc-visually-hidden">{{ text.colorTab }}</h3>
     <cc-color-grid class="colors" [(value)]="form.color().value" />
 
     @if (categoryGroups.length > 0) {
       <cc-disclosure [label]="categoriesLabel()">
         <div class="categories">
-          <p class="categories-help">Se pone sola al registrar en lo que marques.</p>
           @for (group of categoryGroups; track group.label) {
             <h3 class="grid-title">{{ group.label }}</h3>
             <cc-category-checklist

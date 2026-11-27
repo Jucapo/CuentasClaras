@@ -8,10 +8,13 @@ import {
   input,
   output,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { moveItem } from '../../../../domain/categories/category-tree';
 import { formatMoney } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { Donut, DonutSegment } from '../../atoms/donut/donut';
+import { Icon } from '../../atoms/icon/icon';
+import { Skeleton } from '../../atoms/skeleton/skeleton';
 import { CategoryBubble } from '../../molecules/category-bubble/category-bubble';
 import { MONEY_FORMAT } from '../../money/money-format';
 import { TOUCH_DRAG_DELAY_MS, UI_TEXT } from '../../ui.constants';
@@ -47,13 +50,14 @@ let nextGridId = 0;
 
 /**
  * Categories as bubbles around the donut (spec §7): four columns on phones and six on wide
- * containers, with the donut in the middle. `edit` mode turns the bubbles into buttons, adds the
- * "+" bubble and, with `reorderable`, lets them move by dragging (a long press on touch screens)
- * or with Alt and the arrows.
+ * containers, with the donut in the middle. With `switchLabel` the center of the donut is a button
+ * that switches between expenses and incomes, as in 1Money. `edit` mode turns the bubbles into
+ * buttons, adds the "+" bubble and, with `reorderable`, lets them move by dragging (a long press on
+ * touch screens) or with Alt and the arrows. While `loading`, placeholder bubbles (spec §13.4).
  */
 @Component({
   selector: 'cc-category-grid',
-  imports: [CdkDropList, CdkDrag, CategoryBubble, Donut, Amount],
+  imports: [NgTemplateOutlet, CdkDropList, CdkDrag, CategoryBubble, Donut, Amount, Icon, Skeleton],
   templateUrl: './category-grid.html',
   styleUrl: './category-grid.scss',
 })
@@ -77,8 +81,14 @@ export class CategoryGrid {
   readonly donut = input(true);
   /** `category` paints each amount in the color of its category. */
   readonly amountColor = input<'neutral' | 'category'>('neutral');
+  /** Turns the center of the donut into a button with this name, e.g. "Ver ingresos". */
+  readonly switchLabel = input<string | null>(null);
+  /** The categories are on their way: placeholder bubbles instead of an empty grid. */
+  readonly loading = input(false);
   /** A category was chosen: its screen in edit mode, the quick entry in view mode. */
   readonly opened = output<string>();
+  /** The center of the donut was tapped (with `switchLabel`). */
+  readonly switched = output<void>();
   readonly add = output<void>();
   /** Ids in their new order after a move. */
   readonly reorder = output<readonly string[]>();
@@ -87,7 +97,11 @@ export class CategoryGrid {
   private readonly format = inject(MONEY_FORMAT);
   private focusAfterMove: string | null = null;
 
-  protected readonly helpId = `cc-category-grid-help-${nextGridId++}`;
+  private readonly gridId = nextGridId++;
+  protected readonly helpId = `cc-category-grid-help-${this.gridId}`;
+  protected readonly totalsId = `cc-category-grid-totals-${this.gridId}`;
+  /** Placeholder bubbles while loading: two rows around the donut. */
+  protected readonly placeholders = Array.from({ length: 8 }, (_, index) => index);
   protected readonly keyboardHelp = UI_TEXT.gridEditHelpKeyboard;
   protected readonly dragDelay = { touch: TOUCH_DRAG_DELAY_MS, mouse: 0 };
   /** The totals drawn in the donut, read out before the bubbles. */

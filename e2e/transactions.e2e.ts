@@ -102,7 +102,7 @@ test('an expense adds and subtracts on the keypad', async ({ page, isMobile }) =
 test('an income is recorded from the Ingresos tab', async ({ page, isMobile }) => {
   const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
   await page.goto('/categorias');
-  await page.getByRole('tab', { name: 'Ingresos' }).click();
+  await page.getByRole('button', { name: 'Ver ingresos' }).click();
 
   const salary = page.getByRole('button', { name: /^Salario/ });
   await expect(salary).toHaveAccessibleName(/^Salario, \$ 6,500,000\.00/);

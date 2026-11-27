@@ -52,3 +52,24 @@
   font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface-variant);
 }
+
+// The bar of a subscreen in the compact class (spec §13.5): fixed on top of the content, edge to
+// edge over the page's padding, on the surface of the app bars and under the status bar.
+:host(.bar) {
+  position: sticky;
+  top: 0;
+  z-index: var(--cc-z-app-bar);
+  min-height: calc(var(--cc-header-row-height) + var(--cc-safe-area-top));
+  margin: calc(-1 * var(--cc-page-padding)) calc(-1 * var(--cc-page-padding))
+    var(--cc-page-header-gap);
+  padding: var(--cc-safe-area-top) var(--cc-space-2) 0;
+  background-color: var(--cc-bar-surface);
+
+  .start {
+    margin-inline-start: 0;
+  }
+
+  .title {
+    font: var(--mat-sys-title-large);
+  }
+}

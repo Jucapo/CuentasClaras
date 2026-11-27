@@ -1,4 +1,10 @@
-<cc-overlay-panel [title]="data().title" (closed)="closed.emit()">
+<!-- The tabs already say what is recorded: the title only names the overlay (spec §13.5). -->
+<cc-overlay-panel
+  [title]="data().title"
+  [floatingClose]="true"
+  [handleLabel]="closeLabel"
+  (closed)="closed.emit()"
+>
   <cc-tabs ccOverlayToolbar [label]="text.tabs" [options]="tabs" [(value)]="tab" />
   <div class="panel">
     @switch (tab()) {

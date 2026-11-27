@@ -1,6 +1,7 @@
 import {
   contrastRatio,
   MIN_GRAPHIC_CONTRAST,
+  MIN_LARGE_TEXT_CONTRAST,
   MIN_TEXT_CONTRAST,
 } from '../../../domain/color/contrast';
 import {
@@ -14,15 +15,28 @@ import {
   LEGACY_COLOR_ALIASES,
   PALETTE_DARK_FOREGROUND,
   PALETTE_TEXT_SURFACES,
+  paletteAccent,
   paletteColor,
   paletteForeground,
+  paletteLargeTextColor,
+  paletteOnColorText,
   paletteTextColor,
   PALETTE_TONES,
   readableForeground,
+  readableTextForeground,
   resolveColorKey,
 } from './color-palette';
 
 const WHITE = '#ffffff';
+
+function lightDarkSides(value: string): [string, string] {
+  const [, light, dark] = /^light-dark\((#[0-9a-f]{6}), (#[0-9a-f]{6})\)$/.exec(value) ?? [
+    '',
+    '',
+    '',
+  ];
+  return [light, dark];
+}
 
 /** Every key the first palette (F1b) could store; production data only has these. */
 const FIRST_PALETTE_KEYS = [
@@ -111,6 +125,69 @@ describe('color palette', () => {
       }
     });
   }
+
+  // Spec §7: text over a palette color (the blocks of the quick entry, a selected chip) keeps AA.
+  for (const color of COLOR_PALETTE) {
+    it(`keeps text over ${color.key} readable in light and dark`, () => {
+      const [light, dark] = lightDarkSides(paletteOnColorText(color.key));
+      expect(contrastRatio(light, color.light)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      expect(contrastRatio(dark, color.dark)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+    });
+  }
+
+  // Spec §7: the amount of the quick entry is large text, so 3:1 is enough.
+  for (const color of COLOR_PALETTE) {
+    it(`keeps large text in ${color.key} readable in light and dark`, () => {
+      const [light, dark] = lightDarkSides(paletteLargeTextColor(color.key));
+      for (const surface of PALETTE_TEXT_SURFACES.light) {
+        expect(contrastRatio(light, surface)).toBeGreaterThanOrEqual(MIN_LARGE_TEXT_CONTRAST);
+      }
+      for (const surface of PALETTE_TEXT_SURFACES.dark) {
+        expect(contrastRatio(dark, surface)).toBeGreaterThanOrEqual(MIN_LARGE_TEXT_CONTRAST);
+      }
+    });
+  }
+
+  // WCAG 1.4.11: the focus ring of the quick entry, in its accent, stands out 3:1 from the surface.
+  for (const color of COLOR_PALETTE) {
+    it(`keeps the focus ring in ${color.key} visible in light and dark`, () => {
+      const { focusRing } = paletteAccent(color.key);
+      expect(focusRing).toBe(paletteLargeTextColor(color.key));
+      const [light, dark] = lightDarkSides(focusRing);
+      for (const surface of PALETTE_TEXT_SURFACES.light) {
+        expect(contrastRatio(light, surface)).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST);
+      }
+      for (const surface of PALETTE_TEXT_SURFACES.dark) {
+        expect(contrastRatio(dark, surface)).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST);
+      }
+    });
+  }
+
+  it('lets large text keep more of the color than normal text', () => {
+    // Green (700) reaches 3:1 as it is; orange (700) takes the dark orange, not the neutral fallback.
+    expect(lightDarkSides(paletteLargeTextColor('green'))[0]).toBe('#388e3c');
+    expect(lightDarkSides(paletteLargeTextColor('orange'))[0]).toBe('#e65100');
+    expect(lightDarkSides(paletteTextColor('orange'))[0]).toBe('#1a1c20');
+  });
+
+  it('picks white text over dark colors and dark or black text over the rest', () => {
+    expect(readableTextForeground('#1a237e')).toBe(WHITE);
+    expect(readableTextForeground('#fff59d')).toBe(PALETTE_DARK_FOREGROUND);
+    // A mid tone where neither white nor the dark foreground reach 4.5:1.
+    expect(readableTextForeground('#7c7c7c')).toBe('#000000');
+  });
+
+  it('gives an accent whose text pairs keep AA', () => {
+    for (const color of COLOR_PALETTE) {
+      const accent = paletteAccent(color.key);
+      const [textLight, textDark] = lightDarkSides(accent.text);
+      const [onLight, onDark] = lightDarkSides(accent.onText);
+      expect(contrastRatio(onLight, textLight)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      expect(contrastRatio(onDark, textDark)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      expect(accent.color).toBe(paletteColor(color.key));
+      expect(accent.text).toBe(paletteTextColor(color.key));
+    }
+  });
 
   it('keeps the color of the text when it already reads, and deepens it when it does not', () => {
     // Blue dark (900) reads in light; yellow (700) needs the dark yellow, or the fallback.

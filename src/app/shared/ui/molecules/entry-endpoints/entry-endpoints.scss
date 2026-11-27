@@ -1,58 +1,86 @@
+// The corners come from the container, e.g. the top of the sheet.
 :host {
   display: block;
+  border-radius: inherit;
 }
 
 .endpoints {
   display: grid;
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
-  gap: var(--cc-space-2);
+  border-radius: inherit;
 }
 
+// Filled with the color, edge to edge; the top half of the floating icon sits above the block.
 .endpoint {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--cc-space-2);
+  flex-direction: column;
+  justify-content: flex-end;
   min-width: 0;
   min-height: var(--cc-touch-target-min);
-  padding: var(--cc-space-2);
+  padding: calc(var(--cc-entry-badge-size) / 2 + var(--cc-space-1)) var(--cc-space-4)
+    var(--cc-space-3);
   border: none;
-  border-radius: var(--cc-radius-md);
-
-  // The soft tone of Presupuesto's rows: the text on it keeps AA in both themes.
-  background-color: color-mix(
-    in srgb,
-    var(--cc-endpoint-color) var(--cc-backdrop-tint),
-    var(--mat-sys-surface)
-  );
-  color: var(--mat-sys-on-surface);
+  border-radius: inherit;
+  background-color: var(--cc-endpoint-color);
+  color: var(--cc-endpoint-on-color);
   font: inherit;
   text-align: start;
   cursor: pointer;
 
+  // Inside the block, so it takes the color of its text, which reads over it (4.5:1).
   &:focus-visible {
-    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+    outline: var(--cc-swatch-ring-width) solid var(--cc-endpoint-on-color);
+    outline-offset: calc(-2 * var(--cc-swatch-ring-width));
   }
 }
 
-.badge {
-  flex-shrink: 0;
+// Only the outer top corners follow the sheet's.
+.endpoint:first-child {
+  border-radius: inherit;
+  border-top-right-radius: 0;
 }
 
-.texts {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.endpoint:last-child:not(:first-child) {
+  border-top-left-radius: 0;
+}
+
+.endpoint:not(:first-child, :last-child) {
+  border-radius: 0;
+}
+
+.badge {
+  position: absolute;
+  top: calc(var(--cc-entry-badge-size) / -2);
+  left: var(--cc-space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-entry-badge-size);
+  height: var(--cc-entry-badge-size);
+  border-radius: var(--cc-radius-sm);
+  background-color: var(--mat-sys-surface-container-lowest);
+  box-shadow: var(--cc-elevation-2);
+  color: var(--cc-endpoint-icon-color);
+}
+
+.badge.circle {
+  border-radius: var(--cc-radius-full);
+}
+
+.badge.at-end {
+  right: var(--cc-space-4);
+  left: auto;
 }
 
 .role {
   font: var(--mat-sys-label-medium);
-  color: var(--mat-sys-on-surface-variant);
 }
 
 .name {
   overflow: hidden;
-  font: var(--mat-sys-title-medium);
+  font: var(--mat-sys-title-large);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

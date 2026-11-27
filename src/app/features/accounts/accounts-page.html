@@ -1,59 +1,64 @@
+<!-- The header holds the "+" and, instead of the period (balances do not depend on it), the tabs. -->
+<ng-template ccScreenAction>
+  @if (canEdit()) {
+    <cc-icon-button icon="add" label="Nueva cuenta" shortcut="N" (click)="create()" />
+  }
+</ng-template>
+<ng-template ccScreenBar>
+  <cc-tabs
+    class="view-tabs"
+    label="Qué ver"
+    [panel]="false"
+    [options]="viewTabs"
+    [value]="view()"
+    (valueChange)="changeView($event)"
+  />
+</ng-template>
+
 <cc-list-detail-layout [detailOpen]="detailOpen()">
   <div ccListPane class="list">
-    <cc-page-header title="Cuentas">
-      @if (canEdit()) {
-        <cc-icon-button icon="add" label="Nueva cuenta" shortcut="N" (click)="create()" />
+    <h1 class="cc-visually-hidden">Cuentas</h1>
+    @if (view() === 'accounts') {
+      @if (loadError(); as error) {
+        <cc-message>{{ error }}</cc-message>
+      } @else if (isEmpty()) {
+        <cc-section
+          title="Aún no tienes cuentas"
+          description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
+        >
+          @if (canEdit()) {
+            <cc-button icon="add" (click)="create()">Agregar una cuenta</cc-button>
+          }
+        </cc-section>
+      } @else {
+        <cc-account-list [groups]="groups()" [totals]="listTotals()" [loading]="!loaded()" />
       }
-    </cc-page-header>
 
-    <cc-tabs
-      label="Qué ver"
-      [options]="viewTabs"
-      [value]="view()"
-      (valueChange)="changeView($event)"
-    >
-      <div class="tab">
-        @if (view() === 'accounts') {
-          @if (loadError(); as error) {
-            <cc-message>{{ error }}</cc-message>
-          } @else if (isEmpty()) {
-            <cc-section
-              title="Aún no tienes cuentas"
-              description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
-            >
-              @if (canEdit()) {
-                <cc-button icon="add" (click)="create()">Agregar una cuenta</cc-button>
-              }
-            </cc-section>
-          } @else {
-            <cc-account-list [groups]="groups()" [totals]="totals()" />
-          }
-
-          @if (hasArchived()) {
-            <cc-disclosure [label]="archivedLabel()">
-              <cc-account-list [groups]="archivedGroups()" />
-            </cc-disclosure>
-          }
-        } @else {
-          @if (netWorthError(); as error) {
-            <cc-message>{{ error }}</cc-message>
-          }
-          @if (netWorth(); as worth) {
-            <cc-missing-rates-notice
-              [currencies]="worth.missingRateCurrencies"
-              [canDefine]="canEdit()"
-              (define)="defineRate($event)"
-            />
-            <cc-net-worth
-              [figures]="worth.consolidated"
-              [groups]="netWorthGroups()"
-              [byCurrency]="worth.byCurrency"
-              [currency]="mainCurrency()"
-            />
-          }
-        }
-      </div>
-    </cc-tabs>
+      @if (hasArchived()) {
+        <cc-disclosure [label]="archivedLabel()">
+          <cc-account-list [groups]="archivedGroups()" />
+        </cc-disclosure>
+      }
+    } @else {
+      @if (netWorthError(); as error) {
+        <cc-message>{{ error }}</cc-message>
+      }
+      @if (netWorth(); as worth) {
+        <cc-missing-rates-notice
+          [currencies]="worth.missingRateCurrencies"
+          [canDefine]="canEdit()"
+          (define)="defineRate($event)"
+        />
+        <cc-net-worth
+          [figures]="worth.consolidated"
+          [groups]="netWorthGroups()"
+          [byCurrency]="worth.byCurrency"
+          [currency]="mainCurrency()"
+        />
+      } @else if (!netWorthError()) {
+        <cc-skeleton-list variant="blocks" [rows]="3" />
+      }
+    }
   </div>
 
   <div ccDetailPane class="detail">

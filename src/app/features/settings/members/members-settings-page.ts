@@ -61,10 +61,9 @@ export class MembersSettingsPage {
     })),
   );
   protected readonly membersTitle = computed(() => `Miembros (${this.memberEntries().length})`);
+  /** Only to those without the controls: it explains why they are missing. */
   protected readonly membersDescription = computed(() =>
-    this.canConfigure()
-      ? 'Toca a alguien para cambiar su rol.'
-      : 'Solo el propietario invita, cambia roles y quita miembros.',
+    this.canConfigure() ? undefined : 'Solo el propietario invita, cambia roles y quita miembros.',
   );
 
   protected readonly invitationEntries = computed<readonly InvitationListEntry[]>(() => {
@@ -89,9 +88,10 @@ export class MembersSettingsPage {
     const me = this.me();
     return me !== null && canLeave(this.members.members(), me.userId);
   });
+  /** Only while leaving is not possible: why (the confirmation explains the rest). */
   protected readonly leaveDescription = computed(() =>
     this.canLeave() || !this.me()
-      ? 'Dejas de ver el espacio. Lo registrado en cuentas compartidas se queda.'
+      ? undefined
       : 'Eres el único propietario: para salir, haz propietario antes a otra persona.',
   );
 

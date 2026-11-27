@@ -47,7 +47,6 @@ import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
 import { FALLBACK_COLOR } from '../../shared/ui/colors/color-palette';
 import { MONEY_FORMAT } from '../../shared/ui/money/money-format';
 import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { TotalOption, TotalToggle } from '../../shared/ui/molecules/total-toggle/total-toggle';
 import {
@@ -56,6 +55,8 @@ import {
 } from '../../shared/ui/organisms/breakdown-list/breakdown-list';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { TransactionFiltersStore } from '../transactions/transaction-filters.store';
+import { Skeleton } from '../../shared/ui/atoms/skeleton/skeleton';
+import { SkeletonList } from '../../shared/ui/molecules/skeleton-list/skeleton-list';
 import {
   chartSummary,
   DIMENSION_TABS,
@@ -77,7 +78,6 @@ const KINDS: readonly CategoryKind[] = ['expense', 'income'];
 @Component({
   selector: 'app-summary-page',
   imports: [
-    PageHeader,
     Message,
     Amount,
     ProgressRing,
@@ -88,6 +88,8 @@ const KINDS: readonly CategoryKind[] = ['expense', 'income'];
     BudgetRow,
     Tabs,
     MissingRatesNotice,
+    Skeleton,
+    SkeletonList,
   ],
   providers: [ReportsService],
   templateUrl: './summary-page.html',
@@ -96,6 +98,8 @@ const KINDS: readonly CategoryKind[] = ['expense', 'income'];
 export class SummaryPage {
   private readonly reports = inject(ReportsService);
   private readonly totals = inject(TotalsService);
+  /** The first totals of the period are on their way: placeholders (spec §13.4). */
+  protected readonly loading = computed(() => !this.totals.categoryTotalsLoaded());
   private readonly periods = inject(PeriodService);
   private readonly spaces = inject(SpaceService);
   private readonly categories = inject(CategoriesService);

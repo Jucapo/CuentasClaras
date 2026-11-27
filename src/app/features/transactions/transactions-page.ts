@@ -1,8 +1,10 @@
 import {
+  afterNextRender,
   Component,
   computed,
   effect,
   inject,
+  Injector,
   linkedSignal,
   resource,
   signal,
@@ -43,6 +45,7 @@ import {
   TransactionFilters,
 } from '../../domain/transactions/transaction-filters';
 import { Button } from '../../shared/ui/atoms/button/button';
+import { Fab } from '../../shared/ui/atoms/fab/fab';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Message } from '../../shared/ui/atoms/message/message';
@@ -53,7 +56,6 @@ import {
   OptionPanelData,
   PanelOption,
 } from '../../shared/ui/molecules/option-panel/option-panel';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { MONEY_FORMAT } from '../../shared/ui/money/money-format';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
@@ -66,6 +68,7 @@ import { ConfirmService } from '../../shared/ui/services/confirm.service';
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
 import { LayoutService } from '../../shared/ui/services/layout.service';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
+import { ScreenAction, ScreenFab } from '../../shared/ui/services/screen-chrome';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { QuickEntryFlow, QuickEntrySession } from './quick-entry-flow';
 import { DayTotals, injectTransactionLookups, toTransactionGroups } from './transaction-items';
@@ -78,14 +81,16 @@ import {
 
 /**
  * Transacciones (spec §7): the movements of the global period that the user sees, by day, with a
- * search, filters as chips and the totals of what is listed. A movement opens in the quick entry:
- * in an overlay in the compact and medium classes, and beside the list in the expanded one, where
- * leaving it with unsaved changes asks first.
+ * search (opened from the header), filters as chips and the totals of what is listed. A movement
+ * opens in the quick entry: in an overlay in the compact and medium classes, and beside the list in
+ * the expanded one, where leaving it with unsaved changes asks first. "+" floats over the list.
  */
 @Component({
   selector: 'app-transactions-page',
   imports: [
-    PageHeader,
+    ScreenAction,
+    ScreenFab,
+    Fab,
     IconButton,
     Icon,
     Button,
@@ -118,11 +123,17 @@ export class TransactionsPage implements HasUnsavedChanges {
   private readonly layout = inject(LayoutService);
   private readonly format = inject(MONEY_FORMAT);
   private readonly store = inject(TransactionFiltersStore);
+  private readonly injector = inject(Injector);
   private readonly lookups = injectTransactionLookups();
 
   protected readonly text = TRANSACTIONS_TEXT;
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly query = this.store.query;
+
+  /** The search shows once opened from the header, and stays while it has text. */
+  private readonly searchOpen = signal(false);
+  protected readonly showSearch = computed(() => this.searchOpen() || this.query().length > 0);
+  private readonly searchField = viewChild(TextField);
 
   private readonly mainCurrency = computed(
     () => this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency,
@@ -476,6 +487,23 @@ export class TransactionsPage implements HasUnsavedChanges {
   protected clearAll(): void {
     this.store.reset();
     this.settledQuery.set('');
+  }
+
+  /** 🔍 in the header: shows the search and puts the cursor in it, or hides an empty one. */
+  protected toggleSearch(): void {
+    if (this.showSearch() && this.query().length === 0) {
+      this.searchOpen.set(false);
+      return;
+    }
+    this.searchOpen.set(true);
+    afterNextRender(() => this.searchField()?.focus(), { injector: this.injector });
+  }
+
+  /** The ✕ of the search: clears it and hides it. */
+  protected closeSearch(): void {
+    this.query.set('');
+    this.settledQuery.set('');
+    this.searchOpen.set(false);
   }
 
   protected defineRate(currency: string): void {

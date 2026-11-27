@@ -4,9 +4,23 @@
   box-sizing: border-box;
 }
 
+// The app does not behave like a page (spec §13.4): no bounce or pull-to-refresh on the edges, no
+// zoom on a double tap (pinch zoom stays, for accessibility). Inside the signed-in shell only its
+// content scrolls; the screens outside it (sign-in, wizard, invitation) scroll the document.
 html,
 body {
   height: 100%;
+  overscroll-behavior: none;
+}
+
+html {
+  text-size-adjust: 100%;
+}
+
+// Every element, since a scroll container stops what its ancestors allow; anything that sets its
+// own (a drag handle) wins over this.
+:where(*) {
+  touch-action: manipulation;
 }
 
 body {
@@ -16,6 +30,67 @@ body {
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
   -webkit-tap-highlight-color: transparent;
+}
+
+// Controls are not text: no selection and no long-press menu on them. On touch screens nothing is,
+// except fields and notes (.cc-selectable); with a mouse, the rest of the text can still be copied.
+button,
+a,
+label,
+[role='button'],
+[role='tab'],
+[role='option'],
+[role='radio'],
+[role='checkbox'],
+[role='switch'],
+[role='menuitem'] {
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  body {
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  // Scrolling areas keep working; their bars do not show, as in a native app.
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Every control shows it is pressed (spec §13.4). Material's controls and the rows with a ripple
+// bring their own state layer.
+:where(button, a[href], [role='button'], [role='option'], [role='radio'], [role='tab']):not(
+    .mat-mdc-button-base,
+    .mat-ripple,
+    .mdc-tab,
+    .mat-mdc-tab-link,
+    .mat-mdc-chip-action,
+    .mat-mdc-option,
+    .mat-mdc-chip,
+    :disabled
+  ):active {
+  box-shadow: var(--cc-pressed-layer);
+}
+
+input,
+textarea,
+[contenteditable='true'],
+.cc-selectable {
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img,
+svg,
+a {
+  -webkit-user-drag: none;
 }
 
 // Components hide parts with [hidden]; no display rule may override it.

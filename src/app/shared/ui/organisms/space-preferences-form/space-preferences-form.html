@@ -1,15 +1,16 @@
 <cc-text-field
   label="Nombre del espacio"
   placeholder="Hogar"
-  hint="Por ejemplo: Hogar o Personal."
+  [hint]="hints() ? 'Por ejemplo: Hogar o Personal.' : undefined"
   autocomplete="off"
   [formField]="fields().name"
 />
 <cc-currency-select
   label="Moneda principal"
-  hint="Los totales se muestran en esta moneda."
+  [hint]="hints() ? 'Los totales se muestran en esta moneda.' : undefined"
   [formField]="fields().mainCurrency"
 />
+<!-- The range of the month is worked out from the day: it stays everywhere. -->
 <cc-select
   label="Primer día del mes"
   [hint]="monthHint()"

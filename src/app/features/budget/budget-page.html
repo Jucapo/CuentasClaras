@@ -1,6 +1,6 @@
 <cc-list-detail-layout [detailOpen]="paneDetail() !== null">
   <div ccListPane class="list">
-    <cc-page-header [title]="text.title" />
+    <h1 class="cc-visually-hidden">{{ text.title }}</h1>
 
     @switch (view()) {
       @case ('off') {
@@ -50,42 +50,19 @@
           (define)="defineRate($event)"
         />
 
-        <section class="group" [attr.aria-label]="text.expenses">
-          <cc-budget-row
-            emphasis="total"
-            [name]="text.expenses"
-            [figures]="expenseTotal()"
-            [currency]="currency()"
-            [note]="unbudgetedNote()"
-          />
-          @for (category of expenses(); track category.id) {
-            <cc-budget-row
-              [name]="category.name"
-              [icon]="category.icon"
-              [color]="category.color"
-              [figures]="category.figures"
-              [currency]="currency()"
-              [actionable]="true"
-              [selected]="selectedId() === category.id"
-              (activate)="open(category.id)"
-            />
-          } @empty {
-            <cc-message>{{ text.noCategories }}</cc-message>
-          }
-        </section>
-
-        @if (incomes().length > 0) {
-          <section class="group" [attr.aria-label]="text.incomes">
+        @if (loading()) {
+          <cc-skeleton-list variant="blocks" [rows]="5" />
+        } @else {
+          <section class="group" [attr.aria-label]="text.expenses">
             <cc-budget-row
               emphasis="total"
-              kind="income"
-              [name]="text.incomes"
-              [figures]="incomeTotal()"
+              [name]="text.expenses"
+              [figures]="expenseTotal()"
               [currency]="currency()"
+              [note]="unbudgetedNote()"
             />
-            @for (category of incomes(); track category.id) {
+            @for (category of expenses(); track category.id) {
               <cc-budget-row
-                kind="income"
                 [name]="category.name"
                 [icon]="category.icon"
                 [color]="category.color"
@@ -95,8 +72,35 @@
                 [selected]="selectedId() === category.id"
                 (activate)="open(category.id)"
               />
+            } @empty {
+              <cc-message>{{ text.noCategories }}</cc-message>
             }
           </section>
+
+          @if (incomes().length > 0) {
+            <section class="group" [attr.aria-label]="text.incomes">
+              <cc-budget-row
+                emphasis="total"
+                kind="income"
+                [name]="text.incomes"
+                [figures]="incomeTotal()"
+                [currency]="currency()"
+              />
+              @for (category of incomes(); track category.id) {
+                <cc-budget-row
+                  kind="income"
+                  [name]="category.name"
+                  [icon]="category.icon"
+                  [color]="category.color"
+                  [figures]="category.figures"
+                  [currency]="currency()"
+                  [actionable]="true"
+                  [selected]="selectedId() === category.id"
+                  (activate)="open(category.id)"
+                />
+              }
+            </section>
+          }
         }
       }
     }

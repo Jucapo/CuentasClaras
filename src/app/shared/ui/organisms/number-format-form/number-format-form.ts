@@ -21,6 +21,8 @@ export interface NumberFormatPreferences {
 })
 export class NumberFormatForm {
   readonly fields = input.required<FieldTree<NumberFormatPreferences>>();
+  /** Help under the fields, for the first time (the wizard); off in Configuración (spec §13.5). */
+  readonly hints = input(true);
 
   /** Each option previews a sample amount, following the decimals switch. */
   protected readonly formatOptions = computed<readonly SelectOption<NumberFormat>[]>(() => {

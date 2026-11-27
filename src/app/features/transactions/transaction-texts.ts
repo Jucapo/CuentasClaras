@@ -15,6 +15,7 @@ export const TRANSACTIONS_TEXT = {
   title: 'Transacciones',
   search: 'Buscar',
   searchPlaceholder: 'Nota, categoría, cuenta o monto',
+  closeSearch: 'Cerrar la búsqueda',
   filters: 'Filtros',
   totals: 'Totales de lo que se ve',
   balances: 'Saldos del periodo',

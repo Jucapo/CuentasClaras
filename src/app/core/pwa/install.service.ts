@@ -24,6 +24,9 @@ export class InstallService {
   /** Whether the browser offered its install prompt, so an "Instalar" button can open it. */
   readonly canPrompt = computed(() => this.deferredPrompt() !== null);
 
+  /** Whether the page runs as the installed app (home screen or app window). */
+  readonly standalone = signal(this.detectStandalone());
+
   /** Where the app is opened. */
   readonly platform: InstallPlatform = this.window
     ? detectInstallPlatform(this.window.navigator.userAgent, this.window.navigator.maxTouchPoints)
@@ -38,15 +41,22 @@ export class InstallService {
       this.deferredPrompt.set(event as BeforeInstallPromptEvent);
     });
     this.window?.addEventListener('appinstalled', () => this.deferredPrompt.set(null));
+    this.window
+      ?.matchMedia?.('(display-mode: standalone)')
+      .addEventListener('change', () => this.standalone.set(this.detectStandalone()));
   }
 
   /** Whether the page runs as the installed app (home screen or app window). */
   isStandalone(): boolean {
+    return this.standalone();
+  }
+
+  private detectStandalone(): boolean {
     if (!this.window) {
       return false;
     }
     return (
-      this.window.matchMedia('(display-mode: standalone)').matches ||
+      this.window.matchMedia?.('(display-mode: standalone)').matches ||
       (this.window.navigator as IosNavigator).standalone === true
     );
   }

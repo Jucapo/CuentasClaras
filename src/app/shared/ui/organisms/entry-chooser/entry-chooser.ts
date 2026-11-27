@@ -1,6 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 import { TabOption, Tabs } from '../../atoms/tabs/tabs';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
+import { UI_TEXT } from '../../ui.constants';
 import { AccountList, AccountListGroup } from '../account-list/account-list';
 import { CategoryGrid, CategoryGridItem } from '../category-grid/category-grid';
 
@@ -55,6 +56,7 @@ export class EntryChooser {
 
   protected readonly tabs = CHOOSER_TABS;
   protected readonly text = CHOOSER_TEXT;
+  protected readonly closeLabel = UI_TEXT.close;
   protected readonly tab = signal<ChooserTab>('expense');
 
   protected pickCategory(categoryId: string): void {

@@ -23,8 +23,40 @@
 }
 
 .toolbar:empty,
-.actions:empty {
+.actions:empty,
+.hero:empty {
   display: none;
+}
+
+// Edge to edge on top, e.g. the blocks of the quick entry: it cancels the padding of the panel and
+// takes its corners.
+.hero {
+  margin: calc(-1 * var(--cc-space-3)) calc(-1 * var(--cc-space-4)) 0;
+  border-radius: inherit;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+:host(.floating) .hero {
+  margin-top: calc(-1 * var(--cc-space-2));
+}
+
+// In a bottom sheet the panel is the sheet: its container is transparent, with a gutter on top where
+// the handle floats over the backdrop (spec §13.5). Only the panel takes touches; the gutter around
+// the handle lets them through to the backdrop, which closes the sheet as before.
+:host(.in-sheet) {
+  max-height: calc(var(--cc-picker-panel-max-height) - var(--cc-sheet-gutter));
+  border-radius: var(--cc-sheet-radius) var(--cc-sheet-radius) 0 0;
+  background-color: var(--cc-overlay-surface);
+  pointer-events: auto;
+}
+
+.sheet-handle {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  z-index: var(--cc-z-overlay-control);
+  transform: translateX(-50%);
 }
 
 .body {
@@ -51,6 +83,11 @@
   padding-bottom: var(--cc-overlay-confirm-clearance);
 }
 
+// A toolbar on top (e.g. tabs) leaves room for the ✕ floating in the corner.
+:host(.corner-close) .toolbar {
+  padding-inline-end: var(--cc-overlay-close-clearance);
+}
+
 .floating-close {
   position: absolute;
   top: var(--cc-space-1);
@@ -58,6 +95,15 @@
   z-index: var(--cc-z-overlay-control);
   border-radius: var(--cc-radius-full);
   background-color: var(--mat-sys-surface-container-high);
+}
+
+// Centered on the top edge, where the handle is in a sheet: it takes no width from the content.
+.floating-close.at-top {
+  top: 0;
+  right: auto;
+  left: 50%;
+  box-shadow: var(--cc-elevation-1);
+  transform: translate(-50%, -50%);
 }
 
 .floating-confirm {

@@ -131,10 +131,11 @@ export function axisMonthText(month: IsoDate, withYear: boolean): string {
 
 /**
  * The date of a movement in one line (spec §7): "Hoy, 27 nov", "Ayer, 26 nov" or "Jueves, 20 nov",
- * with the year when it is not the one of `today`.
+ * with the year when it is not the one of `today`, or always with `withYear` (the line under the
+ * keypad of the quick entry: "Hoy, 27 nov 2026").
  */
-export function entryDateText(date: IsoDate, today: IsoDate): string {
-  const short = shortDate(date, dateParts(date).year !== dateParts(today).year);
+export function entryDateText(date: IsoDate, today: IsoDate, withYear = false): string {
+  const short = shortDate(date, withYear || dateParts(date).year !== dateParts(today).year);
   if (date === today) {
     return `Hoy, ${short}`;
   }

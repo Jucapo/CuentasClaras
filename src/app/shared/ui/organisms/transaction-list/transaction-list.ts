@@ -4,6 +4,7 @@ import { Button } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Icon } from '../../atoms/icon/icon';
 import { ListItem } from '../../molecules/list-item/list-item';
+import { SkeletonList } from '../../molecules/skeleton-list/skeleton-list';
 import { UI_TEXT } from '../../ui.constants';
 
 /** A movement as the list shows it, already worded by the page. */
@@ -48,7 +49,7 @@ export interface TransactionListGroup {
  */
 @Component({
   selector: 'cc-transaction-list',
-  imports: [ListItem, IconBadge, Icon, Amount, Button],
+  imports: [ListItem, IconBadge, Icon, Amount, Button, SkeletonList],
   templateUrl: './transaction-list.html',
   styleUrl: './transaction-list.scss',
 })

@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-avatar-size-md);
+  height: var(--cc-avatar-size-md);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-title-small);
+  user-select: none;
+}
+
+:host(.size-lg) {
+  width: var(--cc-avatar-size-lg);
+  height: var(--cc-avatar-size-lg);
+  font: var(--mat-sys-title-large);
+}

@@ -1,13 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
 import { capture, captureViewport } from './support/screenshots';
-import {
-  blockSupabase,
-  E2E_USER,
-  mockDataApi,
-  seedSession,
-  SUPABASE_URL,
-} from './support/supabase';
+import { blockSupabase, mockDataApi, seedSession, SUPABASE_URL } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
   await blockSupabase(page);
@@ -168,7 +162,10 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
 
   await grid.getByRole('button', { name: 'Hogar', exact: true }).click();
   await expect(page).toHaveURL(/\/bienvenida\/gastos\/categories-\d+\?clase=gasto$/);
-  await expect(page.getByRole('heading', { name: 'Hogar', level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Hogar');
   await expect(
     page.getByRole('list', { name: 'Subcategorías', exact: true }).getByRole('listitem'),
   ).toHaveCount(5);
@@ -355,12 +352,14 @@ test('a complete wizard can be reviewed from Configuración', async ({ page }) =
   await expect(page.getByRole('list', { name: 'Categorías de gasto' })).toContainText('Hogar');
 });
 
-test('settings show the space and the session', async ({ page }) => {
+test('settings show the space; the theme and the session are in the menu', async ({ page }) => {
   await mockDataApi(page, { withSpace: true });
   await page.goto('/configuracion');
 
   await expect(page.getByRole('heading', { name: 'Configuración', exact: true })).toBeVisible();
   await expect(page.getByLabel('Nombre del espacio')).toHaveValue('Hogar');
-  await expect(page.getByText(`Sesión iniciada como ${E2E_USER.email}`)).toBeVisible();
+  const main = page.getByRole('main');
+  await expect(main.getByRole('button', { name: 'Cerrar sesión' })).toHaveCount(0);
+  await expect(main.getByLabel('Tema')).toHaveCount(0);
   await capture(page, 'configuracion');
 });

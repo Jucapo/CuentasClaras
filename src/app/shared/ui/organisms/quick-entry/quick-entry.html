@@ -4,19 +4,22 @@
   [hidden]="!atForm()"
   [title]="data().title"
   [floatingClose]="true"
+  [handleLabel]="ui.close"
+  [closeAtTop]="true"
   [confirmLabel]="floatingConfirm()"
   [confirming]="form().submitting()"
   [confirmingLabel]="ui.saving"
   (closed)="requestClose()"
   (confirmed)="submitEntry()"
 >
+  <cc-entry-endpoints
+    ccOverlayHero
+    class="endpoints"
+    [label]="text.endpoints"
+    [endpoints]="endpoints()"
+    (picked)="pickEndpoint($event)"
+  />
   <div class="layout">
-    <cc-entry-endpoints
-      class="endpoints"
-      [label]="text.endpoints"
-      [endpoints]="endpoints()"
-      (picked)="pickEndpoint($event)"
-    />
     @if (stacked()) {
       <div class="form">
         <ng-container [ngTemplateOutlet]="chips" />
@@ -30,6 +33,7 @@
           @if (keypadOpen()) {
             <ng-container [ngTemplateOutlet]="keypad" />
           }
+          <ng-container [ngTemplateOutlet]="dateLine" />
           <ng-container [ngTemplateOutlet]="actions" />
         </div>
         <div class="form">
@@ -45,6 +49,7 @@
       @if (keypadOpen()) {
         <ng-container [ngTemplateOutlet]="keypad" />
       }
+      <ng-container [ngTemplateOutlet]="dateLine" />
       <ng-container [ngTemplateOutlet]="actions" />
     }
   </div>
@@ -98,6 +103,16 @@
             (chosen)="pickDate($event)"
           />
         }
+        @case ('tags') {
+          <cc-chip-select
+            class="tags"
+            [label]="text.tags"
+            [hideLabel]="true"
+            [options]="data().tags"
+            [emptyText]="text.noTags"
+            [formField]="form.tagIds"
+          />
+        }
       }
     </cc-overlay-panel>
   }
@@ -141,7 +156,7 @@
     <cc-amount-display
       size="lg"
       [label]="amountLabel()"
-      [color]="isCategorized() ? (category()?.color ?? null) : null"
+      [color]="accentKey()"
       [expression]="sourceAmount().expression"
       [result]="sourceAmount().result"
       [interactive]="!keypadOpen()"
@@ -160,17 +175,64 @@
     [showDecimal]="showDecimal()"
     [submitLabel]="ui.save"
     [submitDisabled]="form().submitting()"
+    [dateKey]="true"
+    [accent]="accentKey()"
     (pressed)="press($event)"
     (submitted)="submitEntry()"
+    (dateRequested)="openDate()"
   />
 </ng-template>
 
-<ng-template #fields>
-  <cc-text-field [label]="text.note" [formField]="form.note" />
+<ng-template #dateLine>
+  <button
+    type="button"
+    class="date-line"
+    [class.beside-confirm]="floatingConfirm() !== null && data().mode !== 'edit'"
+    [attr.aria-label]="text.date + ': ' + dateText()"
+    aria-haspopup="dialog"
+    (click)="openDate()"
+  >
+    {{ dateText() }}
+  </button>
+</ng-template>
 
-  <cc-list-item [title]="dateText()" [actionable]="true" (activate)="openDate()">
-    <cc-icon ccListItemLeading name="calendar_month" />
-  </cc-list-item>
+<ng-template #fields>
+  <div class="note">
+    <cc-text-field
+      appearance="outline"
+      align="center"
+      [label]="text.note"
+      [hideLabel]="true"
+      [placeholder]="text.notePlaceholder"
+      [actionIcon]="isCategorized() && data().tags.length > 0 ? 'sell' : null"
+      [actionLabel]="text.tags"
+      [formField]="form.note"
+      (action)="openTags()"
+    />
+    @if (isCategorized() && chosenTags().length > 0) {
+      <button
+        type="button"
+        class="chosen-tags"
+        [attr.aria-label]="tagsLabel()"
+        aria-haspopup="dialog"
+        (click)="openTags()"
+      >
+        @for (tag of chosenTags(); track tag.value) {
+          <span class="tag-chip">
+            @if (tag.color; as color) {
+              <cc-color-swatch
+                [color]="color"
+                [label]="tag.label"
+                [decorative]="true"
+                [small]="true"
+              />
+            }
+            {{ tag.label }}
+          </span>
+        }
+      </button>
+    }
+  </div>
 
   @if (isTransfer() && toAccountError(); as error) {
     <cc-message>{{ error }}</cc-message>
@@ -205,24 +267,7 @@
   }
 
   @if (showInclude()) {
-    <cc-switch
-      [label]="text.includeInSpace"
-      [hint]="text.includeHint"
-      [row]="true"
-      [formField]="form.includeInSpace"
-    />
-  }
-
-  @if (isCategorized()) {
-    <cc-disclosure [label]="tagsLabel()">
-      <cc-chip-select
-        class="tags"
-        [label]="text.tags"
-        [options]="data().tags"
-        [emptyText]="text.noTags"
-        [formField]="form.tagIds"
-      />
-    </cc-disclosure>
+    <cc-switch [label]="text.includeInSpace" [row]="true" [formField]="form.includeInSpace" />
   }
 
   @if (error(); as error) {
@@ -240,9 +285,6 @@
     >
       <cc-button variant="text" icon="delete" [danger]="true" (click)="askDelete()">
         {{ text.delete }}
-      </cc-button>
-      <cc-button variant="text" icon="calendar_month" (click)="openDate()">
-        {{ text.date }}
       </cc-button>
       <cc-button variant="text" icon="content_copy" (click)="duplicate()">
         {{ text.duplicate }}

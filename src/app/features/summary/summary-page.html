@@ -1,4 +1,4 @@
-<cc-page-header [title]="text.title" />
+<h1 class="cc-visually-hidden">{{ text.title }}</h1>
 
 <div class="summary">
   <div class="column">
@@ -14,13 +14,17 @@
     <div class="balance">
       <div class="balance-figure">
         <span class="balance-label">{{ text.balance }}</span>
-        <cc-amount
-          class="balance-amount"
-          tone="auto"
-          [signed]="true"
-          [amount]="balance()"
-          [currency]="currency()"
-        />
+        @if (loading()) {
+          <cc-skeleton class="balance-skeleton" />
+        } @else {
+          <cc-amount
+            class="balance-amount"
+            tone="auto"
+            [signed]="true"
+            [amount]="balance()"
+            [currency]="currency()"
+          />
+        }
       </div>
       @if (ring(); as ring) {
         <cc-progress-ring [value]="ring.value" [label]="ring.label" [tone]="ring.tone">
@@ -55,14 +59,18 @@
   </div>
 
   <div class="column">
-    <cc-breakdown-list
-      [label]="categoriesLabel()"
-      [items]="categoryItems()"
-      [rest]="categoryRest()"
-      [currency]="currency()"
-      [emptyText]="emptyText()"
-      (opened)="viewTransactions($event)"
-    />
+    @if (loading()) {
+      <cc-skeleton-list [rows]="3" />
+    } @else {
+      <cc-breakdown-list
+        [label]="categoriesLabel()"
+        [items]="categoryItems()"
+        [rest]="categoryRest()"
+        [currency]="currency()"
+        [emptyText]="emptyText()"
+        (opened)="viewTransactions($event)"
+      />
+    }
 
     @if (budgetRows().length) {
       <section class="group" aria-labelledby="summary-budget">

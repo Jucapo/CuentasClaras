@@ -62,8 +62,11 @@
   align-items: stretch;
 }
 
-// Full-screen templates: layout containment keeps their sticky/fixed parts inside the frame.
+// Full-screen templates: layout containment keeps their sticky/fixed parts inside the frame, and the
+// app shell takes the frame's height instead of the screen's.
 .framed {
+  --cc-shell-height: 100%;
+
   display: block;
   height: var(--cc-catalog-frame-height);
   overflow: auto;

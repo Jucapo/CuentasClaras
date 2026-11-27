@@ -16,6 +16,11 @@ function movements(page: Page): Locator {
   return page.getByRole('region', { name: 'Movimientos' });
 }
 
+/** 🔍 in the header shows the search (spec §7). */
+async function openSearch(page: Page): Promise<void> {
+  await page.getByRole('banner').getByRole('button', { name: 'Buscar' }).click();
+}
+
 /** The quick entry: a sheet on phones, beside the list on wide screens (spec §7). */
 function quickEntry(page: Page, isMobile: boolean): Locator {
   return isMobile ? page.locator('.mat-bottom-sheet-container') : page.locator('cc-quick-entry');
@@ -61,6 +66,7 @@ test('the totals add up the accounts outside the space and say how much', async 
   await capture(page, 'transacciones-fuera-del-espacio');
 
   // Without that account, nothing comes from outside the space.
+  await openSearch(page);
   await page.getByRole('searchbox', { name: 'Buscar' }).fill('Bancolombia');
   await expect(totals).toContainText('-$ 2,420,500.00');
   await expect(totals).not.toContainText('fuera del espacio');
@@ -112,7 +118,9 @@ test('searches and filters with chips that say what is on', async ({ page }) => 
   const list = movements(page);
   await expect(list.getByRole('button', { name: /^Salario/ })).toBeVisible();
 
-  // Without accents or case, like the database (spec §7).
+  // Without accents or case, like the database (spec §7). The search opens from the header.
+  await openSearch(page);
+  await expect(page.getByRole('searchbox', { name: 'Buscar' })).toBeFocused();
   await page.getByRole('searchbox', { name: 'Buscar' }).fill('SEMANA');
   await expect(list.getByRole('button')).toHaveCount(1);
   await expect(list.getByRole('button', { name: /^Mercado/ })).toBeVisible();

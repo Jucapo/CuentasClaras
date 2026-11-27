@@ -73,7 +73,7 @@ test('the owner sees the members and the pending invitations, and invites by ema
   });
 
   // An existing account gets no email: the sheet shows the link to copy.
-  await page.getByRole('button', { name: 'Invitar a alguien' }).click();
+  await page.getByRole('button', { name: 'Invitar', exact: true }).click();
   await page.getByRole('textbox', { name: 'Correo' }).fill('ana@example.com');
   await page.getByRole('dialog').getByRole('button', { name: 'Invitar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Ya tiene una cuenta' })).toBeVisible();
@@ -174,7 +174,7 @@ test('without a space, a pending invitation is offered next to creating one', as
   ]);
 });
 
-test('with more than one space, the header switches between them', async ({ page }) => {
+test('with more than one space, the menu switches between them', async ({ page }) => {
   await mockDataApi(page, {
     withSpace: true,
     catalog: HOUSEHOLD_WITH_MOVEMENTS,
@@ -192,15 +192,20 @@ test('with more than one space, the header switches between them', async ({ page
   });
   await page.goto('/cuentas');
 
-  await page.getByRole('button', { name: 'Espacio: Hogar. Cambiar de espacio' }).click();
-  await expect(page.getByRole('radio', { name: /Personal/ })).toBeVisible();
-  await captureViewport(page, 'selector-de-espacio');
-  await page.getByRole('radio', { name: /Personal/ }).click();
+  // Spec §7: the active space is in the menu; the others unfold under it, with the role.
+  await page.getByRole('button', { name: 'Abrir el menú' }).click();
+  const menu = page.getByRole('dialog', { name: 'Menú' });
+  await menu.getByRole('button', { name: 'Cambiar de espacio: Hogar, Propietario' }).click();
+  await expect(menu.getByRole('button', { name: /^Personal/ })).toBeVisible();
+  await captureViewport(page, 'menu-espacios');
+  await menu.getByRole('button', { name: /^Personal/ }).click();
 
-  await expect(
-    page.getByRole('button', { name: 'Espacio: Personal. Cambiar de espacio' }),
-  ).toBeVisible();
+  await expect(menu).toBeHidden();
   await expect(page).toHaveURL(/\/categorias$/);
+  await page.getByRole('button', { name: 'Abrir el menú' }).click();
+  await expect(
+    menu.getByRole('button', { name: 'Cambiar de espacio: Personal, Propietario' }),
+  ).toBeVisible();
 });
 
 test('with two members, Resumen and Transacciones offer Persona', async ({ page }) => {

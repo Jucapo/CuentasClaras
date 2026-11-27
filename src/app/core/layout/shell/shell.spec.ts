@@ -5,7 +5,10 @@ import { AuthService } from '../../auth/auth.service';
 import { ExchangeRateFlow } from '../../exchange-rates/exchange-rate-flow';
 import { InvitationsService } from '../../invitations/invitations.service';
 import { PeriodService } from '../../periods/period.service';
+import { ProfileService } from '../../profiles/profile.service';
+import { SpaceMembersService } from '../../spaces/space-members.service';
 import { SpaceService } from '../../spaces/space.service';
+import { ThemeService } from '../../theme/theme.service';
 import { TotalsService } from '../../totals/totals.service';
 import { Shell } from './shell';
 
@@ -38,6 +41,9 @@ describe('Shell', () => {
           },
         },
         { provide: ExchangeRateFlow, useValue: { open: vi.fn() } },
+        { provide: ProfileService, useValue: { profile: signal(null) } },
+        { provide: SpaceMembersService, useValue: { members: signal([]) } },
+        { provide: ThemeService, useValue: { preference: signal('system'), set: vi.fn() } },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(Shell);
@@ -65,11 +71,11 @@ describe('Shell', () => {
     ]);
   });
 
-  it('links to settings from the header', () => {
-    const settings = (fixture.nativeElement as HTMLElement).querySelector(
-      'a[aria-label="Configuración"]',
-    );
-    expect(settings?.getAttribute('href')).toBe('/configuracion');
+  // Spec §7: Configuración is in the menu, which the avatar of the header opens.
+  it('has the menu instead of settings in the header', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('a[aria-label="Configuración"]')).toBeNull();
+    expect(element.querySelector('header button[aria-label="Abrir el menú"]')).not.toBeNull();
   });
 
   it('sends the user to the login page when the session ends', async () => {

@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.12 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.13 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -46,7 +46,7 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 - **Usuario:** una persona con cuenta (email + contraseña) y un perfil (nombre visible, avatar).
 - **Espacio:** unidad que comparte presupuesto. Tiene sus propias categorías, etiquetas, presupuestos y configuración de periodos.
   - Un espacio con un solo miembro es personal.
-  - Un usuario puede pertenecer a varios espacios (p. ej. su espacio personal y el del hogar). Si pertenece a más de uno, cambia de espacio desde el encabezado (§7).
+  - Un usuario puede pertenecer a varios espacios (p. ej. su espacio personal y el del hogar). Si pertenece a más de uno, cambia de espacio desde el menú lateral (§7).
 - **Miembro:** relación usuario ↔ espacio, con rol y cuenta predeterminada propia.
 
 | Rol | Puede |
@@ -455,15 +455,37 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
 
 ### Encabezado global
 
-- Selector de espacio (solo si el usuario tiene más de uno). Desde la F1f es un botón con el ícono del espacio activo, antes de Configuración. Abre la lista de espacios con el rol en cada uno; al elegir otro, la app va a la pantalla de inicio.
-- Total de cuentas: el mismo de la pestaña Cuentas (las cuentas activas que el usuario ve con "incluir en el total", incluidas sus privadas), en la moneda principal. Si falta una tasa, lo avisa.
-- Selector de periodo: flechas + chip con el nombre y el rango; al tocarlo abre las opciones de §4.5 (bottom sheet en compacta, diálogo en los demás tamaños).
-  - En compacta el selector ocupa todo el centro, entre el total y Configuración.
-  - El total tiene prioridad: aunque sea largo se ve completo, y el chip se achica (recorta primero el rango).
+Fijo, como el de 1Money (F1g): nunca se desplaza; solo se desplaza el contenido (§13.5).
+
+- **Compacta, dos filas:**
+  - Arriba: el avatar a la izquierda (abre el menú lateral), el total al centro y, a la derecha, la acción de la pantalla (vacío si no tiene).
+  - Abajo: el selector de periodo con sus flechas, a todo el ancho. En Cuentas van sus pestañas (Cuentas · Mis finanzas), porque los saldos no dependen del periodo.
+- **Mediana y expandida:** una fila (total, periodo o la fila de la pantalla, acción) y el avatar arriba del rail.
+- **Acción de cada pantalla:** el "+" en Cuentas, el lápiz del modo edición en Categorías (si puede editar) y 🔍 en Transacciones. Presupuesto y Resumen no tienen.
+- **Total de cuentas:** el mismo de la pestaña Cuentas (las cuentas activas que el usuario ve con "incluir en el total", incluidas sus privadas), en la moneda principal. Si falta una tasa, lo avisa. Mientras llega, un esqueleto; al recargar (otro movimiento) se queda el anterior.
+- **Selector de periodo:** flechas + chip con el nombre y el rango; al tocarlo abre las opciones de §4.5 (bottom sheet en compacta, diálogo en los demás tamaños).
+- Desde la F1g no hay ⚙ ni selector de espacio en el encabezado: están en el menú lateral.
+- **Subpantallas** (detalle de cuenta, Configuración y sus subpantallas, Miembros): en compacta muestran solo su barra ← fija, sin el encabezado global ni la navegación inferior, como los flujos. El total y el periodo no aplican ahí.
+
+### Menú lateral (F1g)
+
+- Se abre con el avatar: el del encabezado en compacta y el de arriba del rail en mediana y expandida. Es el mismo drawer modal en todos los tamaños (§13.5): sale desde la izquierda con el fondo atenuado y se cierra con el atrás del sistema, Esc, tocando fuera o deslizándolo.
+- **Arriba:** el avatar (iniciales del nombre visible hasta que haya foto), el nombre y el correo. Debajo, el espacio activo con su rol; con más de un espacio, tocarlo despliega los demás (con el rol) en el mismo menú. Al elegir otro, la app va a la pantalla de inicio.
+- **Opciones:**
+  - Configuración y Miembros (con cuántos miembros hay).
+  - Tema: Sistema, Claro u Oscuro, que se aplica al instante y se guarda; si falla el guardado, vuelve al anterior y avisa.
+  - Instalar la app, solo si no está instalada: el aviso del navegador donde lo ofrece; si no, los pasos (`cc-install-steps`) en una vista del menú.
+  - Acerca de, con la versión, en una vista con el logo y "Buscar actualizaciones".
+  - Cerrar sesión.
+- Lo que venga después (datos, exportar, ayuda) va como filas nuevas.
+- Las opciones devuelven el destino y la app navega cuando el menú ya cerró, así el atrás no queda con una entrada de más.
 
 ### Categorías (inicio)
 
-- Pestañas Gastos / Ingresos.
+- **Gastos o ingresos (F1g, como 1Money):** sin pestañas. El centro del donut muestra la clase visible grande y la otra en pequeño, con un ícono ⇅; tocarlo cambia la grilla, el donut y `?clase=`.
+  - Es un botón cuyo nombre es la acción ("Ver ingresos"), descrito por los dos totales. Al cambiar, una región `status` dice "Mostrando ingresos" y la grilla cambia su nombre.
+  - Con una clase vacía (sin donut), el estado vacío ofrece pasar a la otra.
+  - El modo edición conserva sus pestañas.
 - Burbujas de categoría alrededor del donut (`cc-category-grid`). Cada burbuja muestra:
   - nombre;
   - restante del presupuesto arriba;
@@ -480,7 +502,7 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
   - Cada categoría suma sus subcategorías.
   - Con los presupuestos apagados no se muestra el restante.
   - En ingresos, el restante es lo que falta para el ingreso esperado.
-- **Modo edición:** el lápiz del encabezado abre `/categorias/editar`. Es la misma grilla con una burbuja "+" para crear; tocar una categoría abre su pantalla, y las burbujas se reordenan arrastrándolas. Configuración → Categorías lleva al mismo lugar: un solo flujo con dos puntos de entrada.
+- **Modo edición:** el lápiz del encabezado global abre `/categorias/editar`. Es la misma grilla con una burbuja "+" para crear; tocar una categoría abre su pantalla, y las burbujas se reordenan arrastrándolas. Configuración → Categorías lleva al mismo lugar: un solo flujo con dos puntos de entrada.
 - **Pantalla de categoría:** nombre grande en el encabezado, badge de ícono y color, etiquetas por defecto y la lista de subcategorías con "Añadir subcategoría".
   - Si la categoría es nueva, añadir una subcategoría la guarda primero.
 - **Subcategoría:** se crea y edita en un sheet con nombre, etiquetas por defecto e ícono. El color se hereda de la categoría y se puede cambiar. En "Más opciones" se puede mover a otra categoría o volverla principal.
@@ -544,6 +566,23 @@ Rediseño (F1e2), como en 1Money; aplica al crear y al editar, desde cualquier p
 - **Descartar:** con cambios sin guardar, cerrar (✕, fondo, Esc o el atrás del sistema) muestra la vista "¿Descartar los cambios?" en vez de cerrar.
 - **Diálogo y panel:** los bloques arriba, a todo el ancho; debajo, el monto y el teclado a la izquierda y lo demás a la derecha.
 
+Como 1Money (F1g); reemplaza lo anterior donde difiere. Meta: un gasto típico cabe sin scroll en un teléfono de 360 × 740.
+
+- **Bloques:**
+  - A todo el ancho y pegados al borde superior del sheet, rellenos con el color entero (no un tono suave).
+  - El texto ("De cuenta" y el nombre) va en el color que se lee sobre ese color con 4,5:1: blanco, o el oscuro de la paleta, o negro en los pocos tonos medios donde ninguno llega (`paletteOnColorText`). Es texto normal, así que no basta el 3:1 de los íconos.
+  - El ícono de cada extremo flota sobre el borde superior, en un cuadro (cuenta) o un círculo (categoría) de superficie, con el ícono en su color: el del primer bloque al inicio y el del último al final, así el centro queda libre para el asa.
+- **Cerrar:** en compacta no hay ✕. El asa, centrada sobre el borde, es el botón "Cerrar"; arrastrarla hacia abajo también cierra. Con el atrás, el fondo y Esc, siempre con la guarda de descarte (excepción registrada en §13.5). En diálogo y panel, la ✕ ocupa ese mismo lugar.
+- **Subcategorías:** los chips no elegidos con borde (3:1), ícono y texto en el color de la categoría (`paletteTextColor`); el elegido, relleno, con su texto a 4,5:1.
+- **Monto:** en el color de la categoría. Es texto grande, así que basta 3:1: el color tal cual si llega y, si no, el tono más oscuro de su paleta que llegue (`paletteLargeTextColor`). La etiqueta "Gasto"/"Ingreso" es texto normal y sigue con 4,5:1.
+- **Nota:** campo con borde redondeado y "Notas…" centrado (la etiqueta "Nota" queda para lectores de pantalla).
+- **Etiquetas:** sin fila propia. El ícono de etiqueta al final de la nota abre la vista "Etiquetas", y las elegidas se ven como chips pequeños bajo la nota (tocarlos abre la misma vista). Sin etiquetas en el espacio, no hay ícono.
+- **Teclado:** a la derecha ⌫, la tecla de calendario y el ✓ alto. El 000 y el 0 ocupan una casilla cada uno (sin decimales, el 0 ocupa dos). La calculadora del presupuesto usa el mismo teclado sin calendario.
+- **Fecha:** texto bajo el teclado con el año ("Hoy, 27 nov 2026"). Tocarlo, o la tecla de calendario, abre la vista de fecha. Al editar sin teclado queda al final, así que "Fecha" sale de las acciones (quedan Borrar y Duplicar).
+- **Colores:** el acento es el color de la categoría (en transferencias y ajustes, el de la cuenta de origen). El ✓ va con el acento y su contraste; operadores, ⌫ y calendario en gris neutro. Dentro del registro rápido `--mat-sys-primary` es el tono AA del acento, así que nada sale en azul de marca.
+- **Anillo de foco:** en el tono del monto (`paletteLargeTextColor`), no en el color tal cual, porque tiene que llegar a 3:1 contra la superficie (WCAG 1.4.11); con amarillo o lima el color tal cual no se vería. Va en `--cc-focus-ring-color`, que leen los anillos de todos los componentes (sin acento, el azul de marca). En los bloques, el anillo va por dentro, en el color de su texto (4,5:1 sobre el bloque). Una prueba unitaria lo verifica para cada color, en claro y en oscuro.
+- Sin la ayuda de "Incluir en el espacio": la explica la cuenta.
+
 ### Cuentas
 
 Pestañas:
@@ -557,6 +596,8 @@ Pestañas:
   - Los bienes con valor manual llegan en la F2. Hasta la pestaña Deudas (F2), las deudas siguen en la lista de Cuentas.
 
 Desde la F1b la pestaña Cuentas lista los grupos Cuentas, Ahorros, Deudas y Me deben, cada uno con su total por moneda, más un total general por moneda de las cuentas con "incluir en el total". Las archivadas van en una sección plegada.
+
+- Desde la F1g las pestañas Cuentas · Mis finanzas van en la segunda fila del encabezado, y el total general solo aparece con varias monedas: en una, es el del encabezado.
 
 **Crear una cuenta:** el "+" abre "¿Qué vas a crear?" (Cuenta, Ahorro, Deuda o Me deben). Después viene un formulario corto:
 
@@ -622,6 +663,7 @@ Detalle (F1e):
 - **Editar:**
   - Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo: en compacta como sheet, y en mediana como diálogo.
   - En expandida, lista y detalle van lado a lado (§13.5): el registro rápido se abre en línea en el panel de detalle. Si hay cambios sin guardar y se toca otro movimiento, se cierra el panel o se sale, pregunta "¿Descartar los cambios?".
+- **Búsqueda y "+" (F1g, como 1Money):** 🔍 en el encabezado muestra la búsqueda arriba de la lista, con el cursor en ella; se queda mientras tenga texto, y su ✕ la limpia y la esconde. El "+" es un botón flotante abajo a la derecha.
 - **Crear:** "+" (atajo `N`) abre "¿Qué vas a registrar?". Luego abre el registro rápido, en el panel en expandida.
   - Desde la F1e2 tiene tres pestañas, Ingreso, Gasto y Transferencia, y abre siempre en Gasto.
   - Gasto e Ingreso: la cuadrícula de categorías de ese tipo, con lo registrado en el periodo debajo de cada ícono, en su color (AA).
@@ -653,6 +695,11 @@ Reportes de §6 para el periodo seleccionado, como el Resumen de 1Money. De arri
 
 - Inicio de sesión, registro (oculto mientras el registro público esté cerrado) y recuperar contraseña.
 - `/invitacion` (F1f): aceptar o rechazar una invitación, también sin sesión. Las reglas están en §3.3.
+- **Títulos (F1g):** lo que repite el logo o un botón sale.
+  - Antes de aceptar con una cuenta nueva, la línea del logo es el título: "Únete a", el logo y "Cuentas Claras".
+  - "Invitación" queda solo para lectores de pantalla: la tarjeta o el mensaje ya lo dicen.
+  - En "¡Listo!", el título de los pasos de instalación también.
+  - Inicio de sesión, recuperar y restablecer contraseña: sin los subtítulos que repiten los campos o el botón.
 
 ### Asistente de configuración inicial
 
@@ -700,6 +747,11 @@ Detalle (F1e):
   - Primero el usuario: "Tu perfil" y "Preferencias".
   - Luego el espacio: "Espacio", la configuración inicial y los catálogos (con monedas).
   - Al final, "Sesión".
+- **Desde la F1g:**
+  - Es una subpantalla que se abre desde el menú lateral; su ← vuelve a donde se abrió.
+  - El tema y "Cerrar sesión" están en el menú, no aquí.
+  - Las filas de Miembros y de la configuración inicial van dentro de "Espacio".
+  - Sin las descripciones de sección ni las ayudas fijas; se queda la ayuda calculada del primer día del mes ("Cada mes va del 1 al…"), y la descripción de "Espacio" solo para quien no es propietario.
 - **Perfil:** el nombre visible (`profiles.display_name`), que es el que ven los demás miembros. El avatar llega cuando haya almacenamiento de archivos.
 - **Pantalla de inicio:** Cuentas, Categorías, Transacciones, Presupuesto o Resumen. Abrir la app en `/` lleva a ella.
 - **Periodo por defecto:** Día, Semana, Mes, Año o Siempre. Solo se usa en los dispositivos que no recuerdan otro (§4.5).
@@ -891,6 +943,7 @@ recurring_templates (fase 3)
 | F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), overlays con confirmación (✕ y ✓ flotantes), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
 | F1f · Compartir | SMTP (Gmail) y plantillas, invitaciones con Edge Function, página `/invitacion` pensada para iOS, onboarding por invitación, Miembros (roles, quitar y salir, al menos un propietario en la base), selector de espacio |
+| F1g · Sensación nativa | Registro rápido como 1Money (bloques, asa, teclado con fecha, nota y etiquetas, colores AA), encabezado fijo de dos filas con la acción de cada pantalla, menú lateral, títulos que no aportan fuera, el centro del donut cambia entre gastos e ingresos, `theme-color` dinámico, solo el contenido se desplaza, transiciones, arrastrar para cerrar, esqueletos. Sin cambios en la base de datos |
 | F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes, metas de ahorro por cuenta |
 | F3 · Automatización | Recurrentes, cuotas automáticas, correo, atajos, bandeja "Por confirmar" |
 | F4 · Abrir a terceros | Registro público con captcha, límites de tasa, política de datos, exportar y borrar cuenta, plantilla genérica de categorías pulida |
@@ -964,6 +1017,16 @@ recurring_templates (fase 3)
   - **Quien sale:** no se borra nada. Lo compartido queda, sus cuentas privadas quedan ocultas y vuelven si regresa.
   - **Encabezado:** selector de espacio con más de uno.
   - Detalle en §3, §7 y §8. Plan en `docs/plans/f1f.md`; configuración de producción en `docs/runbooks/f1f-compartir.md`.
+- [x] F1g (Sensación nativa):
+  - **Registro rápido** como 1Money: bloques llenos con texto a 4,5:1 (no el 3:1 de los íconos), íconos flotantes en los extremos, sin ✕ en compacta (el asa cierra), monto con 3:1 por ser texto grande, nada en azul de marca.
+  - **Encabezado** fijo de dos filas en compacta, con la acción de cada pantalla; Cuentas lleva sus pestañas en vez del periodo. Sin ⚙ ni selector de espacio.
+  - **Menú lateral:** el mismo drawer en todos los tamaños, montado en `OverlayService`. El tema se cambia ahí, al instante, y sale de Configuración junto con la sesión.
+  - **Subpantallas** en compacta sin encabezado global ni navegación.
+  - **Títulos:** fuera los que repiten lo que se ve, incluidas las pantallas de auth y `/invitacion`.
+  - **B5:** el centro del donut cambia entre gastos e ingresos.
+  - **App, no página:** `theme-color` con la superficie de las barras (atenuada con overlays); iOS sin `apple-mobile-web-app-status-bar-style`; un scroller a todo el ancho con memoria por pantalla; transiciones con View Transitions; arrastrar para cerrar sheets y el menú; esqueletos.
+  - **Versión** de la app desde `package.json` (0.10.0).
+  - Detalle en §7 y §13. Plan en `docs/plans/f1g.md`.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
@@ -977,9 +1040,9 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar`, `cc-progress-ring`, `cc-bar-chart` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row`, `cc-total-toggle`, `cc-entry-endpoints`, `cc-date-choice`, `cc-invitation-card`, `cc-install-steps` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-entry-chooser` (y su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-breakdown-list`, `cc-net-worth`, `cc-missing-rates-notice`, `cc-nav-rail`, `cc-member-list`, `cc-invitation-list`, `cc-invite-sheet` | `shared/ui/organisms` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar`, `cc-progress-ring`, `cc-bar-chart`, `cc-avatar`, `cc-skeleton` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row`, `cc-total-toggle`, `cc-entry-endpoints`, `cc-date-choice`, `cc-invitation-card`, `cc-install-steps`, `cc-sheet-handle`, `cc-skeleton-list` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-entry-chooser` (y su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-breakdown-list`, `cc-net-worth`, `cc-missing-rates-notice`, `cc-nav-rail`, `cc-member-list`, `cc-invitation-list`, `cc-invite-sheet`, `cc-app-drawer` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
@@ -1009,7 +1072,19 @@ Reglas:
   - con esquinas redondeadas: favicon (`.ico` y `.svg`) y logo del login y del asistente (`cc-brand`). El favicon `.svg` y el de 16 px del `.ico` dibujan las C 1,4 veces más gruesas (misma geometría) para que se lean a 16 px; el logo de la interfaz conserva el trazo original;
   - a sangre completa: íconos de la PWA (192, 512 y maskable) y `apple-touch-icon`. Android e iOS recortan las esquinas, y el símbolo ya está dentro de la zona segura del maskable.
 - Los PNG y el `.ico` salen de los SVG con `npm run brand:build` (reproducible) y se commitean.
-- `theme_color` y `background_color` del manifest en `#1E4E8C`: la pantalla de carga de la app instalada sale con el color de la marca.
+
+**Barras del sistema (F1g)**
+
+- **`theme-color` dinámico:** `SystemBarsService` lo pone con el color de `--cc-bar-surface`, la superficie que comparten el encabezado, la navegación inferior y el rail (`surface-container`). Android pinta con él su barra de estado (y la de navegación cuando no es borde a borde), así que dejan de verse como parches azules.
+  - Sigue el tema elegido en la app, no solo el del sistema.
+  - Con overlays abiertos (sheets, diálogos, confirmaciones, el menú) toma esa superficie bajo el fondo atenuado, como 1Money. El fondo atenuado sale de `--mat-sys-scrim` al `--cc-scrim-opacity` (32 %), y varios apilados oscurecen más.
+  - Se lee donde está el borde superior de la pantalla: cada marco puede definir su `--cc-bar-surface` (el asistente usa la superficie de la página).
+  - `index.html` trae las dos metas (`media` claro y oscuro) con los valores iniciales; el servicio actualiza las dos.
+- **Manifest:** `theme_color` = superficie de las barras en claro (`#ededf3`) y `background_color` = superficie de la página en claro (`#f9f9ff`). La pantalla de carga ya no destella en azul. Un e2e los compara con los tokens, porque el JSON no puede leerlos.
+  - Limitación: el manifest no tiene variante oscura estable, así que en oscuro el splash sale claro.
+- **iOS:** sin `apple-mobile-web-app-status-bar-style`, como recomienda WebKit (bug 317153): la barra de estado toma el color de la página, y `black-translucent` está obsoleto. Con `viewport-fit=cover`, el encabezado ocupa `safe-area-inset-top`. Que la barra siga un `theme-color` que cambia se confirma en un iPhone.
+- **Android:** con `viewport-fit=cover`, Chrome dibuja borde a borde bajo la barra de gestos; la navegación inferior y los sheets dejan `safe-area-inset-bottom`. `interactive-widget=resizes-content` hace que el teclado achique la app en vez de taparla.
+- **Versión:** la de `package.json` (`APP_VERSION`), en Acerca de. Cada fase sube el minor (F1g = 0.10.0).
 
 ### 13.3 Íconos y colores personalizables
 
@@ -1060,6 +1135,28 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 - Microinteracciones sutiles (ripple, transiciones cortas), respetando `prefers-reduced-motion`.
 - Accesibilidad: contraste AA en textos, áreas táctiles de al menos 44 px y label en todos los campos.
 
+**Que se sienta como app (F1g)**
+
+- **Solo el contenido se desplaza:**
+  - El shell ocupa la pantalla; el encabezado y la navegación nunca se mueven.
+  - El scroller va a todo el ancho (con `cdkScrollable`, `overscroll-behavior: contain` y sin desborde horizontal). `html` y `body` llevan `overscroll-behavior: none`: sin rebote ni pull-to-refresh.
+  - Auth, el asistente e `/invitacion` siguen con el scroll del documento.
+- **Memoria de scroll:** cada pantalla vuelve a donde estaba (al volver a una pestaña o subir de un detalle); una más profunda empieza arriba; cambiar solo la query (una pestaña interna) no la mueve. Espera a que el contenido tenga alto, hasta un segundo, y se rinde si el usuario desplaza. Se borra al cambiar de espacio o al cerrar sesión.
+- **Nada de página:**
+  - Sin selección ni menú de mantener presionado en botones, enlaces y filas. En táctil, en nada salvo campos y notas (`.cc-selectable`).
+  - `touch-action: manipulation` en todo: sin zoom por doble toque, con el zoom con dos dedos.
+  - Sin barras de scroll en táctil; sin arrastrar imágenes ni enlaces.
+- **Estado presionado:** todo control muestra la capa de estado de Material 3 mientras se toca (`--cc-pressed-layer`); los de Material y las filas con ripple traen la suya.
+- **Esqueletos:** mientras llegan los datos, placeholders (`cc-skeleton`, `cc-skeleton-list`) en lugar de pantallas vacías o "$ 0":
+  - el total del encabezado, las burbujas, las cuentas y Mis finanzas, los movimientos, el Presupuesto, el Resumen, las pantallas de cuenta y categoría, y la invitación.
+  - Al cambiar de periodo o registrar un movimiento se quedan los montos anteriores hasta que llegan los nuevos.
+- **Pendientes de sensación nativa:**
+  - en iOS, tocar la barra de estado ya no sube al inicio (el documento no se desplaza);
+  - en el navegador, Chrome ya no esconde su barra al desplazar (en la app instalada no aplica);
+  - el splash del manifest en oscuro;
+  - que la barra de estado de iOS siga un `theme-color` que cambia, por confirmar en el iPhone;
+  - con el teclado abierto en Android, la navegación inferior queda sobre él (`resizes-content`). Se revisa en el teléfono si conviene esconderla.
+
 ### 13.5 Patrones de interacción y layouts adaptativos
 
 Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al dispositivo en vez de solo estirarse. El asistente (F1c) reutiliza estos flujos.
@@ -1078,8 +1175,26 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 
 **Encabezados**
 
-- Título de página centrado; el botón atrás a la izquierda cuando aplica y las acciones a la derecha (p. ej. el lápiz de Categorías).
+- Título de página centrado; el botón atrás a la izquierda cuando aplica y las acciones a la derecha.
 - La barra de los flujos sigue el mismo orden: cerrar o atrás, título centrado y Guardar.
+- **Un solo encabezado (F1g):**
+  - Las pestañas principales no tienen fila de título: la navegación ya dice dónde se está, y sus acciones van en el encabezado global (`ScreenChrome`: la acción, la segunda fila y el botón flotante de cada pantalla).
+  - Las subpantallas, en compacta, muestran solo su barra ← (`cc-page-header` con atrás), fija y sobre la superficie de las barras.
+  - Al editar algo que ya existe, la barra dice qué hace la pantalla ("Editar cuenta"), porque el nombre ya está grande debajo.
+
+**Títulos (F1g)**
+
+- **Salen:**
+  - los títulos que solo nombran lo que ya se ve;
+  - los títulos de sheet que repite el contenido;
+  - las etiquetas y subtítulos redundantes;
+  - las ayudas que solo sirven la primera vez. El asistente, que es la primera vez, las conserva; los organismos que comparte con Configuración las apagan con `hints`.
+- **Se quedan:**
+  - la barra ← con título de las subpantallas, los flujos y las vistas;
+  - los títulos que separan contenido distinto;
+  - los estados vacíos y los avisos de estado;
+  - las ayudas que explican una consecuencia que no es obvia (privacidad, rol, deuda en positivo, la fecha de una tasa).
+- **Accesibilidad:** si sale un título visible, la región conserva su nombre (`aria-label`, `cc-section` con `hideTitle` o un `h1` con `.cc-visually-hidden`).
 
 **Flujos** (crear o editar algo)
 
@@ -1100,6 +1215,11 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 **Sheets y diálogos**
 
 - **Alto (F1e2):** en compacta, los overlays salen desde abajo con el alto de su contenido y la pantalla de fondo visible. Solo pasan a pantalla completa (su alto máximo, con scroll interno) cuando el contenido es largo.
+- **Asa y arrastre (F1g):**
+  - **Forma:** en compacta, el contenedor del sheet es transparente, con una franja arriba donde flota el asa sobre el fondo atenuado; el panel pinta el sheet. Un toque en la franja fuera del asa llega al fondo y cierra como siempre.
+  - **Arrastre:** arrastrar el asa hacia abajo mueve el sheet. Pasado un 30 % (hasta 160 px), o con un gesto rápido de más de 40 px, pide cerrar con la guarda: con cambios sin guardar vuelve a su lugar y pregunta. Un arrastre corto vuelve a su lugar.
+  - **El asa como botón:** solo sirve para arrastrar, y los sheets conservan su ✕ o su barra. Excepción: el registro rápido no tiene ✕, y su asa es el botón "Cerrar" (sus bloques necesitan todo el ancho).
+  - **El menú lateral** se cierra deslizándolo hacia su borde.
 - Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
 - **Vistas dentro de un overlay (F1e):** cuando el paso siguiente es parte del mismo contexto (la calculadora o la confirmación dentro del detalle de Presupuesto), se muestra como una vista del mismo sheet, no como otro.
   - La vista lleva ← ("Volver") en lugar de ✕. Esc y el atrás del sistema vuelven a la vista anterior sin cerrar el sheet.
@@ -1113,8 +1233,26 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
   - La acción principal es un botón flotante circular con ✓ en la esquina inferior derecha, siempre visible. El contenido con scroll deja espacio abajo para que el ✓ no tape la última fila.
   - Mientras guarda, el ✓ muestra la carga y queda deshabilitado; un error se muestra dentro del overlay.
   - Accesibilidad: el overlay conserva su nombre accesible (el título de antes); la ✕ y el ✓ tienen nombre y tooltip ("Cerrar", "Listo"). Enter y Ctrl/⌘+S confirman (Enter conserva su efecto sobre botones, casillas y listas).
+  - Desde la F1g, "¿Qué vas a registrar?" tampoco muestra su título (las pestañas lo dicen): en compacta lo cierra el asa, y en diálogo la ✕ de la esquina, junto a las pestañas.
   - Desde la F1e2 el registro rápido sigue este patrón, con una diferencia: mientras su teclado se ve, el ✓ es la tecla del teclado, para que no haya dos.
   - Los overlays sin confirmación (una opción, "¿Qué vas a crear?", "¿Qué vas a registrar?", periodo, confirmaciones) y las pantallas de flujo mantienen su barra.
+
+**Menú lateral (F1g)**
+
+- **El mismo en todos los tamaños:** un drawer modal desde el borde inicial, montado como el tamaño `drawer` de `OverlayService`. Hereda el fondo atenuado, Esc, la trampa de foco, el atrás del sistema y su efecto en las barras del sistema.
+- **En expandida también:** se eligió el drawer y no un panel. Es un solo componente con un solo comportamiento, y es el "modal navigation drawer" de Material 3, válido en pantallas grandes.
+- **Dentro:** lo que abre (instalar, acerca de) son vistas del mismo overlay, y los espacios se despliegan ahí: ningún overlay abre otro.
+
+**Transiciones (F1g)**
+
+- **Con View Transitions:** fundido entre pestañas; deslizar hacia adelante al entrar a una pantalla más profunda y hacia atrás al salir.
+- **Qué se mueve:** el encabezado, la navegación y el rail tienen su propio nombre, así que solo se mueve el contenido. Cuando aparecen o desaparecen (un flujo o una subpantalla en compacta), se desliza la página entera.
+- **Sin transición:**
+  - con `prefers-reduced-motion`;
+  - con un overlay o su fondo en pantalla (quedarían bajo el encabezado);
+  - cuando solo cambia la query;
+  - entre lista y detalle lado a lado.
+- **La decisión** es una función pura (`screenTransition`) con pruebas.
 
 **Teclado y puntero** (mediana y expandida)
 

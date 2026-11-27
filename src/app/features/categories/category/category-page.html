@@ -12,7 +12,7 @@
   }
 
   @if (loading()) {
-    <p class="status" role="status">Cargando la categoría…</p>
+    <cc-skeleton-list variant="blocks" [rows]="3" label="Cargando la categoría" />
   } @else if (notFound()) {
     <div class="notice">
       <cc-message>No encontramos esta categoría. Puede que se haya eliminado.</cc-message>

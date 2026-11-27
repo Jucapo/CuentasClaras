@@ -1,16 +1,24 @@
 :host {
   display: inline-flex;
-  align-items: center;
-  gap: var(--cc-space-3);
   color: var(--mat-sys-primary);
+}
+
+.line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cc-space-3);
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+
+.lead {
+  color: var(--mat-sys-on-surface);
 }
 
 .logo {
   flex: none;
   width: var(--cc-brand-logo-size);
   height: var(--cc-brand-logo-size);
-}
-
-.name {
-  font: var(--mat-sys-title-large);
 }

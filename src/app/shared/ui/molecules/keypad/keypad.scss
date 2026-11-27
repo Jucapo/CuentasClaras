@@ -8,14 +8,17 @@
   gap: var(--cc-space-2);
 }
 
+// Digits: light keys with a thin border, as 1Money's.
 .key {
+  --cc-key-color: var(--mat-sys-surface-container-lowest);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: var(--cc-keypad-key-height);
-  border: none;
+  border: var(--cc-border-width) solid var(--mat-sys-outline-variant);
   border-radius: var(--cc-radius-md);
-  background-color: var(--mat-sys-surface-container-high);
+  background-color: var(--cc-key-color);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-headline-small);
   font-variant-numeric: tabular-nums;
@@ -24,34 +27,37 @@
   touch-action: manipulation;
   user-select: none;
 
+  // Apart from the key, so it shows around the ✓, which is filled with the same color.
   &:focus-visible {
-    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
-  }
-
-  &:active {
-    background-color: var(--mat-sys-surface-container-highest);
+    outline: var(--cc-swatch-ring-width) solid var(--cc-focus-ring-color, var(--mat-sys-primary));
+    outline-offset: var(--cc-swatch-ring-width);
   }
 }
 
+// Operators, erase and the date: neutral gray, never the brand color (spec §7).
 .operator {
-  background-color: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-secondary-container);
+  --cc-key-color: var(--mat-sys-surface-container-highest);
+
+  border-color: transparent;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .span-2 {
   grid-column: span 2;
 }
 
-.span-3 {
-  grid-column: span 3;
+.tall {
+  grid-row: span 2;
 }
 
 // Tall, in the last column of the last two rows; the other keys flow around it.
 .submit {
+  --cc-key-color: var(--cc-keypad-accent, var(--mat-sys-primary));
+
   grid-row: 3 / span 2;
   grid-column: 5;
-  background-color: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
+  border-color: transparent;
+  color: var(--cc-keypad-on-accent, var(--mat-sys-on-primary));
 
   &:disabled {
     opacity: var(--cc-disabled-opacity);
@@ -60,15 +66,11 @@
 }
 
 @media (hover: hover) {
-  .key:hover:not(:disabled) {
-    background-color: var(--mat-sys-surface-container-highest);
-  }
-
-  .operator:hover {
-    background-color: var(--mat-sys-secondary-container);
-  }
-
-  .submit:hover:not(:disabled) {
-    background-color: var(--mat-sys-primary);
+  .key:hover:not(:disabled, :active) {
+    background-color: color-mix(
+      in srgb,
+      currentcolor calc(var(--mat-sys-hover-state-layer-opacity) * 100%),
+      var(--cc-key-color)
+    );
   }
 }

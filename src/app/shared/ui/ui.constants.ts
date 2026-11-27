@@ -47,6 +47,7 @@ export const KEYPAD_TEXT = {
   divide: 'Dividir',
   decimal: 'Decimales',
   thousands: 'Tres ceros',
+  date: 'Fecha',
 } as const;
 
 /** SVG geometry of `cc-donut`, in viewBox units. */
@@ -96,6 +97,22 @@ export const MONEY_PARSE_MESSAGES = {
 
 /** Longest wait for the browser to drop a closed overlay's history entry. */
 export const OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS = 500;
+
+/**
+ * Dragging a sheet down or the drawer to the side closes it (spec §13.5): how far the finger moves
+ * before it is a drag, and how far (a share of the overlay, capped) or how fast it must go.
+ */
+export const DRAG_DISMISS = {
+  slopPx: 8,
+  distanceRatio: 0.3,
+  maxDistancePx: 160,
+  velocityPxPerMs: 0.5,
+  /** A fast flick closes only past this distance, so a jitter does not. */
+  flickMinPx: 40,
+} as const;
+
+/** How long the drawer takes to slide in and out; matches --cc-duration-medium. */
+export const DRAWER_ANIMATION_MS = 250;
 
 /** Minimum widths (px) of the Material 3 window size classes; match src/styles/_breakpoints.scss. */
 export const WINDOW_BREAKPOINTS = { medium: 600, expanded: 840 } as const;

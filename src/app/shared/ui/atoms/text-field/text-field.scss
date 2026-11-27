@@ -5,3 +5,23 @@
 .field {
   width: 100%;
 }
+
+// Rounded border, as the note of the quick entry (spec §7).
+:host(.outline) {
+  --mat-form-field-outlined-container-shape: var(--cc-radius-md);
+  --mat-form-field-container-height: var(--cc-field-compact-height);
+  --mat-form-field-container-vertical-padding: var(--cc-space-3);
+}
+
+:host(.center) input {
+  text-align: center;
+}
+
+:host(.center) input::placeholder {
+  font-style: italic;
+}
+
+.spacer {
+  display: block;
+  width: var(--cc-touch-target-min);
+}

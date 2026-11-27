@@ -62,3 +62,8 @@
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
 }
+
+.balance-skeleton {
+  --cc-skeleton-width: var(--cc-total-skeleton-width);
+  --cc-skeleton-height: var(--cc-touch-target-min);
+}

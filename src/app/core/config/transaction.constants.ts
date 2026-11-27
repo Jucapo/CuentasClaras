@@ -35,7 +35,6 @@ export const UNCATEGORIZED_LOOK = {
 /** "¿Qué vas a registrar?" in Transacciones (spec §7). */
 export const NEW_TRANSACTION_CHOICE = {
   title: '¿Qué vas a registrar?',
-  transferHint: 'Entre tus cuentas',
 } as const;
 
 /** Names of the kinds of movement. */

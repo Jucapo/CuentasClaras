@@ -7,11 +7,26 @@
   display: block;
 }
 
-// In the detail pane it takes the height of the pane, and its columns stack while it is narrow.
+// In a dialog the panels paint the surface themselves: the container is transparent, so the icons
+// of the blocks and the ✕ can float over their top edge, as in the sheet (spec §7).
+:host(.dialog) cc-overlay-panel {
+  max-height: calc(var(--cc-entry-sheet-max-height) - var(--cc-sheet-gutter));
+  border-radius: var(--cc-sheet-radius);
+  background-color: var(--cc-overlay-surface);
+  box-shadow: var(--cc-elevation-3);
+}
+
+// In the detail pane it takes the height of the pane, and its columns stack while it is narrow. The
+// gutter on top leaves room for what floats over the blocks.
 :host(.pane) {
   --cc-picker-panel-max-height: none;
 
+  padding-top: var(--cc-sheet-gutter);
   container-type: inline-size;
+
+  cc-overlay-panel {
+    border-radius: var(--cc-radius-lg);
+  }
 
   .columns {
     grid-template-columns: minmax(0, 1fr);
@@ -28,11 +43,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--cc-space-3);
-}
-
-// The floating ✕ sits beside the blocks, never on them.
-.endpoints {
-  padding-inline-end: var(--cc-overlay-close-clearance);
 }
 
 .form {
@@ -53,7 +63,59 @@
   padding-top: var(--cc-space-2);
 }
 
-// Amount, keypad and actions: the left column of the dialog.
+// The note, with the tags of the movement as small chips under it.
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}
+
+.chosen-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--cc-space-1);
+  min-height: var(--cc-touch-target-min);
+  padding: var(--cc-space-1);
+  border: none;
+  border-radius: var(--cc-radius-md);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--cc-focus-ring-color, var(--mat-sys-primary));
+  }
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cc-space-1);
+  padding: var(--cc-space-0-5) var(--cc-space-2);
+  border: var(--cc-border-width) solid var(--mat-sys-outline-variant);
+  border-radius: var(--cc-radius-full);
+}
+
+// The date as text under the keypad: "Hoy, 27 nov 2026" (spec §7).
+.date-line {
+  align-self: center;
+  min-height: var(--cc-touch-target-min);
+  padding: 0 var(--cc-space-3);
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-title-small);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--cc-focus-ring-color, var(--mat-sys-primary));
+  }
+}
+
+// Amount, keypad, date and actions: the left column of the dialog.
 .pad {
   display: flex;
   flex-direction: column;
@@ -61,12 +123,12 @@
   min-width: 0;
 }
 
-// Keypad and actions pinned under the fields in the sheet.
+// Keypad, date and actions pinned under the fields in the sheet.
 .pinned {
   display: flex;
   flex: 1 1 100%;
   flex-direction: column;
-  gap: var(--cc-space-2);
+  gap: var(--cc-space-1);
   min-width: 0;
 }
 
@@ -103,4 +165,11 @@
 // The floating ✓ sits in the bottom corner, beside the actions.
 .actions.beside-confirm {
   padding-inline-end: var(--cc-overlay-confirm-clearance);
+}
+
+@media (hover: hover) {
+  .date-line:hover,
+  .chosen-tags:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
 }

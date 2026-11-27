@@ -1,8 +1,12 @@
-<cc-page-header title="Categorías">
+<ng-template ccScreenAction>
   @if (canEdit()) {
     <cc-icon-button icon="edit" label="Editar categorías" shortcut="E" (click)="edit()" />
   }
-</cc-page-header>
+</ng-template>
+
+<h1 class="cc-visually-hidden">Categorías</h1>
+<!-- Says which kind shows after switching at the center of the donut (spec §7). -->
+<p class="cc-visually-hidden" role="status">{{ switchAnnouncement() }}</p>
 
 @if (onboarding.showReminder()) {
   <cc-section
@@ -17,42 +21,41 @@
   </cc-section>
 }
 
-<cc-tabs
-  label="Clase de categorías"
-  [options]="kindTabs"
-  [value]="kind()"
-  (valueChange)="changeKind($event)"
->
-  <div class="content">
-    @if (loadError(); as error) {
-      <cc-message>{{ error }}</cc-message>
-    } @else if (isEmpty()) {
-      <cc-section
-        [title]="emptyTitle()"
-        description="Crea las categorías en las que repartes tus gastos e ingresos."
-      >
-        @if (canEdit()) {
-          <cc-button icon="add" (click)="edit()">Crear categorías</cc-button>
-        }
-      </cc-section>
-    } @else {
-      @if (totalsError(); as error) {
-        <cc-message>{{ error }}</cc-message>
+@if (loadError(); as error) {
+  <cc-message>{{ error }}</cc-message>
+} @else if (isEmpty()) {
+  <cc-section
+    [title]="emptyTitle()"
+    description="Crea las categorías en las que repartes tus gastos e ingresos."
+  >
+    <cc-form-actions align="start">
+      <cc-button variant="tonal" icon="swap_vert" (click)="switchKind()">
+        {{ otherKindLabel() }}
+      </cc-button>
+      @if (canEdit()) {
+        <cc-button icon="add" (click)="edit()">Crear categorías</cc-button>
       }
-      <cc-missing-rates-notice
-        class="notice"
-        [currencies]="missingRates()"
-        [canDefine]="canEdit()"
-        (define)="defineRate($event)"
-      />
-      <cc-category-grid
-        [label]="gridLabel()"
-        [centerLabel]="kindLabel()"
-        [items]="items()"
-        [currency]="mainCurrency()"
-        [totals]="gridTotals()"
-        (opened)="record($event)"
-      />
-    }
-  </div>
-</cc-tabs>
+    </cc-form-actions>
+  </cc-section>
+} @else {
+  @if (totalsError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  }
+  <cc-missing-rates-notice
+    class="notice"
+    [currencies]="missingRates()"
+    [canDefine]="canEdit()"
+    (define)="defineRate($event)"
+  />
+  <cc-category-grid
+    [label]="gridLabel()"
+    [centerLabel]="kindLabel()"
+    [items]="items()"
+    [currency]="mainCurrency()"
+    [totals]="gridTotals()"
+    [loading]="loading()"
+    [switchLabel]="switchLabel()"
+    (opened)="record($event)"
+    (switched)="switchKind()"
+  />
+}

@@ -19,7 +19,7 @@
 
 // Chips in the color of a category: outlined and labeled in it, the picked one filled with it.
 :host(.accented) {
-  --mat-chip-outline-color: var(--cc-chip-accent);
+  --mat-chip-outline-color: var(--cc-chip-accent-outline);
   --mat-chip-label-text-color: var(--cc-chip-accent-text);
   --mat-chip-with-icon-icon-color: var(--cc-chip-accent-text);
   --mat-chip-elevated-selected-container-color: var(--cc-chip-accent);

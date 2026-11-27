@@ -1,11 +1,6 @@
 <cc-page-header title="Monedas" [backLink]="backLink" backLabel="Volver a Configuración" />
 
 <div class="content">
-  <p class="intro">
-    Los totales se muestran en {{ mainSymbol() }}. Cada movimiento en otra moneda usa la tasa más
-    reciente de su fecha o antes.
-  </p>
-
   @if (loadError(); as error) {
     <cc-message>{{ error }}</cc-message>
   } @else if (isEmpty()) {

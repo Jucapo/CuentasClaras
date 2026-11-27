@@ -1,5 +1,5 @@
 @if (totalsText(); as text) {
-  <p class="cc-visually-hidden">{{ text }}</p>
+  <p class="cc-visually-hidden" [id]="totalsId">{{ text }}</p>
 }
 <div
   class="grid"
@@ -7,56 +7,69 @@
   cdkDropList
   cdkDropListOrientation="mixed"
   [attr.aria-label]="label()"
+  [attr.aria-busy]="loading() || null"
   [cdkDropListDisabled]="!reorderable()"
   (cdkDropListDropped)="dropped($event)"
 >
   @if (donut()) {
-    <cc-donut class="donut" aria-hidden="true" [segments]="segments()">
-      @if (currency() && totals().length > 0) {
-        @for (total of totals(); track total.label; let first = $first) {
-          <span class="total" [class.main]="first">
-            <span class="total-label">{{ total.label }}</span>
-            <cc-amount
-              class="total-amount"
-              [amount]="total.amount"
-              [currency]="currency() ?? ''"
-              tone="neutral"
-            />
-          </span>
-        }
+    <cc-donut class="donut" [segments]="segments()">
+      @if (switchLabel(); as switchLabel) {
+        <!-- Tapping the center switches the kind, as in 1Money (spec §7). -->
+        <button
+          type="button"
+          class="center-switch"
+          [attr.aria-label]="switchLabel"
+          [attr.aria-describedby]="totalsText() ? totalsId : null"
+          (click)="switched.emit()"
+        >
+          <ng-container [ngTemplateOutlet]="center" />
+          <cc-icon class="switch-icon" name="swap_vert" size="sm" />
+        </button>
       } @else {
-        <span class="center-label">{{ centerLabel() }}</span>
+        <span class="center-static" aria-hidden="true">
+          <ng-container [ngTemplateOutlet]="center" />
+        </span>
       }
     </cc-donut>
   }
 
-  @for (item of items(); track item.id; let index = $index) {
-    <div
-      class="cell"
-      role="listitem"
-      cdkDrag
-      [cdkDragDisabled]="!reorderable()"
-      [cdkDragStartDelay]="dragDelay"
-      [attr.data-id]="item.id"
-    >
-      <cc-category-bubble
-        [name]="item.name"
-        [icon]="item.icon"
-        [color]="item.color"
-        [variant]="mode()"
-        [amount]="item.amount ?? null"
-        [remaining]="item.remaining ?? null"
-        [reserveRemaining]="anyRemaining()"
-        [progress]="item.progress ?? null"
-        [amountColor]="amountColor()"
-        [currency]="mode() === 'view' ? currency() : null"
-        [selected]="item.id === selectedId()"
-        [describedBy]="reorderable() ? helpId : null"
-        [keyShortcuts]="reorderable() ? 'Alt+ArrowLeft Alt+ArrowRight' : null"
-        (activate)="opened.emit(item.id)"
-        (keydown)="onKeydown($event, index)"
-      />
-    </div>
+  @if (loading()) {
+    @for (placeholder of placeholders; track placeholder) {
+      <div class="cell placeholder" role="listitem" aria-hidden="true">
+        <cc-skeleton class="placeholder-name" />
+        <cc-skeleton shape="circle" class="placeholder-badge" />
+        <cc-skeleton class="placeholder-amount" />
+      </div>
+    }
+  } @else {
+    @for (item of items(); track item.id; let index = $index) {
+      <div
+        class="cell"
+        role="listitem"
+        cdkDrag
+        [cdkDragDisabled]="!reorderable()"
+        [cdkDragStartDelay]="dragDelay"
+        [attr.data-id]="item.id"
+      >
+        <cc-category-bubble
+          [name]="item.name"
+          [icon]="item.icon"
+          [color]="item.color"
+          [variant]="mode()"
+          [amount]="item.amount ?? null"
+          [remaining]="item.remaining ?? null"
+          [reserveRemaining]="anyRemaining()"
+          [progress]="item.progress ?? null"
+          [amountColor]="amountColor()"
+          [currency]="mode() === 'view' ? currency() : null"
+          [selected]="item.id === selectedId()"
+          [describedBy]="reorderable() ? helpId : null"
+          [keyShortcuts]="reorderable() ? 'Alt+ArrowLeft Alt+ArrowRight' : null"
+          (activate)="opened.emit(item.id)"
+          (keydown)="onKeydown($event, index)"
+        />
+      </div>
+    }
   }
 
   @if (mode() === 'edit' && addLabel(); as addLabel) {
@@ -67,5 +80,25 @@
 </div>
 
 @if (reorderable() && items().length > 1) {
-  <p class="help" [id]="helpId">{{ keyboardHelp }}</p>
+  <p class="help cc-visually-hidden" [id]="helpId">{{ keyboardHelp }}</p>
 }
+
+<ng-template #center>
+  @if (currency() && totals().length > 0) {
+    @for (total of totals(); track total.label; let first = $first) {
+      <span class="total" [class.main]="first">
+        <span class="total-label">{{ total.label }}</span>
+        <cc-amount
+          class="total-amount"
+          [amount]="total.amount"
+          [currency]="currency() ?? ''"
+          tone="neutral"
+        />
+      </span>
+    }
+  } @else if (loading()) {
+    <cc-skeleton class="center-skeleton" />
+  } @else {
+    <span class="center-label">{{ centerLabel() }}</span>
+  }
+</ng-template>

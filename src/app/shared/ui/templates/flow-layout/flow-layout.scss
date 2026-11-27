@@ -16,13 +16,13 @@
   gap: var(--cc-space-2);
   min-height: var(--cc-header-height);
   padding: var(--cc-safe-area-top) var(--cc-space-4) 0 var(--cc-space-1);
-  background-color: var(--mat-sys-surface-container);
+  background-color: var(--cc-bar-surface);
 }
 
-// In the medium window class the shell header stays on top, so the bar sticks below it; a host
-// without that header (the setup wizard) sets --cc-flow-bar-top.
+// In the medium window class the shell header stays on top, outside the content that scrolls, so the
+// bar sticks right under it and needs no room for the status bar.
 :host(.window-medium) .top-bar {
-  top: var(--cc-flow-bar-top, calc(var(--cc-header-height) + var(--cc-safe-area-top)));
+  top: var(--cc-flow-bar-top, 0);
   padding-top: 0;
 }
 

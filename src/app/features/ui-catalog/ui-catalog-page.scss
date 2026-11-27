@@ -45,3 +45,16 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--cc-space-2);
 }
+
+// The handle floats over the backdrop: a dimmed strip stands for it here.
+.handle-demo {
+  display: flex;
+  gap: var(--cc-space-4);
+  padding: var(--cc-space-2);
+  border-radius: var(--cc-radius-md);
+  background-color: color-mix(
+    in srgb,
+    var(--mat-sys-scrim) calc(var(--cc-scrim-opacity) * 100%),
+    var(--mat-sys-surface)
+  );
+}

@@ -1,6 +1,6 @@
 <cc-select
   label="Formato de moneda"
-  hint="Separadores de miles y decimales."
+  [hint]="hints() ? 'Separadores de miles y decimales.' : undefined"
   [options]="formatOptions()"
   [formField]="fields().numberFormat"
 />

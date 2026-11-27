@@ -3,6 +3,7 @@ import { CurrencyAmount } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { LinkCommands } from '../../atoms/button/button';
 import { AccountRow } from '../../molecules/account-row/account-row';
+import { SkeletonList } from '../../molecules/skeleton-list/skeleton-list';
 
 /** An account as the list shows it. */
 export interface AccountListItem {
@@ -32,11 +33,11 @@ export interface AccountListGroup {
 /**
  * Accounts grouped by kind, each group with its total per currency, plus an overall total. Each
  * account links to its screen, or with `actionable` is a button that emits `opened`, e.g. to pick
- * the account of a movement (spec §7).
+ * the account of a movement (spec §7). While `loading`, placeholder rows (spec §13.4).
  */
 @Component({
   selector: 'cc-account-list',
-  imports: [AccountRow, Amount],
+  imports: [AccountRow, Amount, SkeletonList],
   templateUrl: './account-list.html',
   styleUrl: './account-list.scss',
 })
@@ -46,6 +47,8 @@ export class AccountList {
   readonly totals = input<readonly CurrencyAmount[]>([]);
   readonly totalLabel = input('Total');
   readonly actionable = input(false);
+  /** The accounts are on their way: placeholder rows instead of an empty list. */
+  readonly loading = input(false);
   /** An account was picked (with `actionable`). */
   readonly opened = output<string>();
 }

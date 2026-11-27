@@ -1,0 +1,90 @@
+// Screen transitions (spec §13.5), set by core/routing/view-transitions.ts on <html>: tabs fade, a
+// deeper screen slides in from the end and back out. Only the content moves; the header, the
+// navigation and the rail have their own names and stay. When they come or go (a flow or a subscreen
+// in the compact class) the whole page slides instead. Skipped with reduced motion.
+
+::view-transition-group(*) {
+  animation-duration: var(--cc-duration-medium);
+  animation-timing-function: var(--cc-easing-standard);
+}
+
+html[data-cc-transition-scope='page'] {
+  .shell-header,
+  .scroller,
+  .bottom-nav,
+  .nav-rail {
+    view-transition-name: none !important;
+  }
+}
+
+@mixin slide($name, $kind) {
+  @if $kind == 'forward' {
+    &::view-transition-old(#{$name}) {
+      animation: cc-slide-out-start var(--cc-duration-medium) var(--cc-easing-standard) both;
+    }
+
+    &::view-transition-new(#{$name}) {
+      animation: cc-slide-in-end var(--cc-duration-medium) var(--cc-easing-standard) both;
+    }
+  } @else {
+    &::view-transition-old(#{$name}) {
+      animation: cc-slide-out-end var(--cc-duration-medium) var(--cc-easing-standard) both;
+    }
+
+    &::view-transition-new(#{$name}) {
+      animation: cc-slide-in-start var(--cc-duration-medium) var(--cc-easing-standard) both;
+    }
+  }
+}
+
+html[data-cc-transition='forward'][data-cc-transition-scope='content'] {
+  @include slide(cc-content, 'forward');
+}
+
+html[data-cc-transition='back'][data-cc-transition-scope='content'] {
+  @include slide(cc-content, 'back');
+}
+
+html[data-cc-transition='forward'][data-cc-transition-scope='page'] {
+  @include slide(root, 'forward');
+}
+
+html[data-cc-transition='back'][data-cc-transition-scope='page'] {
+  @include slide(root, 'back');
+}
+
+@keyframes cc-slide-in-end {
+  from {
+    opacity: 0;
+    transform: translateX(var(--cc-transition-offset));
+  }
+}
+
+@keyframes cc-slide-out-start {
+  to {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--cc-transition-offset)));
+  }
+}
+
+@keyframes cc-slide-in-start {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--cc-transition-offset)));
+  }
+}
+
+@keyframes cc-slide-out-end {
+  to {
+    opacity: 0;
+    transform: translateX(var(--cc-transition-offset));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

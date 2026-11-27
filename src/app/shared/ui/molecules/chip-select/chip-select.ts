@@ -28,6 +28,8 @@ export class ChipSelect extends FormControlBase implements FormValueControl<read
   readonly options = input.required<readonly ChipOption[]>();
   /** Shown when there are no options to pick. */
   readonly emptyText = input('');
+  /** Keeps the label only for assistive technology, when the context already names the choice. */
+  readonly hideLabel = input(false);
 
   protected readonly labelId = `cc-chip-select-${nextChipSelectId++}`;
 

@@ -1,16 +1,33 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: var(--cc-nav-rail-width);
+  padding-top: calc(var(--cc-safe-area-top) + var(--cc-space-4));
+  background-color: var(--cc-bar-surface);
 }
 
 :host(.expanded) {
   width: var(--cc-nav-rail-expanded-width);
 }
 
+// The avatar that opens the menu sits on top of the destinations (spec §7).
+.top {
+  display: flex;
+  justify-content: center;
+  padding-bottom: var(--cc-space-4);
+}
+
+.top:empty {
+  display: none;
+}
+
+:host(.expanded) .top {
+  justify-content: flex-start;
+  padding-inline: var(--cc-space-3);
+}
+
 .nav-rail {
-  height: 100%;
-  padding-top: calc(var(--cc-safe-area-top) + var(--cc-space-4));
-  background-color: var(--mat-sys-surface-container);
+  flex: 1 1 auto;
 }
 
 .nav-list {

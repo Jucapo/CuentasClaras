@@ -2,9 +2,10 @@
   display: block;
 }
 
+// The same surface as the header: the system's bars take it (theme-color, spec §13.2).
 .bottom-nav {
   padding-bottom: var(--cc-safe-area-bottom);
-  background-color: var(--mat-sys-surface-container);
+  background-color: var(--cc-bar-surface);
 }
 
 .nav-list {
