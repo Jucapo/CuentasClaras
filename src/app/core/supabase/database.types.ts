@@ -79,6 +79,52 @@ export type Database = {
           },
         ];
       };
+      budgets: {
+        Row: {
+          amount: number;
+          category_id: string;
+          created_at: string;
+          currency: string;
+          effective_from: string;
+          id: string;
+          space_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          category_id: string;
+          created_at?: string;
+          currency: string;
+          effective_from: string;
+          id?: string;
+          space_id: string;
+        };
+        Update: {
+          amount?: number;
+          category_id?: string;
+          created_at?: string;
+          currency?: string;
+          effective_from?: string;
+          id?: string;
+          space_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'budgets_space_id_category_id_fkey';
+            columns: ['space_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'budgets_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       categories: {
         Row: {
           archived_at: string | null;
@@ -251,6 +297,7 @@ export type Database = {
           main_currency: string;
           month_start_day: number;
           onboarding_completed_at: string | null;
+          onboarding_postponed_at: string | null;
           onboarding_step: number;
           space_id: string;
           week_start: Database['public']['Enums']['weekday'];
@@ -262,6 +309,7 @@ export type Database = {
           main_currency?: string;
           month_start_day?: number;
           onboarding_completed_at?: string | null;
+          onboarding_postponed_at?: string | null;
           onboarding_step?: number;
           space_id: string;
           week_start?: Database['public']['Enums']['weekday'];
@@ -272,6 +320,7 @@ export type Database = {
           main_currency?: string;
           month_start_day?: number;
           onboarding_completed_at?: string | null;
+          onboarding_postponed_at?: string | null;
           onboarding_step?: number;
           space_id?: string;
           week_start?: Database['public']['Enums']['weekday'];
@@ -441,6 +490,14 @@ export type Database = {
       };
     };
     Functions: {
+      create_category_tree: {
+        Args: {
+          category_kind: Database['public']['Enums']['category_kind'];
+          target_space_id: string;
+          tree: Json;
+        };
+        Returns: undefined;
+      };
       create_space: {
         Args: {
           main_currency: string;

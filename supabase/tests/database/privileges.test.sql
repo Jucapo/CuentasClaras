@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(65);
+select plan(76);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -16,6 +16,7 @@ select table_privs_are('public', 'tags', 'anon', array[]::text[], 'anon has no a
 select table_privs_are('public', 'category_default_tags', 'anon', array[]::text[],
   'anon has no access to category_default_tags');
 select table_privs_are('public', 'account_balances', 'anon', array[]::text[], 'anon has no access to account_balances');
+select table_privs_are('public', 'budgets', 'anon', array[]::text[], 'anon has no access to budgets');
 
 -- ── authenticated: read, plus column-level updates ───────────────────────────
 select table_privs_are('public', 'profiles', 'authenticated', array['SELECT'], 'authenticated reads profiles');
@@ -33,6 +34,8 @@ select table_privs_are('public', 'category_default_tags', 'authenticated', array
   'authenticated reads and removes default tags (RLS decides which)');
 select table_privs_are('public', 'account_balances', 'authenticated', array['SELECT'],
   'authenticated reads the balances view');
+select table_privs_are('public', 'budgets', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes budgets (RLS decides which)');
 
 select column_privs_are('public', 'profiles', 'display_name', 'authenticated', array['SELECT', 'UPDATE'],
   'the display name is editable');
@@ -70,6 +73,18 @@ select column_privs_are('public', 'space_settings', 'month_start_day', 'authenti
   'the month start day is editable');
 select column_privs_are('public', 'space_settings', 'space_id', 'authenticated', array['SELECT'],
   'the settings space is read-only');
+select column_privs_are('public', 'space_settings', 'onboarding_postponed_at', 'authenticated',
+  array['SELECT', 'UPDATE'], 'postponing the wizard is a settings update');
+select column_privs_are('public', 'budgets', 'amount', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the budget amount is set on insert and editable');
+select column_privs_are('public', 'budgets', 'currency', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the budget currency is set on insert and editable');
+select column_privs_are('public', 'budgets', 'space_id', 'authenticated', array['SELECT', 'INSERT'],
+  'a budget never moves to another space');
+select column_privs_are('public', 'budgets', 'category_id', 'authenticated', array['SELECT', 'INSERT'],
+  'a budget never moves to another category');
+select column_privs_are('public', 'budgets', 'effective_from', 'authenticated', array['SELECT', 'INSERT'],
+  'a change from another period is a new row');
 select column_privs_are('public', 'user_settings', 'last_space_id', 'authenticated', array['SELECT', 'UPDATE'],
   'the last space is editable');
 select column_privs_are('public', 'user_settings', 'user_id', 'authenticated', array['SELECT'],
@@ -96,6 +111,8 @@ select table_privs_are('public', 'category_default_tags', 'service_role', array[
   'service_role has CRUD on category_default_tags');
 select table_privs_are('public', 'account_balances', 'service_role', array['SELECT'],
   'service_role reads the balances view');
+select table_privs_are('public', 'budgets', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on budgets');
 
 -- ── Functions ────────────────────────────────────────────────────────────────
 select function_privs_are('public', 'create_space', array['text', 'text', 'integer', 'weekday'], 'anon',
@@ -114,6 +131,10 @@ select function_privs_are('public', 'reorder_categories', array['uuid[]'], 'anon
   array[]::text[], 'anon cannot call reorder_categories');
 select function_privs_are('public', 'reorder_categories', array['uuid[]'], 'authenticated',
   array['EXECUTE'], 'authenticated calls reorder_categories');
+select function_privs_are('public', 'create_category_tree', array['uuid', 'category_kind', 'jsonb'], 'anon',
+  array[]::text[], 'anon cannot call create_category_tree');
+select function_privs_are('public', 'create_category_tree', array['uuid', 'category_kind', 'jsonb'],
+  'authenticated', array['EXECUTE'], 'authenticated calls create_category_tree');
 select function_privs_are('private', 'is_space_editor', array['uuid'], 'anon',
   array[]::text[], 'anon cannot call the editor helper');
 select function_privs_are('private', 'can_see_account', array['uuid'], 'anon',
