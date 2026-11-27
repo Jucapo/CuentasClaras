@@ -239,6 +239,8 @@ export class TransactionsPage implements HasUnsavedChanges {
       (key) => key !== 'authorIds' || this.members.members().length > 1,
     ),
   );
+  /** The filter whose options are open. */
+  protected readonly openFilterKey = signal<TransactionFilterKey | null>(null);
   protected readonly chips = computed<FilterChip[]>(() => {
     const filters = this.store.filters();
     const options = this.filterOptions();
@@ -328,6 +330,7 @@ export class TransactionsPage implements HasUnsavedChanges {
   protected async openFilter(key: string): Promise<void> {
     const filterKey = key as TransactionFilterKey;
     const label = TRANSACTION_FILTER_LABELS[filterKey];
+    this.openFilterKey.set(filterKey);
     const picked = await this.overlay.open<readonly string[], OptionPanelData<string>>(
       OptionPanel,
       {
@@ -340,6 +343,7 @@ export class TransactionsPage implements HasUnsavedChanges {
         },
       },
     );
+    this.openFilterKey.set(null);
     if (picked) {
       this.store.set(filterKey, picked as TransactionFilters[typeof filterKey]);
     }

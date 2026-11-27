@@ -16,6 +16,7 @@
       <cc-filter-chips
         [label]="text.filters"
         [filters]="chips()"
+        [expanded]="openFilterKey()"
         (opened)="openFilter($event)"
         (cleared)="clearFilter($event)"
         (clearedAll)="clearFilters()"

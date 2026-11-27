@@ -13,8 +13,9 @@ export interface FilterChip {
 
 /**
  * Filters as chips in one row that scrolls sideways (spec §7). Tapping a chip asks the page to open
- * its options (`opened`); an active one shows what is picked and a ✕ that clears it (`cleared`).
- * With two or more active, "Limpiar" clears them all.
+ * its options (`opened`), and `expanded` tells which ones are open; an active one shows what is
+ * picked and a ✕ that clears it (`cleared`). With two or more active, "Limpiar" clears them all.
+ * Own buttons instead of Material chips: none opens options and also clears with ✕.
  */
 @Component({
   selector: 'cc-filter-chips',
@@ -26,6 +27,8 @@ export class FilterChips {
   readonly filters = input.required<readonly FilterChip[]>();
   /** Accessible name of the row, e.g. "Filtros". */
   readonly label = input.required<string>();
+  /** The key of the filter whose options are open (its `aria-expanded`). */
+  readonly expanded = input<string | null>(null);
   readonly opened = output<string>();
   readonly cleared = output<string>();
   readonly clearedAll = output<void>();

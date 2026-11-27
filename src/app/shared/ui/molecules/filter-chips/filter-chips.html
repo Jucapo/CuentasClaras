@@ -6,6 +6,7 @@
           type="button"
           class="main"
           aria-haspopup="dialog"
+          [attr.aria-expanded]="expanded() === filter.key"
           [attr.aria-label]="filter.label + ': ' + summary"
           (click)="opened.emit(filter.key)"
         >
@@ -22,7 +23,13 @@
       </span>
     } @else {
       <span class="chip">
-        <button type="button" class="main" aria-haspopup="dialog" (click)="opened.emit(filter.key)">
+        <button
+          type="button"
+          class="main"
+          aria-haspopup="dialog"
+          [attr.aria-expanded]="expanded() === filter.key"
+          (click)="opened.emit(filter.key)"
+        >
           {{ filter.label }}
           <cc-icon name="expand_more" size="sm" />
         </button>
