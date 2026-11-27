@@ -1,4 +1,5 @@
--- F1e · Transacciones: búsqueda y filtros de movimientos, y los totales de lo filtrado. Spec §7 y §8.
+-- F1e · Transacciones: búsqueda y filtros de movimientos, y los totales de lo filtrado. Presupuesto
+-- por subcategoría en los totales por categoría. Spec §4.7, §7 y §8.
 
 -- ── Búsqueda sin tildes ───────────────────────────────────────────────────────
 -- La forma de dos argumentos de unaccent no depende del search_path.
@@ -176,3 +177,140 @@ grant execute on function public.transaction_totals(
   uuid, date, date, text[], bigint, uuid[], uuid[], uuid[], public.transaction_type[], uuid[],
   public.transaction_status[]
 ) to authenticated;
+
+-- ── RPC: totales por categoría, con presupuesto por subcategoría ──────────────
+-- Igual que en la F1d (mismas columnas; create or replace conserva los grants), salvo el
+-- presupuesto: cada subcategoría trae el suyo y su restante, y el de una categoría es su monto
+-- propio (el "General", que cubre lo registrado directo en ella) más los de sus subcategorías
+-- (§4.7). Lo que no tiene tasa no suma y su moneda sale en missing_rate_currencies de la fila y de
+-- su categoría.
+create or replace function public.category_totals(
+  target_space_id uuid,
+  from_date date,
+  to_date date,
+  budget_months date[] default '{}'
+)
+returns table (
+  category_id uuid,
+  parent_id uuid,
+  kind public.category_kind,
+  amount bigint,
+  budget bigint,
+  remaining bigint,
+  missing_rate_currencies text[]
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with settings as (
+    select s.main_currency from public.space_settings s where s.space_id = target_space_id
+  ),
+  -- Se agrupa por categoría, moneda y día antes de convertir: una conversión por grupo.
+  scoped as (
+    select t.category_id, t.currency, t.date, sum(t.amount)::bigint as amount
+    from public.transactions t
+    -- Las cuentas privadas de otros no se ven: sin fila, el movimiento cuenta solo si está incluido.
+    left join public.accounts a on a.id = t.account_id
+    where t.space_id = target_space_id
+      and t.status = 'confirmed'
+      and t.type in ('expense', 'income')
+      and (from_date is null or t.date >= from_date)
+      and (to_date is null or t.date <= to_date)
+      and (t.include_in_space or a.visibility = 'shared')
+    group by t.category_id, t.currency, t.date
+  ),
+  movements as (
+    select
+      c.id as category_id,
+      coalesce(c.parent_id, c.id) as top_id,
+      s.currency,
+      private.convert_minor(s.amount, s.currency, st.main_currency, target_space_id, s.date)
+        as converted
+    from scoped s
+    join public.categories c on c.id = s.category_id
+    cross join settings st
+  ),
+  own as (
+    select
+      m.category_id,
+      sum(m.converted) as amount,
+      array_agg(distinct m.currency) filter (where m.converted is null) as missing
+    from movements m
+    group by m.category_id
+  ),
+  rolled as (
+    select
+      m.top_id,
+      sum(m.converted) as amount,
+      array_agg(distinct m.currency) filter (where m.converted is null) as missing
+    from movements m
+    group by m.top_id
+  ),
+  budgets_in_force as (
+    select distinct on (period.month, b.category_id)
+      b.category_id, b.amount, b.currency, period.month
+    from unnest(budget_months) as period (month)
+    join public.budgets b on b.space_id = target_space_id and b.effective_from <= period.month
+    order by period.month, b.category_id, b.effective_from desc
+  ),
+  -- Cada monto en vigor, convertido, con la categoría principal a la que suma.
+  budget_rows as (
+    select
+      bif.category_id,
+      coalesce(c.parent_id, c.id) as top_id,
+      bif.currency,
+      private.convert_minor(
+        bif.amount, bif.currency, st.main_currency, target_space_id, coalesce(to_date, bif.month)
+      ) as converted
+    from budgets_in_force bif
+    join public.categories c on c.id = bif.category_id
+    cross join settings st
+    where bif.amount > 0
+  ),
+  -- El propio: el "General" de una categoría o el de una subcategoría.
+  budget_own as (
+    select
+      br.category_id,
+      sum(br.converted) as amount,
+      array_agg(distinct br.currency) filter (where br.converted is null) as missing
+    from budget_rows br
+    group by br.category_id
+  ),
+  -- El de una categoría: su General más los de sus subcategorías.
+  budget_rolled as (
+    select
+      br.top_id,
+      sum(br.converted) as amount,
+      array_agg(distinct br.currency) filter (where br.converted is null) as missing
+    from budget_rows br
+    group by br.top_id
+  )
+  select
+    c.id,
+    c.parent_id,
+    c.kind,
+    coalesce(case when c.parent_id is null then r.amount else o.amount end, 0)::bigint,
+    (case when c.parent_id is null then bro.amount else bow.amount end)::bigint,
+    (
+      case
+        when c.parent_id is null then bro.amount - coalesce(r.amount, 0)
+        else bow.amount - coalesce(o.amount, 0)
+      end
+    )::bigint,
+    array(
+      select distinct missing.currency
+      from unnest(
+        coalesce(case when c.parent_id is null then r.missing else o.missing end, '{}')
+        || coalesce(case when c.parent_id is null then bro.missing else bow.missing end, '{}')
+      ) as missing (currency)
+      order by missing.currency
+    )
+  from public.categories c
+  left join own o on o.category_id = c.id
+  left join rolled r on r.top_id = c.id and c.parent_id is null
+  left join budget_own bow on bow.category_id = c.id
+  left join budget_rolled bro on bro.top_id = c.id and c.parent_id is null
+  where c.space_id = target_space_id;
+$$;
