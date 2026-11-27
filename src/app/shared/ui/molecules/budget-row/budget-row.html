@@ -3,7 +3,7 @@
   <button
     type="button"
     class="main"
-    aria-haspopup="dialog"
+    [attr.aria-haspopup]="opensDialog() ? 'dialog' : null"
     [class.selected]="selected()"
     [attr.aria-current]="selected() ? 'true' : null"
     (click)="activate.emit()"

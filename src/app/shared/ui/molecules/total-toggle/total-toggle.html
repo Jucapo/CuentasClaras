@@ -1,0 +1,25 @@
+<div class="group" role="radiogroup" [attr.aria-label]="label()">
+  @for (option of options(); track option.value; let index = $index) {
+    <button
+      type="button"
+      role="radio"
+      class="card"
+      [class]="option.tone"
+      [attr.aria-checked]="option.value === value()"
+      [attr.tabindex]="option.value === value() ? 0 : -1"
+      (click)="select(option.value)"
+      (keydown)="move($event, index)"
+    >
+      <span class="label">{{ option.label }}</span>
+      <cc-amount
+        class="amount"
+        tone="neutral"
+        [amount]="option.amount"
+        [currency]="option.currency"
+      />
+      @if (option.note; as note) {
+        <span class="note" [class]="option.noteTone ?? 'neutral'">{{ note }}</span>
+      }
+    </button>
+  }
+</div>

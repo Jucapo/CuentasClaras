@@ -1,1 +1,99 @@
-<cc-page-header title="Resumen" />
+<cc-page-header [title]="text.title" />
+
+<div class="summary">
+  <div class="column">
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+    <cc-missing-rates-notice
+      [currencies]="missingRates()"
+      [canDefine]="canEdit()"
+      (define)="defineRate($event)"
+    />
+
+    <div class="balance">
+      <div class="balance-figure">
+        <span class="balance-label">{{ text.balance }}</span>
+        <cc-amount
+          class="balance-amount"
+          tone="auto"
+          [signed]="true"
+          [amount]="balance()"
+          [currency]="currency()"
+        />
+      </div>
+      @if (ring(); as ring) {
+        <cc-progress-ring [value]="ring.value" [label]="ring.label" [tone]="ring.tone">
+          {{ ring.text }}
+        </cc-progress-ring>
+      }
+    </div>
+
+    <cc-total-toggle [label]="text.kindPicker" [options]="totalOptions()" [(value)]="kind" />
+
+    <section class="chart" [attr.aria-label]="text.chart">
+      @defer (on viewport) {
+        @if (chartReady()) {
+          <cc-bar-chart
+            [label]="chartLabel()"
+            [buckets]="chartBars()"
+            [series]="chartSeries()"
+            [ticks]="chartTicks()"
+            [currency]="currency()"
+          />
+        } @else {
+          <div class="chart-placeholder"></div>
+        }
+      } @placeholder {
+        <div class="chart-placeholder"></div>
+      }
+    </section>
+
+    @if (averages().length) {
+      <cc-stat-group variant="tiles" [label]="text.averages" [items]="averages()" />
+    }
+  </div>
+
+  <div class="column">
+    <cc-breakdown-list
+      [label]="categoriesLabel()"
+      [items]="categoryItems()"
+      [rest]="categoryRest()"
+      [currency]="currency()"
+      [emptyText]="emptyText()"
+      (opened)="viewTransactions($event)"
+    />
+
+    @if (budgetRows().length) {
+      <section class="group" aria-labelledby="summary-budget">
+        <h2 class="heading" id="summary-budget">{{ text.budget }}</h2>
+        @for (row of budgetRows(); track row.kind) {
+          <cc-budget-row
+            emphasis="total"
+            [actionable]="true"
+            [opensDialog]="false"
+            [name]="row.name"
+            [kind]="row.kind"
+            [figures]="row.figures"
+            [currency]="currency()"
+            (activate)="openBudget()"
+          />
+        }
+      </section>
+    }
+
+    <section class="group" [attr.aria-label]="text.breakdown">
+      <cc-tabs [label]="text.breakdown" [options]="dimensionTabs()" [(value)]="dimension">
+        @if (dimension() === 'tag') {
+          <p class="note">{{ text.tagsNote }}</p>
+        }
+        <cc-breakdown-list
+          [label]="breakdownLabel()"
+          [items]="breakdownItems()"
+          [currency]="currency()"
+          [emptyText]="emptyText()"
+        />
+      </cc-tabs>
+    </section>
+  </div>
+</div>

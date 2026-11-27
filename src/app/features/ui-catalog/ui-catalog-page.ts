@@ -68,6 +68,17 @@ import {
 import { ConfirmPanel } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
 import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
+import { TotalOption, TotalToggle } from '../../shared/ui/molecules/total-toggle/total-toggle';
+import {
+  BarChart,
+  BarChartBucket,
+  BarChartSeries,
+} from '../../shared/ui/atoms/bar-chart/bar-chart';
+import { ProgressRing } from '../../shared/ui/atoms/progress-ring/progress-ring';
+import {
+  BreakdownItem,
+  BreakdownList,
+} from '../../shared/ui/organisms/breakdown-list/breakdown-list';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
@@ -234,6 +245,10 @@ interface WindowClassDemo {
     StatGroup,
     QuickEntry,
     MissingRatesNotice,
+    TotalToggle,
+    BarChart,
+    ProgressRing,
+    BreakdownList,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -659,6 +674,120 @@ export class UiCatalogPage {
     { label: 'Ingresos', amount: 300000000, currency: 'COP', signed: true },
     { label: 'Gastos', amount: -125000000, currency: 'COP' },
     { label: 'Neto', amount: 175000000, currency: 'COP', tone: 'auto', signed: true },
+  ];
+  protected readonly averageItems: readonly StatItem[] = [
+    { label: 'Día (prom.)', amount: 9905769, currency: 'COP', accent: 'expense' },
+    { label: 'Semana (prom.)', amount: 69340385, currency: 'COP', accent: 'expense' },
+    { label: 'Mes', amount: 257550000, currency: 'COP', accent: 'expense' },
+  ];
+  protected readonly totalKind = signal<'expense' | 'income'>('expense');
+  protected readonly totalOptions: readonly TotalOption<'expense' | 'income'>[] = [
+    {
+      value: 'expense',
+      label: 'Gastos',
+      amount: 257550000,
+      currency: 'COP',
+      tone: 'expense',
+      note: '▲ 12 % vs. 1 oct – 26 oct',
+      noteTone: 'bad',
+    },
+    {
+      value: 'income',
+      label: 'Ingresos',
+      amount: 650000000,
+      currency: 'COP',
+      tone: 'income',
+      note: '▲ 8 % vs. 1 oct – 26 oct',
+      noteTone: 'good',
+    },
+  ];
+  protected readonly chartSeries: readonly BarChartSeries[] = [
+    { label: 'Hogar', color: 'orange' },
+    { label: 'Mercado', color: 'green' },
+    { label: 'Salud', color: 'red' },
+    { label: 'Otras', color: 'gray' },
+  ];
+  protected readonly chartBuckets: readonly BarChartBucket[] = Array.from(
+    { length: 30 },
+    (_, index) => ({
+      label: `${index + 1} nov`,
+      title: `${index + 1} nov`,
+      values: [
+        index === 4 ? 180000000 : index === 9 ? 30000000 : 0,
+        index % 6 === 1 ? 8000000 : 0,
+        index === 17 ? 8000000 : 0,
+        index % 5 === 3 ? 2500000 : 0,
+      ],
+    }),
+  );
+  protected readonly chartTicks: readonly number[] = [0, 7, 14, 21, 29];
+  protected readonly breakdownItems: readonly BreakdownItem[] = [
+    {
+      id: 'b-home',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      amount: 210000000,
+      share: 0.82,
+      children: [
+        {
+          id: 'b-rent',
+          name: 'Arriendo',
+          icon: 'key',
+          color: 'orange',
+          amount: 180000000,
+          share: 0.7,
+          actionable: true,
+        },
+        {
+          id: 'b-power',
+          name: 'Servicios públicos',
+          icon: 'bolt',
+          color: 'amber',
+          amount: 30000000,
+          share: 0.12,
+          actionable: true,
+        },
+      ],
+    },
+    {
+      id: 'b-market',
+      name: 'Mercado',
+      icon: 'shopping_cart',
+      color: 'green',
+      amount: 32050000,
+      share: 0.12,
+      actionable: true,
+    },
+    {
+      id: 'b-health',
+      name: 'Salud',
+      icon: 'medical_services',
+      color: 'red',
+      amount: 8000000,
+      share: 0.03,
+      actionable: true,
+    },
+  ];
+  protected readonly breakdownRest: readonly BreakdownItem[] = [
+    {
+      id: 'b-fun',
+      name: 'Ocio',
+      icon: 'sports_esports',
+      color: 'violet',
+      amount: 5000000,
+      share: 0.02,
+      actionable: true,
+    },
+    {
+      id: 'b-taxi',
+      name: 'Transporte',
+      icon: 'directions_car',
+      color: 'blue',
+      amount: 2500000,
+      share: 0.01,
+      actionable: true,
+    },
   ];
   protected readonly filterChips = signal<readonly FilterChip[]>([
     { key: 'account', label: 'Cuenta', summary: 'Efectivo +1' },

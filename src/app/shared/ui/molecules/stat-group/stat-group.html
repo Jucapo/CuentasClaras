@@ -3,7 +3,7 @@
     @for (item of items(); track item.label) {
       <div class="stat">
         <dt class="label">{{ item.label }}</dt>
-        <dd class="value">
+        <dd class="value" [class]="item.accent ?? ''">
           <cc-amount
             [tone]="item.tone ?? 'neutral'"
             [signed]="item.signed ?? false"

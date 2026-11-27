@@ -1,0 +1,5 @@
+<!-- Reads the theme colors the canvas cannot take as CSS variables. -->
+<span #probe class="probe" aria-hidden="true"></span>
+@if (options(); as options) {
+  <div class="chart" echarts aria-hidden="true" [options]="options"></div>
+}

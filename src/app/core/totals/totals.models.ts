@@ -7,7 +7,10 @@ export interface CategoryTotal {
   readonly kind: Enums<'category_kind'>;
   /** Spent (expenses) or received (incomes); a category includes its subcategories. */
   readonly amount: number;
-  /** Budget or expected income in force; null without one, and always null in subcategories. */
+  /**
+   * Budget or expected income in force; null without one. A subcategory has its own, and a category
+   * adds its own ("General") and its subcategories' (spec §4.7).
+   */
   readonly budget: number | null;
   /** Budget minus amount; negative when it went over. */
   readonly remaining: number | null;

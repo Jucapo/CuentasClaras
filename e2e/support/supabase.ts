@@ -223,6 +223,16 @@ export async function mockDataApi(
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       return route.fulfill({ json: accountsTotal(ledger, body, spaceSettings) });
     }
+    if (name === 'daily_category_totals' || name === 'breakdown_totals') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      const movements = spaceMovements(ledger, tables['categories'], body, spaceSettings);
+      return route.fulfill({
+        json:
+          name === 'daily_category_totals'
+            ? dailyCategoryTotals(movements)
+            : breakdownTotals(movements, String(body['dimension'])),
+      });
+    }
     if (name === 'search_transactions' || name === 'transaction_totals') {
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       const found = searchTransactions(ledger, tables['categories'], body);
@@ -623,6 +633,121 @@ function categoryTotals(
       budget,
       remaining: budget === null ? null : budget - amount,
       missing_rate_currencies: [...(missing.get(category['id']) ?? [])],
+    };
+  });
+}
+
+/** A movement of the space scope, as private.space_movements returns it. */
+interface SpaceMovement {
+  readonly date: string;
+  readonly kind: unknown;
+  readonly currency: string;
+  /** Null without a rate. */
+  readonly converted: number | null;
+  readonly topCategoryId: unknown;
+  readonly accountId: unknown;
+  readonly createdBy: unknown;
+  readonly tagIds: readonly unknown[];
+}
+
+/** Plays the part of private.space_movements: confirmed, shared or included, each converted. */
+function spaceMovements(
+  ledger: Ledger,
+  categories: readonly Row[],
+  body: Record<string, unknown>,
+  settings: Row,
+): SpaceMovement[] {
+  const main = String(settings['main_currency']);
+  const from = body['from_date'] as string | null;
+  const to = body['to_date'] as string | null;
+  return ledger.transactions.flatMap((movement) => {
+    const date = String(movement['date']);
+    const account = ledger.accounts.find((candidate) => candidate['id'] === movement['account_id']);
+    const shared = movement['include_in_space'] === true || account?.['visibility'] === 'shared';
+    const category = categories.find((candidate) => candidate['id'] === movement['category_id']);
+    if (
+      movement['status'] !== 'confirmed' ||
+      (movement['type'] !== 'expense' && movement['type'] !== 'income') ||
+      (from !== null && date < from) ||
+      (to !== null && date > to) ||
+      !shared ||
+      !category
+    ) {
+      return [];
+    }
+    const currency = String(movement['currency']);
+    return [
+      {
+        date,
+        kind: category['kind'],
+        currency,
+        converted: convert(ledger, Number(movement['amount']), currency, main, date),
+        topCategoryId: category['parent_id'] ?? category['id'],
+        accountId: movement['account_id'],
+        createdBy: movement['created_by'] ?? E2E_USER.id,
+        tagIds: (movement['tag_ids'] as unknown[] | undefined) ?? [],
+      },
+    ];
+  });
+}
+
+/** Sums converted amounts by a key, with the currencies left out for lack of a rate. */
+function sumByKey<K>(
+  rows: readonly SpaceMovement[],
+  keyOf: (row: SpaceMovement) => readonly K[],
+): Map<K, { amount: number; movements: number; missing: Set<string> }> {
+  const sums = new Map<K, { amount: number; movements: number; missing: Set<string> }>();
+  for (const row of rows) {
+    for (const key of keyOf(row)) {
+      const sum = sums.get(key) ?? { amount: 0, movements: 0, missing: new Set<string>() };
+      sum.movements += 1;
+      if (row.converted === null) {
+        sum.missing.add(row.currency);
+      } else {
+        sum.amount += row.converted;
+      }
+      sums.set(key, sum);
+    }
+  }
+  return sums;
+}
+
+/** Plays the part of daily_category_totals: per day and top-level category. */
+function dailyCategoryTotals(movements: readonly SpaceMovement[]) {
+  const sums = sumByKey(movements, (row) => [`${row.date}|${row.topCategoryId}|${row.kind}`]);
+  return [...sums.entries()]
+    .map(([key, sum]) => {
+      const [date, categoryId, kind] = key.split('|');
+      return {
+        date,
+        category_id: categoryId,
+        kind,
+        amount: sum.amount,
+        missing_rate_currencies: [...sum.missing].sort(),
+      };
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Plays the part of breakdown_totals: per tag (each one), account or person. */
+function breakdownTotals(movements: readonly SpaceMovement[], dimension: string) {
+  const sums = sumByKey(movements, (row) => {
+    const keys =
+      dimension === 'tag'
+        ? row.tagIds.length > 0
+          ? row.tagIds
+          : [null]
+        : [dimension === 'account' ? row.accountId : row.createdBy];
+    return keys.map((key) => JSON.stringify([key, row.kind]));
+  });
+  return [...sums.entries()].map(([entry, sum]) => {
+    const [key, kind] = JSON.parse(entry) as [unknown, unknown];
+    return {
+      key,
+      kind,
+      amount: sum.amount,
+      movements: sum.movements,
+      missing_rate_currencies: [...sum.missing].sort(),
     };
   });
 }

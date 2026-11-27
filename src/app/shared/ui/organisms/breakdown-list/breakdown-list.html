@@ -1,0 +1,97 @@
+<ul class="list" [attr.aria-label]="label()">
+  @for (item of items(); track item.id) {
+    <ng-container
+      [ngTemplateOutlet]="row"
+      [ngTemplateOutletContext]="{ $implicit: item, child: false }"
+    />
+  } @empty {
+    @if (emptyText()) {
+      <li class="empty">{{ emptyText() }}</li>
+    }
+  }
+  @if (rest().length) {
+    <li>
+      <button type="button" class="row" [attr.aria-expanded]="restOpen()" (click)="toggleRest()">
+        <cc-icon-badge icon="more_horiz" [color]="restColor" />
+        <ng-container
+          [ngTemplateOutlet]="body"
+          [ngTemplateOutletContext]="{
+            $implicit: {
+              name: text.more,
+              color: restColor,
+              amount: restTotal().amount,
+              share: restTotal().share,
+            },
+          }"
+        />
+        <cc-icon class="chevron" size="sm" [name]="restOpen() ? 'expand_less' : 'expand_more'" />
+      </button>
+    </li>
+    @if (restOpen()) {
+      @for (item of rest(); track item.id) {
+        <ng-container
+          [ngTemplateOutlet]="row"
+          [ngTemplateOutletContext]="{ $implicit: item, child: false }"
+        />
+      }
+    }
+  }
+</ul>
+
+<ng-template #row let-item let-child="child">
+  <li>
+    @if (item.children?.length || item.actionable) {
+      <button
+        type="button"
+        class="row"
+        [class.child]="child"
+        [attr.aria-expanded]="item.children?.length ? isOpen(item.id) : null"
+        (click)="activate(item)"
+      >
+        <cc-icon-badge [icon]="item.icon" [color]="item.color" [size]="child ? 'sm' : 'md'" />
+        <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: item }" />
+        <cc-icon
+          class="chevron"
+          size="sm"
+          [name]="
+            item.children?.length
+              ? isOpen(item.id)
+                ? 'expand_less'
+                : 'expand_more'
+              : 'chevron_right'
+          "
+        />
+      </button>
+    } @else {
+      <div class="row" [class.child]="child">
+        <cc-icon-badge [icon]="item.icon" [color]="item.color" [size]="child ? 'sm' : 'md'" />
+        <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: item }" />
+      </div>
+    }
+    @if (item.children?.length && isOpen(item.id)) {
+      <ul class="children">
+        @for (subitem of item.children; track subitem.id) {
+          <ng-container
+            [ngTemplateOutlet]="row"
+            [ngTemplateOutletContext]="{ $implicit: subitem, child: true }"
+          />
+        }
+      </ul>
+    }
+  </li>
+</ng-template>
+
+<ng-template #body let-item>
+  <span class="body">
+    <span class="head">
+      <span class="name">{{ item.name }}</span>
+      <cc-amount class="amount" tone="neutral" [amount]="item.amount" [currency]="currency()" />
+    </span>
+    <span class="meter">
+      <span class="track" aria-hidden="true">
+        <cc-progress-bar [value]="item.share" [color]="item.color" [label]="item.name" />
+      </span>
+      <span class="percent">{{ percent(item.share) }}</span>
+    </span>
+  </span>
+</ng-template>

@@ -1,0 +1,64 @@
+@use 'breakpoints';
+
+// Layout only: one column, and two side by side in the expanded window class (spec §7).
+.summary {
+  display: grid;
+  gap: var(--cc-stack-gap);
+  padding-top: var(--cc-stack-gap);
+
+  @include breakpoints.expanded {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-stack-gap);
+  min-width: 0;
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cc-space-4);
+}
+
+.balance-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.balance-label {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.balance-amount {
+  font: var(--mat-sys-headline-small);
+}
+
+.chart-placeholder {
+  height: var(--cc-bar-chart-height);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}
+
+.heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-primary);
+}
+
+.note {
+  margin: var(--cc-space-2) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

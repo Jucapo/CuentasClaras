@@ -26,6 +26,13 @@ html {
       density: 0,
     )
   );
+
+  // Tones of expenses and incomes (Resumen, spec §7): figures on the surface and the fill of the
+  // selected card, with their text on it. Theme pairs, so they keep AA in both modes.
+  --cc-tone-expense: var(--mat-sys-error);
+  --cc-on-tone-expense: var(--mat-sys-on-error);
+  --cc-tone-income: var(--mat-sys-tertiary);
+  --cc-on-tone-income: var(--mat-sys-on-tertiary);
 }
 
 // cc-tabs: no divider under the tabs, only the indicator of the active one (spec §13.3).

@@ -6,7 +6,7 @@ import { PeriodService } from '../../core/periods/period.service';
 import { APP_PATHS } from '../../core/routing/app-paths';
 import { SpaceService } from '../../core/spaces/space.service';
 import { TotalsService } from '../../core/totals/totals.service';
-import { BudgetFigures } from '../../domain/budgets/budget-lines';
+import { BudgetFigures, kindBudgetFigures } from '../../domain/budgets/budget-lines';
 import { BudgetEditScope } from '../../domain/budgets/budget-scope';
 import { formatMoney } from '../../domain/money/money';
 import { periodContaining } from '../../domain/periods/periods';
@@ -149,10 +149,12 @@ export class BudgetPage {
   );
 
   /** Every budget against everything spent; what went to categories without one goes apart. */
-  protected readonly expenseTotal = computed<BudgetFigures>(() => ({
-    spent: this.totals.kindTotal('expense'),
-    budget: this.sumBudgets(this.expenses()),
-  }));
+  protected readonly expenseTotal = computed<BudgetFigures>(() =>
+    kindBudgetFigures(
+      this.totals.kindTotal('expense'),
+      this.expenses().map((category) => category.figures),
+    ),
+  );
   protected readonly unbudgetedNote = computed(() => {
     const unbudgeted = this.expenses()
       .filter((category) => !category.figures.budget)
@@ -161,10 +163,12 @@ export class BudgetPage {
       ? `${BUDGET_TEXT.unbudgeted} ${formatMoney(unbudgeted, this.currency(), this.format())}`
       : undefined;
   });
-  protected readonly incomeTotal = computed<BudgetFigures>(() => ({
-    spent: this.totals.kindTotal('income'),
-    budget: this.sumBudgets(this.incomes()),
-  }));
+  protected readonly incomeTotal = computed<BudgetFigures>(() =>
+    kindBudgetFigures(
+      this.totals.kindTotal('income'),
+      this.incomes().map((category) => category.figures),
+    ),
+  );
   protected readonly missingRates = this.totals.missingRateCurrencies;
   protected readonly totalsError = this.totals.categoryTotalsError;
 
@@ -326,12 +330,6 @@ export class BudgetPage {
 
   private find(categoryId: string): BudgetCategoryView | null {
     return [...this.expenses(), ...this.incomes()].find((view) => view.id === categoryId) ?? null;
-  }
-
-  private sumBudgets(views: readonly BudgetCategoryView[]): number | null {
-    const budgets = views.map((view) => view.figures.budget ?? 0);
-    const total = budgets.reduce((sum, budget) => sum + budget, 0);
-    return total > 0 ? total : null;
   }
 
   private periodText(): string {

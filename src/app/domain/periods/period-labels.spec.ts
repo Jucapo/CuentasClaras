@@ -1,4 +1,11 @@
-import { dayTitle, periodRangeText, periodTitle, rangeText } from './period-labels';
+import {
+  axisDayText,
+  axisMonthText,
+  dayTitle,
+  periodRangeText,
+  periodTitle,
+  rangeText,
+} from './period-labels';
 import { PeriodSettings } from './periods';
 
 const calendar: PeriodSettings = { monthStartDay: 1, weekStart: 'monday' };
@@ -86,5 +93,14 @@ describe('dayTitle', () => {
   it('names the days of a list', () => {
     expect(dayTitle('2026-11-26', today)).toBe('Hoy');
     expect(dayTitle('2026-11-24', today)).toBe('Martes 24 nov');
+  });
+});
+
+describe('axis texts', () => {
+  it('show a day without its year and a month by its abbreviation', () => {
+    expect(axisDayText('2026-05-27')).toBe('27 may');
+    expect(axisDayText('2025-12-03')).toBe('3 dic');
+    expect(axisMonthText('2026-11-01', false)).toBe('nov');
+    expect(axisMonthText('2025-01-01', true)).toBe('ene 2025');
   });
 });

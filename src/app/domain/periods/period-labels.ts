@@ -117,6 +117,18 @@ export function periodRangeText(period: Period, settings: PeriodSettings, today:
   return rangeText(periodRange(period, settings), today);
 }
 
+/** A day on a chart axis, e.g. "27 may", without the year. */
+export function axisDayText(date: IsoDate): string {
+  return shortDate(date, false);
+}
+
+/** The month that names a period on a chart axis, e.g. "nov", or "nov 2025" with the year. */
+export function axisMonthText(month: IsoDate, withYear: boolean): string {
+  const { year, month: number } = dateParts(month);
+  const text = MONTH_ABBREVIATIONS[number - 1];
+  return withYear ? `${text} ${year}` : text;
+}
+
 /** Long form of a date for a list header, e.g. "Jueves 26 nov". */
 export function dayTitle(date: IsoDate, today: IsoDate): string {
   return periodTitle(

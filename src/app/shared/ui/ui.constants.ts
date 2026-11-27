@@ -33,6 +33,8 @@ export const UI_TEXT = {
   privateAccount: 'Cuenta privada',
   clearFilters: 'Limpiar',
   removeFilter: 'Quitar filtro',
+  total: 'Total',
+  more: 'Más…',
 } as const;
 
 /** Labels of the quick-entry keypad keys (spec §7). */
@@ -55,6 +57,26 @@ export const DONUT_GEOMETRY = {
   stroke: 8,
   /** Space between segments, along the ring. */
   segmentGap: 1.5,
+} as const;
+
+/** Geometry of `cc-progress-ring`, in SVG user units; `pathLength` makes the dashes percentages. */
+export const RING_GEOMETRY = {
+  viewBox: '0 0 100 100',
+  center: 50,
+  radius: 42,
+  stroke: 10,
+  pathLength: 100,
+} as const;
+
+/**
+ * Layout of `cc-bar-chart`, in pixels of its canvas: the margins of the plot, the widest bar, how
+ * many guide lines the amounts get and the rounded top of a bar.
+ */
+export const BAR_CHART_LAYOUT = {
+  grid: { left: 4, right: 4, top: 12, bottom: 4 },
+  barMaxWidth: 24,
+  splitNumber: 2,
+  barRadius: 3,
 } as const;
 
 /** How long a touch must be held before a drag starts, so scrolling a grid keeps working. */

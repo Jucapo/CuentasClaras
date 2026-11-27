@@ -37,6 +37,18 @@ export function budgetFill(figures: BudgetFigures, counted = false): number {
 }
 
 /**
+ * A whole kind against its budget (spec §4.7): everything spent (or received) in it, and the sum of
+ * the budgets of its categories; null when none has one.
+ */
+export function kindBudgetFigures(
+  spent: number,
+  categories: readonly BudgetFigures[],
+): BudgetFigures {
+  const budget = categories.reduce((sum, category) => sum + (category.budget ?? 0), 0);
+  return { spent, budget: budget > 0 ? budget : null };
+}
+
+/**
  * The "General" line of a category: what was recorded right in it and its own amount, out of the
  * category totals that include its subcategories (spec §4.7). Null budget without an own amount.
  */
