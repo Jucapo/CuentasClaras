@@ -1,10 +1,8 @@
-import { IconName } from '../../shared/ui/icons/icon-glyphs';
-
 /** Product name shown in the UI and in the document title. */
 export const APP_NAME = 'Cuentas Claras';
 
-/** Icon shown next to the product name. */
-export const APP_BRAND_ICON: IconName = 'account_balance_wallet';
+/** Logo shown next to the product name (rounded version, spec §13.2), relative to the base href. */
+export const APP_LOGO_PATH = 'brand/cuentas-claras-logo.svg';
 
 /** localStorage key that caches the theme preference so it applies before the user loads. */
 export const THEME_STORAGE_KEY = 'cc-theme';
