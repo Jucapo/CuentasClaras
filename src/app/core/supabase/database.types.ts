@@ -746,12 +746,35 @@ export type Database = {
       };
     };
     Functions: {
+      accounts_balance: {
+        Args: { account_ids?: string[]; on_date: string; target_space_id: string };
+        Returns: {
+          balance: number;
+          currency: string;
+          missing_rate_currencies: string[];
+        }[];
+      };
       accounts_total: {
         Args: { on_date: string; target_space_id: string };
         Returns: {
           currency: string;
           missing_rate_currencies: string[];
           total: number;
+        }[];
+      };
+      breakdown_totals: {
+        Args: {
+          dimension: Database['public']['Enums']['report_dimension'];
+          from_date: string;
+          target_space_id: string;
+          to_date: string;
+        };
+        Returns: {
+          amount: number;
+          key: string;
+          kind: Database['public']['Enums']['category_kind'];
+          missing_rate_currencies: string[];
+          movements: number;
         }[];
       };
       category_totals: {
@@ -787,6 +810,26 @@ export type Database = {
           week_start: Database['public']['Enums']['weekday'];
         };
         Returns: string;
+      };
+      daily_category_totals: {
+        Args: { from_date: string; target_space_id: string; to_date: string };
+        Returns: {
+          amount: number;
+          category_id: string;
+          date: string;
+          kind: Database['public']['Enums']['category_kind'];
+          missing_rate_currencies: string[];
+        }[];
+      };
+      net_worth: {
+        Args: { on_date: string; target_space_id: string };
+        Returns: {
+          account_group: Database['public']['Enums']['account_group'];
+          balance: number;
+          converted: number;
+          currency: string;
+          main_currency: string;
+        }[];
       };
       reorder_categories: { Args: { category_ids: string[] }; Returns: undefined };
       save_exchange_rate: {
@@ -867,6 +910,28 @@ export type Database = {
         Args: { target_account_id: string; target_space_id: string };
         Returns: undefined;
       };
+      transaction_day_totals: {
+        Args: {
+          filter_account_ids?: string[];
+          filter_author_ids?: string[];
+          filter_category_ids?: string[];
+          filter_statuses?: Database['public']['Enums']['transaction_status'][];
+          filter_tag_ids?: string[];
+          filter_types?: Database['public']['Enums']['transaction_type'][];
+          from_date?: string;
+          search_amount?: number;
+          search_terms?: string[];
+          target_space_id: string;
+          to_date?: string;
+        };
+        Returns: {
+          date: string;
+          expense: number;
+          income: number;
+          missing_rate_currencies: string[];
+          net: number;
+        }[];
+      };
       transaction_totals: {
         Args: {
           filter_account_ids?: string[];
@@ -913,6 +978,7 @@ export type Database = {
       member_role: 'owner' | 'editor' | 'viewer';
       number_format: 'comma_dot' | 'dot_comma' | 'space_comma';
       period_kind: 'day' | 'week' | 'month' | 'year' | 'all';
+      report_dimension: 'tag' | 'account' | 'member';
       theme_preference: 'system' | 'light' | 'dark';
       transaction_source: 'manual' | 'recurring' | 'email' | 'shortcut' | 'import';
       transaction_status: 'confirmed' | 'pending';
@@ -1050,6 +1116,7 @@ export const Constants = {
       member_role: ['owner', 'editor', 'viewer'],
       number_format: ['comma_dot', 'dot_comma', 'space_comma'],
       period_kind: ['day', 'week', 'month', 'year', 'all'],
+      report_dimension: ['tag', 'account', 'member'],
       theme_preference: ['system', 'light', 'dark'],
       transaction_source: ['manual', 'recurring', 'email', 'shortcut', 'import'],
       transaction_status: ['confirmed', 'pending'],

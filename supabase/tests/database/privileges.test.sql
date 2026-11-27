@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(125);
+select plan(139);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -264,6 +264,44 @@ select function_privs_are('private', 'search_text', array['text'], 'anon',
   array[]::text[], 'anon cannot call the search text helper');
 select function_privs_are('private', 'search_text', array['text'], 'authenticated',
   array['EXECUTE'], 'authenticated calls the search text helper through the searches');
+
+-- ── F1e2: reportes, patrimonio, totales por día y saldo a una fecha ──────────
+select function_privs_are('public', 'daily_category_totals', array['uuid', 'date', 'date'], 'anon',
+  array[]::text[], 'anon cannot call daily_category_totals');
+select function_privs_are('public', 'daily_category_totals', array['uuid', 'date', 'date'],
+  'authenticated', array['EXECUTE'], 'authenticated calls daily_category_totals');
+select function_privs_are('public', 'breakdown_totals', array['uuid', 'date', 'date', 'report_dimension'],
+  'anon', array[]::text[], 'anon cannot call breakdown_totals');
+select function_privs_are('public', 'breakdown_totals', array['uuid', 'date', 'date', 'report_dimension'],
+  'authenticated', array['EXECUTE'], 'authenticated calls breakdown_totals');
+select function_privs_are('public', 'net_worth', array['uuid', 'date'], 'anon',
+  array[]::text[], 'anon cannot call net_worth');
+select function_privs_are('public', 'net_worth', array['uuid', 'date'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls net_worth');
+select function_privs_are('public', 'transaction_day_totals',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'anon', array[]::text[], 'anon cannot call transaction_day_totals');
+select function_privs_are('public', 'transaction_day_totals',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'authenticated', array['EXECUTE'], 'authenticated calls transaction_day_totals');
+select function_privs_are('public', 'accounts_balance', array['uuid', 'date', 'uuid[]'], 'anon',
+  array[]::text[], 'anon cannot call accounts_balance');
+select function_privs_are('public', 'accounts_balance', array['uuid', 'date', 'uuid[]'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls accounts_balance');
+select function_privs_are('private', 'space_movements', array['uuid', 'date', 'date'], 'anon',
+  array[]::text[], 'anon cannot call the space movements helper');
+select function_privs_are('private', 'space_movements', array['uuid', 'date', 'date'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls the space movements helper through the reports');
+select function_privs_are('private', 'filtered_amounts',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'anon', array[]::text[], 'anon cannot call the filtered amounts helper');
+select function_privs_are('private', 'filtered_amounts',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'authenticated', array['EXECUTE'], 'authenticated calls the filtered amounts helper through the totals');
 
 select * from finish();
 rollback;
