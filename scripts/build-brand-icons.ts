@@ -1,6 +1,6 @@
 // Builds the favicons and the PWA icons from the brand logos in public/brand (spec §13.2).
 // Run `npm run brand:build` after changing a logo and commit the outputs; the app build never runs it.
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
@@ -15,8 +15,9 @@ const SQUARE_LOGO = join(PUBLIC, 'brand', 'cuentas-claras-logo-square.svg');
 /** Sizes inside favicon.ico. */
 const FAVICON_SIZES = [16, 32, 48] as const;
 /**
- * At 16 px the two C (strokes of about one pixel) blur into the ring, so that size draws the same
- * geometry with thicker letters. Thicker than this, the blue C merges with the ring.
+ * At 16 px the two C (strokes of about one pixel) blur into the ring, so that size and the SVG
+ * favicon (which tabs draw at 16 px) use the same geometry with thicker letters. Thicker than this,
+ * the blue C merges with the ring. The logo inside the app keeps the original strokes.
  */
 const SMALL_FAVICON = { size: 16, letterStrokeScale: 1.4 } as const;
 
@@ -70,17 +71,13 @@ async function main(): Promise<void> {
   const rounded = await readFile(ROUNDED_LOGO, 'utf8');
   const square = await readFile(SQUARE_LOGO, 'utf8');
 
+  const bold = withThickerLetters(rounded, SMALL_FAVICON.letterStrokeScale);
   const favicons = FAVICON_SIZES.map((size) => ({
     size,
-    png: renderPng(
-      size === SMALL_FAVICON.size
-        ? withThickerLetters(rounded, SMALL_FAVICON.letterStrokeScale)
-        : rounded,
-      size,
-    ),
+    png: renderPng(size === SMALL_FAVICON.size ? bold : rounded, size),
   }));
   await writeFile(join(PUBLIC, 'favicon.ico'), icoFromPngs(favicons));
-  await copyFile(ROUNDED_LOGO, join(PUBLIC, 'favicon.svg'));
+  await writeFile(join(PUBLIC, 'favicon.svg'), bold);
 
   for (const { file, size } of PNG_OUTPUTS) {
     await mkdir(dirname(file), { recursive: true });

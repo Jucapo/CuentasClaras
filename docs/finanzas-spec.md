@@ -711,7 +711,7 @@ Reglas:
 **Marca (F1d2)**
 
 - Dos versiones del logo en `public/brand/`:
-  - con esquinas redondeadas: favicon (`.ico` y `.svg`) y logo del login y del asistente (`cc-brand`);
+  - con esquinas redondeadas: favicon (`.ico` y `.svg`) y logo del login y del asistente (`cc-brand`). El favicon `.svg` y el de 16 px del `.ico` dibujan las C 1,4 veces más gruesas (misma geometría) para que se lean a 16 px; el logo de la interfaz conserva el trazo original;
   - a sangre completa: íconos de la PWA (192, 512 y maskable) y `apple-touch-icon`. Android e iOS recortan las esquinas, y el símbolo ya está dentro de la zona segura del maskable.
 - Los PNG y el `.ico` salen de los SVG con `npm run brand:build` (reproducible) y se commitean.
 - `theme_color` y `background_color` del manifest en `#1E4E8C`: la pantalla de carga de la app instalada sale con el color de la marca.
