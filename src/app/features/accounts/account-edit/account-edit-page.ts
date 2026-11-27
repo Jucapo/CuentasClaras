@@ -37,6 +37,7 @@ import {
 import { ConfirmService } from '../../../shared/ui/services/confirm.service';
 import { useShortcuts } from '../../../shared/ui/services/keyboard-shortcuts';
 import { ToastService } from '../../../shared/ui/services/toast.service';
+import { SkeletonList } from '../../../shared/ui/molecules/skeleton-list/skeleton-list';
 import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout';
 import { AccountPane } from '../account-pane';
 
@@ -47,7 +48,7 @@ import { AccountPane } from '../account-pane';
  */
 @Component({
   selector: 'app-account-edit-page',
-  imports: [FlowLayout, Form, FormActions, Button, Message, AccountEditor],
+  imports: [FlowLayout, Form, FormActions, Button, Message, AccountEditor, SkeletonList],
   templateUrl: './account-edit-page.html',
   styleUrl: './account-edit-page.scss',
 })
@@ -79,7 +80,8 @@ export class AccountEditPage implements HasUnsavedChanges, AccountPane {
   );
   protected readonly title = computed(() => {
     if (this.id()) {
-      return this.existing()?.name ?? 'Cuenta';
+      // The name is already large under the bar (spec §13.5): the bar says what the screen does.
+      return 'Editar cuenta';
     }
     return ACCOUNT_GROUP_CHOICES[accountGroupFromParam(this.grupo())].newTitle;
   });

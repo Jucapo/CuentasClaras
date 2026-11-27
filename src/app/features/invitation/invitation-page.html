@@ -1,10 +1,11 @@
 @switch (stage()) {
   @case ('loading') {
-    <cc-page-header title="Invitación" subtitle="Cargando la invitación…" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
+    <cc-skeleton-list variant="blocks" [rows]="2" label="Cargando la invitación" />
   }
 
   @case ('invalid') {
-    <cc-page-header title="Invitación" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
     <cc-message>
       Este link de invitación no es válido o está incompleto. Ábrelo de nuevo desde el correo o pide
       que te lo envíen otra vez.
@@ -15,7 +16,7 @@
   }
 
   @case ('closed') {
-    <cc-page-header title="Invitación" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
     @if (details(); as invitation) {
       <cc-invitation-card
         [spaceName]="invitation.spaceName"
@@ -33,7 +34,6 @@
 
   @case ('new-account') {
     @if (details(); as invitation) {
-      <cc-page-header title="Únete a Cuentas Claras" />
       <cc-invitation-card
         [spaceName]="invitation.spaceName"
         [spaceIcon]="invitation.spaceIcon"
@@ -77,7 +77,7 @@
   }
 
   @case ('sign-in') {
-    <cc-page-header title="Invitación" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
     @if (details(); as invitation) {
       <cc-invitation-card
         [spaceName]="invitation.spaceName"
@@ -107,7 +107,7 @@
   }
 
   @case ('wrong-account') {
-    <cc-page-header title="Invitación" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
     @if (details(); as invitation) {
       <cc-invitation-card
         [spaceName]="invitation.spaceName"
@@ -127,7 +127,7 @@
   }
 
   @case ('answer') {
-    <cc-page-header title="Invitación" />
+    <h1 class="cc-visually-hidden">Invitación</h1>
     @if (details(); as invitation) {
       <cc-invitation-card
         [spaceName]="invitation.spaceName"
@@ -174,7 +174,7 @@
   }
 
   @case ('declined') {
-    <cc-page-header title="Invitación rechazada" />
+    <h1 class="cc-visually-hidden">Invitación rechazada</h1>
     <cc-message tone="info">Rechazaste la invitación. Nadie más puede usar ese link.</cc-message>
     <cc-form-actions>
       <cc-button ccSecondaryAction variant="text" (click)="openApp()">Ir a la app</cc-button>

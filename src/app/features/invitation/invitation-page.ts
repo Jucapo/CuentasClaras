@@ -1,4 +1,12 @@
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  resource,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { form, FormField, maxLength, minLength, required, validate } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -26,9 +34,14 @@ import { Form } from '../../shared/ui/molecules/form/form';
 import { InstallSteps } from '../../shared/ui/molecules/install-steps/install-steps';
 import { InvitationCard } from '../../shared/ui/molecules/invitation-card/invitation-card';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
+import { SkeletonList } from '../../shared/ui/molecules/skeleton-list/skeleton-list';
 import { ConfirmService } from '../../shared/ui/services/confirm.service';
 import { ToastService } from '../../shared/ui/services/toast.service';
+import { AuthBrand } from '../auth/auth-frame/auth-brand';
 import { AUTH_VALIDATION_MESSAGES, matchesPassword } from '../auth/auth-validation';
+
+/** The logo line is the title of the invitation to a new account: "Únete a Cuentas Claras". */
+const JOIN_LEAD = 'Únete a';
 
 /** The invitation as the page shows it, from the preview (a link) or `my_invitations` (the app). */
 interface InvitationDetails {
@@ -78,6 +91,7 @@ const CLOSED_MESSAGES: Readonly<Record<Exclude<InvitationStatus, 'pending'>, str
   imports: [
     FormField,
     PageHeader,
+    SkeletonList,
     Form,
     FormActions,
     TextField,
@@ -100,6 +114,13 @@ export class InvitationPage {
   protected readonly install = inject(InstallService);
 
   private readonly queryParams = toSignal(inject(ActivatedRoute).queryParamMap);
+
+  constructor() {
+    // Before accepting with a new account, the logo line is the title (spec §7): no second title.
+    const brand = inject(AuthBrand);
+    effect(() => brand.lead.set(this.stage() === 'new-account' ? JOIN_LEAD : null));
+    inject(DestroyRef).onDestroy(() => brand.lead.set(null));
+  }
 
   private readonly link = computed<InvitationLink>(() => {
     const params = this.queryParams();

@@ -12,7 +12,7 @@
             <cc-message>{{ error }}</cc-message>
           } @else {
             @if (canEdit()) {
-              <p class="help">{{ help }}</p>
+              <p class="cc-visually-hidden">{{ help }}</p>
             }
             <cc-category-grid
               mode="edit"

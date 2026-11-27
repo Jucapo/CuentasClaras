@@ -17,7 +17,7 @@
 </cc-flow-hero>
 
 <section class="rows" [attr.aria-labelledby]="rowsTitleId">
-  <h2 class="section-title" [id]="rowsTitleId">Cuenta</h2>
+  <h2 class="cc-visually-hidden" [id]="rowsTitleId">Cuenta</h2>
   <cc-field-row
     icon="category"
     label="Tipo"
@@ -44,7 +44,6 @@
   <cc-switch
     icon="functions"
     label="Incluir en el total"
-    hint="El total muestra el dinero disponible; ahorros y deudas se ven en Mis finanzas."
     [row]="true"
     [formField]="fields().includeInTotal"
   />
@@ -52,7 +51,6 @@
     <cc-switch
       icon="star"
       label="Cuenta predeterminada"
-      hint="La que se elige sola al registrar un movimiento."
       [row]="true"
       [formField]="fields().isDefault"
     />

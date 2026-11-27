@@ -1,2 +1,13 @@
-<img class="logo" [src]="logo" alt="" />
-<span class="name">{{ name }}</span>
+@if (heading()) {
+  <h1 class="line"><ng-container [ngTemplateOutlet]="content" /></h1>
+} @else {
+  <span class="line"><ng-container [ngTemplateOutlet]="content" /></span>
+}
+
+<ng-template #content>
+  @if (lead(); as lead) {
+    <span class="lead">{{ lead }}</span>
+  }
+  <img class="logo" [src]="logo" alt="" />
+  <span class="name">{{ name }}</span>
+</ng-template>

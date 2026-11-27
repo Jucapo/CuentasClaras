@@ -8,8 +8,6 @@ import {
   required,
   validate,
 } from '@angular/forms/signals';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
 import {
   DEFAULT_PERIOD_OPTIONS,
   DISPLAY_NAME_MAX_LENGTH,
@@ -17,14 +15,13 @@ import {
   NUMBER_FORMAT_DEFAULTS,
   SPACE_APPEARANCE_DEFAULTS,
   SPACE_DEFAULTS,
-  THEME_OPTIONS,
 } from '../../core/config/space.constants';
 import { pendingStepsText } from '../../core/onboarding/onboarding-texts';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ProfileService } from '../../core/profiles/profile.service';
 import { APP_PATHS, CATEGORY_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
 import { BackNavigation } from '../../core/routing/back-navigation';
-import { SpaceMembership, ThemePreference } from '../../core/spaces/space.models';
+import { SpaceMembership } from '../../core/spaces/space.models';
 import { SpaceMembersService } from '../../core/spaces/space-members.service';
 import { SpaceService } from '../../core/spaces/space.service';
 import { InvitationsService } from '../../core/invitations/invitations.service';
@@ -55,7 +52,6 @@ import { LayoutService } from '../../shared/ui/services/layout.service';
 import { ToastService } from '../../shared/ui/services/toast.service';
 
 interface UserPreferences {
-  theme: ThemePreference;
   homeScreen: Enums<'home_screen'>;
   numberFormat: NumberFormatPreferences;
 }
@@ -67,8 +63,9 @@ const PROFILE_MESSAGES = {
 } as const;
 
 /**
- * Configuración (spec §7): first the user (profile and preferences), then the active space
- * (preferences, owner only; setup wizard; catalogs) and the session.
+ * Configuración (spec §7), a subscreen opened from the menu: first the user (profile and
+ * preferences), then the active space (preferences, owner only; members; setup wizard) and its
+ * catalogs. The theme and signing out are in the menu.
  */
 @Component({
   selector: 'app-settings-page',
@@ -92,8 +89,6 @@ const PROFILE_MESSAGES = {
   styleUrl: './settings-page.scss',
 })
 export class SettingsPage {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly spaces = inject(SpaceService);
   private readonly userSettings = inject(UserSettingsService);
   private readonly toast = inject(ToastService);
@@ -106,13 +101,11 @@ export class SettingsPage {
   protected readonly shortcuts = inject(KeyboardShortcuts);
 
   protected readonly canConfigure = this.spaces.canConfigure;
-  protected readonly themeOptions = THEME_OPTIONS;
   protected readonly homeScreenOptions = HOME_SCREEN_OPTIONS;
   protected readonly defaultPeriodOptions = DEFAULT_PERIOD_OPTIONS;
   protected readonly spaceError = signal<string | null>(null);
   protected readonly preferencesError = signal<string | null>(null);
   protected readonly profileError = signal<string | null>(null);
-  protected readonly signingOut = signal(false);
   protected readonly catalogLinks = {
     accounts: ['/', APP_PATHS.accounts],
     categories: ['/', APP_PATHS.categories, CATEGORY_PATHS.edit],
@@ -135,25 +128,17 @@ export class SettingsPage {
   });
   protected readonly onboardingRow = computed(() =>
     this.onboarding.isComplete()
-      ? {
-          title: 'Revisar configuración inicial',
-          subtitle: 'Vuelve a cualquier paso del asistente',
-        }
+      ? { title: 'Revisar configuración inicial', subtitle: undefined }
       : {
           title: 'Completar configuración inicial',
           subtitle: pendingStepsText(this.onboarding.pendingSteps()),
         },
   );
 
+  /** Only to those who cannot change it: it explains why the fields are locked. */
   protected readonly spaceDescription = computed(() =>
-    this.canConfigure()
-      ? 'Aplica a todos los miembros del espacio.'
-      : 'Solo el propietario puede cambiar la configuración del espacio.',
+    this.canConfigure() ? undefined : 'Solo el propietario puede cambiar la configuración del espacio.',
   );
-  protected readonly sessionDescription = computed(() => {
-    const email = this.auth.user()?.email;
-    return email ? `Sesión iniciada como ${email}` : undefined;
-  });
 
   // Follow the loaded values: a reload or a space switch replaces what is shown.
   private readonly profileModel = linkedSignal(() => ({
@@ -199,14 +184,13 @@ export class SettingsPage {
     const settings = this.userSettings.settings();
     return settings
       ? {
-          theme: settings.theme,
           homeScreen: settings.home_screen,
           numberFormat: {
             numberFormat: settings.number_format,
             showDecimals: settings.show_decimals,
           },
         }
-      : { theme: 'system', homeScreen: 'categories', numberFormat: { ...NUMBER_FORMAT_DEFAULTS } };
+      : { homeScreen: 'categories', numberFormat: { ...NUMBER_FORMAT_DEFAULTS } };
   });
   protected readonly preferencesForm = form(this.preferencesModel, {
     submission: { action: () => this.savePreferences() },
@@ -215,16 +199,6 @@ export class SettingsPage {
   /** ← goes back to where Configuración was opened from (the menu of any screen). */
   protected goBack(): void {
     this.back.back(['/']);
-  }
-
-  protected async signOut(): Promise<void> {
-    this.signingOut.set(true);
-    try {
-      await this.auth.signOut();
-      await this.router.navigate(['/', APP_PATHS.login]);
-    } finally {
-      this.signingOut.set(false);
-    }
   }
 
   private async saveProfile(): Promise<void> {
@@ -259,9 +233,8 @@ export class SettingsPage {
 
   private async savePreferences(): Promise<void> {
     this.preferencesError.set(null);
-    const { theme, homeScreen, numberFormat } = this.preferencesModel();
+    const { homeScreen, numberFormat } = this.preferencesModel();
     const saved = await this.userSettings.update({
-      theme,
       home_screen: homeScreen,
       number_format: numberFormat.numberFormat,
       show_decimals: numberFormat.showDecimals,

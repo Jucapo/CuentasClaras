@@ -54,6 +54,7 @@ const OWN_ENTER_SELECTOR = [
     '[class.floating]': 'floating()',
     '[class.with-confirm]': 'confirmLabel() !== null',
     '[class.in-sheet]': 'inSheet',
+    '[class.corner-close]': 'floating() && !hideClose() && !closesWithHandle() && !closeAtTop()',
     '(keydown)': 'onKeydown($event)',
   },
 })

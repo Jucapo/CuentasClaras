@@ -21,6 +21,8 @@ import { SpacePreferences } from './space-preferences';
 export class SpacePreferencesForm {
   /** Field tree holding the preferences; validate it with `spacePreferencesSchema`. */
   readonly fields = input.required<FieldTree<SpacePreferences>>();
+  /** Help under the fields, for the first time (the wizard); off in Configuración (spec §13.5). */
+  readonly hints = input(true);
 
   protected readonly monthDayOptions: readonly SelectOption<number>[] = Array.from(
     { length: MONTH_START_DAY_RANGE.max - MONTH_START_DAY_RANGE.min + 1 },

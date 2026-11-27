@@ -83,6 +83,11 @@
   padding-bottom: var(--cc-overlay-confirm-clearance);
 }
 
+// A toolbar on top (e.g. tabs) leaves room for the ✕ floating in the corner.
+:host(.corner-close) .toolbar {
+  padding-inline-end: var(--cc-overlay-close-clearance);
+}
+
 .floating-close {
   position: absolute;
   top: var(--cc-space-1);

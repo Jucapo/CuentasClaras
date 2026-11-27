@@ -1,7 +1,7 @@
 <cc-page-header title="Configuración" [backAction]="true" (back)="goBack()" />
 
 <div class="sections">
-  <cc-section title="Tu perfil" description="El nombre que ven los demás miembros del espacio.">
+  <cc-section title="Tu perfil">
     <cc-form label="Tu perfil" [form]="profileForm">
       <cc-text-field
         label="Nombre visible"
@@ -16,16 +16,15 @@
     </cc-form>
   </cc-section>
 
-  <cc-section title="Preferencias" description="Solo para ti, en todos tus espacios.">
+  <!-- The theme changes right away from the menu (spec §7). -->
+  <cc-section title="Preferencias">
     <cc-form label="Preferencias" [form]="preferencesForm">
-      <cc-select label="Tema" [options]="themeOptions" [formField]="preferencesForm.theme" />
       <cc-select
         label="Pantalla de inicio"
-        hint="La que se abre al entrar a la app."
         [options]="homeScreenOptions"
         [formField]="preferencesForm.homeScreen"
       />
-      <cc-number-format-form [fields]="preferencesForm.numberFormat" />
+      <cc-number-format-form [fields]="preferencesForm.numberFormat" [hints]="false" />
       @if (!layout.isCompact()) {
         <!-- Device preference: applies at once, outside the saved preferences (spec §13.5). -->
         <cc-switch
@@ -62,10 +61,9 @@
         />
         <span class="space-appearance-label">Ícono y color</span>
       </div>
-      <cc-space-preferences-form [fields]="spaceForm.space" />
+      <cc-space-preferences-form [fields]="spaceForm.space" [hints]="false" />
       <cc-select
         label="Periodo por defecto"
-        hint="Se usa en los dispositivos que no recuerdan otro."
         [options]="defaultPeriodOptions"
         [formField]="spaceForm.defaultPeriod"
       />
@@ -73,7 +71,6 @@
         icon="savings"
         [row]="true"
         label="Mostrar presupuestos"
-        hint="En Presupuesto y en las burbujas de Categorías."
         [formField]="spaceForm.budgetsEnabled"
       />
       @if (canConfigure()) {
@@ -84,9 +81,7 @@
         </cc-form-actions>
       }
     </cc-form>
-  </cc-section>
 
-  <cc-section title="Miembros" description="Quién está en el espacio y con qué rol.">
     <div role="list">
       <cc-list-item
         role="listitem"
@@ -96,15 +91,7 @@
       >
         <cc-icon ccListItemLeading name="group" />
       </cc-list-item>
-    </div>
-  </cc-section>
-
-  @if (canConfigure()) {
-    <cc-section
-      title="Configuración inicial"
-      description="El asistente que guía la configuración del espacio."
-    >
-      <div role="list">
+      @if (canConfigure()) {
         <cc-list-item
           role="listitem"
           [title]="onboardingRow().title"
@@ -113,61 +100,24 @@
         >
           <cc-icon ccListItemLeading name="auto_awesome" />
         </cc-list-item>
-      </div>
-    </cc-section>
-  }
-
-  <cc-section
-    title="Catálogos"
-    description="Las cuentas, categorías, etiquetas y tasas de cambio del espacio."
-  >
-    <div role="list">
-      <cc-list-item
-        role="listitem"
-        title="Cuentas"
-        subtitle="Saldos, cuentas privadas y la predeterminada"
-        [link]="catalogLinks.accounts"
-      >
-        <cc-icon ccListItemLeading name="account_balance_wallet" />
-      </cc-list-item>
-      <cc-list-item
-        role="listitem"
-        title="Categorías"
-        subtitle="De gasto y de ingreso, con subcategorías"
-        [link]="catalogLinks.categories"
-      >
-        <cc-icon ccListItemLeading name="category" />
-      </cc-list-item>
-      <cc-list-item
-        role="listitem"
-        title="Etiquetas"
-        subtitle="Agrupan movimientos de distintas categorías"
-        [link]="catalogLinks.tags"
-      >
-        <cc-icon ccListItemLeading name="label" />
-      </cc-list-item>
-      <cc-list-item
-        role="listitem"
-        title="Monedas"
-        subtitle="Tasas de cambio para los totales en la moneda principal"
-        [link]="catalogLinks.currencies"
-      >
-        <cc-icon ccListItemLeading name="currency_exchange" />
-      </cc-list-item>
+      }
     </div>
   </cc-section>
 
-  <cc-section title="Sesión" [description]="sessionDescription()">
-    <cc-form-actions align="start">
-      <cc-button
-        variant="outlined"
-        icon="logout"
-        loadingLabel="Cerrando sesión"
-        [loading]="signingOut()"
-        (click)="signOut()"
-      >
-        Cerrar sesión
-      </cc-button>
-    </cc-form-actions>
+  <cc-section title="Catálogos">
+    <div role="list">
+      <cc-list-item role="listitem" title="Cuentas" [link]="catalogLinks.accounts">
+        <cc-icon ccListItemLeading name="account_balance_wallet" />
+      </cc-list-item>
+      <cc-list-item role="listitem" title="Categorías" [link]="catalogLinks.categories">
+        <cc-icon ccListItemLeading name="category" />
+      </cc-list-item>
+      <cc-list-item role="listitem" title="Etiquetas" [link]="catalogLinks.tags">
+        <cc-icon ccListItemLeading name="label" />
+      </cc-list-item>
+      <cc-list-item role="listitem" title="Monedas" [link]="catalogLinks.currencies">
+        <cc-icon ccListItemLeading name="currency_exchange" />
+      </cc-list-item>
+    </div>
   </cc-section>
 </div>

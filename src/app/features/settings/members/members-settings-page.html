@@ -9,7 +9,7 @@
     <cc-message>{{ error }}</cc-message>
   }
 
-  <cc-section [title]="membersTitle()" [description]="membersDescription()">
+  <cc-section [title]="membersTitle()" [hideTitle]="true" [description]="membersDescription()">
     <cc-member-list
       [members]="memberEntries()"
       (roleRequested)="openRole($event)"
@@ -17,31 +17,17 @@
     />
   </cc-section>
 
-  @if (canConfigure()) {
-    <cc-section
-      title="Invitaciones pendientes"
-      [description]="
-        invitationEntries().length === 0
-          ? 'No hay invitaciones pendientes.'
-          : 'Cada invitación sirve una sola vez, durante 7 días.'
-      "
-    >
-      @if (invitationEntries().length > 0) {
-        <cc-invitation-list
-          [invitations]="invitationEntries()"
-          (resendRequested)="resend($event)"
-          (revokeRequested)="revoke($event)"
-        />
-      }
-      <div class="actions">
-        <cc-button variant="tonal" icon="person_add" (click)="invite()"
-          >Invitar a alguien</cc-button
-        >
-      </div>
+  @if (canConfigure() && invitationEntries().length > 0) {
+    <cc-section title="Invitaciones pendientes">
+      <cc-invitation-list
+        [invitations]="invitationEntries()"
+        (resendRequested)="resend($event)"
+        (revokeRequested)="revoke($event)"
+      />
     </cc-section>
   }
 
-  <cc-section title="Salir del espacio" [description]="leaveDescription()">
+  <cc-section title="Salir del espacio" [hideTitle]="true" [description]="leaveDescription()">
     <div class="actions">
       <cc-button
         variant="outlined"

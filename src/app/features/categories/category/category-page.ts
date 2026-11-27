@@ -35,6 +35,7 @@ import { ConfirmService } from '../../../shared/ui/services/confirm.service';
 import { useShortcuts } from '../../../shared/ui/services/keyboard-shortcuts';
 import { OverlayService } from '../../../shared/ui/services/overlay.service';
 import { ToastService } from '../../../shared/ui/services/toast.service';
+import { SkeletonList } from '../../../shared/ui/molecules/skeleton-list/skeleton-list';
 import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout';
 
 /** Navigation state that asks the category screen to open a new subcategory once it loads. */
@@ -47,7 +48,7 @@ const ADD_SUBCATEGORY_STATE = 'ccAddSubcategory';
  */
 @Component({
   selector: 'app-category-page',
-  imports: [FlowLayout, Form, FormActions, Button, Message, CategoryEditor],
+  imports: [FlowLayout, Form, FormActions, Button, Message, CategoryEditor, SkeletonList],
   templateUrl: './category-page.html',
   styleUrl: './category-page.scss',
 })
@@ -79,7 +80,8 @@ export class CategoryPage implements HasUnsavedChanges {
   );
   protected readonly archived = computed(() => !!this.existing()?.archived_at);
   protected readonly title = computed(() =>
-    this.id() ? (this.existing()?.name ?? 'Categoría') : 'Nueva categoría',
+    // The name is already large under the bar (spec §13.5): the bar says what the screen does.
+    this.id() ? 'Editar categoría' : 'Nueva categoría',
   );
 
   /** Kind of a new category, read once: query params reach every routed screen of the tree. */
