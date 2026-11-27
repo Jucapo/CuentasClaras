@@ -27,6 +27,8 @@ export const E2E_SPACE = {
 /** Aborts every Supabase request, so smoke tests never depend on a running backend. */
 export async function blockSupabase(page: Page): Promise<void> {
   await page.route(`${SUPABASE_URL}/**`, (route) => route.abort());
+  // Nothing reaches a hosted project, even from a build with the production environment.
+  await page.route('https://*.supabase.co/**', (route) => route.abort());
 }
 
 /** Stores a valid-looking session before the app starts, as supabase-js would after signing in. */
