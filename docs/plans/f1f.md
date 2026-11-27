@@ -435,7 +435,10 @@ grant execute on function public.invitation_preview(text) to anon;
   7. `npm run db:backup` y luego `db push --remote=ryuknhuvydlwtbgruqdt`.
   8. `secrets set --remote=… APP_URL=… ALLOWED_ORIGINS=…` y comprobar que `SUPABASE_SERVICE_ROLE_KEY` aparece entre las inyectadas.
   9. `functions deploy invite-member --remote=…` (el deploy usa el proyecto vinculado si no se pasa `--remote`). Verificar que "Verify JWT" quede apagado y por qué.
-  10. Prueba en producción: invitar a un correo propio y abrirlo en Safari del iPhone.
+  10. Prueba en producción con un alias del Gmail de Juan (`micorreo+prueba@gmail.com`): llega a su bandeja y crea una cuenta aparte. Se abre en Safari del iPhone. Antes de invitar a la esposa, se limpia:
+      - se quita ese miembro (Miembros → Quitar);
+      - se revoca cualquier invitación pendiente del alias;
+      - opcional: se borra el usuario del alias en Auth → Users, si no creó cuentas.
   11. Cómo revertir.
 
 ## 3. Frontend
@@ -518,6 +521,11 @@ grant execute on function public.invitation_preview(text) to anon;
   - Requiere `db:start` y `functions:serve`.
   - Crea un propietario único (signUp + `create_space` por API) e inicia sesión en la UI.
   - Invita a un correo único y toma el link de Mailpit (`/api/v1/search`).
+  - **Reenviar antes de aceptar** (ajuste de la aprobación). Auth ya tiene al usuario, sin confirmar, así que la función vuelve a llamar `inviteUserByEmail`. El e2e comprueba:
+    - que Auth reenvía y no responde `email_exists`;
+    - que llega un correo nuevo;
+    - que el link anterior ya no sirve.
+    Si Auth no reenvía, se resuelve en la función y la solución queda en la spec.
   - En un contexto nuevo: nombre, contraseña y aceptar; ve los pasos de iOS.
   - En otro contexto nuevo: inicia sesión con la cuenta nueva y entra al espacio.
 

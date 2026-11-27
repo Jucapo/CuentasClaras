@@ -344,6 +344,74 @@ export type Database = {
         };
         Relationships: [];
       };
+      space_invitations: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          created_at: string;
+          declined_at: string | null;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string | null;
+          revoked_at: string | null;
+          role: Database['public']['Enums']['member_role'];
+          space_id: string;
+          token_hash: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          declined_at?: string | null;
+          email: string;
+          expires_at: string;
+          id?: string;
+          invited_by?: string | null;
+          revoked_at?: string | null;
+          role: Database['public']['Enums']['member_role'];
+          space_id: string;
+          token_hash: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          declined_at?: string | null;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          revoked_at?: string | null;
+          role?: Database['public']['Enums']['member_role'];
+          space_id?: string;
+          token_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'space_invitations_accepted_by_fkey';
+            columns: ['accepted_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'space_invitations_invited_by_fkey';
+            columns: ['invited_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'space_invitations_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       space_members: {
         Row: {
           default_account_id: string | null;
@@ -746,6 +814,10 @@ export type Database = {
       };
     };
     Functions: {
+      accept_invitation: {
+        Args: { invitation_token?: string; target_invitation_id?: string };
+        Returns: string;
+      };
       accounts_balance: {
         Args: { account_ids?: string[]; on_date: string; target_space_id: string };
         Returns: {
@@ -802,6 +874,22 @@ export type Database = {
         };
         Returns: undefined;
       };
+      create_invitation: {
+        Args: {
+          invitee_email: string;
+          invitee_role: Database['public']['Enums']['member_role'];
+          target_space_id: string;
+        };
+        Returns: {
+          email: string;
+          expires_at: string;
+          invitation_id: string;
+          invitee_has_account: boolean;
+          inviter_name: string;
+          space_name: string;
+          token: string;
+        }[];
+      };
       create_space: {
         Args: {
           main_currency: string;
@@ -821,6 +909,37 @@ export type Database = {
           missing_rate_currencies: string[];
         }[];
       };
+      decline_invitation: {
+        Args: { invitation_token?: string; target_invitation_id?: string };
+        Returns: string;
+      };
+      invitation_preview: {
+        Args: { invitation_token: string };
+        Returns: {
+          email: string;
+          expires_at: string;
+          invitation_id: string;
+          inviter_name: string;
+          role: Database['public']['Enums']['member_role'];
+          space_color: unknown;
+          space_icon: unknown;
+          space_name: string;
+          status: string;
+        }[];
+      };
+      my_invitations: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          expires_at: string;
+          invitation_id: string;
+          inviter_name: string;
+          role: Database['public']['Enums']['member_role'];
+          space_color: unknown;
+          space_icon: unknown;
+          space_id: string;
+          space_name: string;
+        }[];
+      };
       net_worth: {
         Args: { on_date: string; target_space_id: string };
         Returns: {
@@ -832,6 +951,19 @@ export type Database = {
         }[];
       };
       reorder_categories: { Args: { category_ids: string[] }; Returns: undefined };
+      revoke_invitation: { Args: { target_invitation_id: string }; Returns: undefined };
+      rotate_invitation: {
+        Args: { target_invitation_id: string };
+        Returns: {
+          email: string;
+          expires_at: string;
+          invitation_id: string;
+          invitee_has_account: boolean;
+          inviter_name: string;
+          space_name: string;
+          token: string;
+        }[];
+      };
       save_exchange_rate: {
         Args: {
           base_currency: string;
@@ -909,6 +1041,16 @@ export type Database = {
       set_default_account: {
         Args: { target_account_id: string; target_space_id: string };
         Returns: undefined;
+      };
+      space_member_list: {
+        Args: { target_space_id: string };
+        Returns: {
+          display_name: string;
+          email: string;
+          joined_at: string;
+          role: Database['public']['Enums']['member_role'];
+          user_id: string;
+        }[];
       };
       transaction_day_totals: {
         Args: {

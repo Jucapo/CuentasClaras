@@ -113,9 +113,9 @@ select throws_ok(
 );
 select throws_ok(
   format('delete from public.space_members where space_id = %L', current_setting('t.space')),
-  '42501',
-  null,
-  'members cannot be removed from the client yet'
+  'P0001',
+  'last_owner',
+  'removing every member is blocked: the space keeps an owner (members.test.sql covers removal)'
 );
 
 -- ── Isolation: a non-member sees and changes nothing ─────────────────────────
