@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.7 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.8 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -119,7 +119,10 @@ Atributos:
 - orden;
 - archivada.
 
-**Convención de signo única:** saldo = saldo inicial + ingresos − gastos + transferencias entrantes − transferencias salientes. Las deudas tienen saldo negativo. Comprar con tarjeta es un gasto desde la cuenta de la tarjeta, así que la deuda crece. Pagarla es una transferencia hacia la tarjeta, así que la deuda baja. Los saldos se calculan; no se guardan.
+**Convención de signo única:** saldo = saldo inicial + ingresos − gastos + transferencias entrantes − transferencias salientes ± ajustes. Las deudas tienen saldo negativo. Comprar con tarjeta es un gasto desde la cuenta de la tarjeta, así que la deuda crece. Pagarla es una transferencia hacia la tarjeta, así que la deuda baja. Los saldos se calculan; no se guardan.
+
+- Cuentan los movimientos confirmados con fecha igual o posterior a la del saldo inicial. Los anteriores ya están dentro de ese saldo, así que no lo cambian, pero sí cuentan en los totales de su periodo. Registrar gastos de días anteriores al asistente no descuadra los saldos.
+- Una transferencia entrante suma lo que llegó, en la moneda de la cuenta destino.
 
 Reglas de gestión (F1b):
 
@@ -131,7 +134,7 @@ Reglas de gestión (F1b):
   - En la base de datos lo pone un trigger si no llega.
 - **Cuenta predeterminada:** se limpia sola cuando la cuenta se archiva, o cuando se vuelve privada (para todos menos el dueño).
 - **Bienes:** el tipo existe en la base de datos desde la F1b, pero la interfaz lo ofrece desde la F2.
-- **Tipo y moneda:** se pueden editar mientras no haya movimientos (F1d).
+- **Tipo y moneda:** se pueden editar mientras no haya movimientos. Desde la F1d lo garantiza un trigger, y la pantalla de la cuenta deshabilita esas filas con la explicación.
 - **Eliminar:** solo si la cuenta no tiene movimientos; si tiene, se archiva. Desde la F1d lo garantiza una FK `on delete restrict`, y la interfaz explica por qué no se puede.
 
 ### 4.2 Movimientos
@@ -156,6 +159,19 @@ Tipos: `gasto`, `ingreso`, `transferencia`, `ajuste`.
 | auditoría | `created_by`, `created_at`, `updated_at` |
 
 Los ajustes sirven para conciliar con el saldo real del banco.
+
+Reglas (F1d):
+
+- **Ajuste:** el monto sigue positivo y la dirección va en `adjustment_direction`: `increase` sube el saldo y `decrease` lo baja. Es obligatoria en los ajustes y null en los demás tipos. Los ajustes no llevan categoría ni cuentan en los totales por categoría.
+- **Categoría:** obligatoria en gasto e ingreso, y de su misma clase. Las transferencias y los ajustes no llevan. Solo un movimiento pendiente (F3) puede llegar sin categoría.
+- **Transferencias:**
+  - Solo hacia otra cuenta que quien registra puede ver.
+  - Si las monedas difieren, el monto destino es obligatorio; si son iguales, no se guarda.
+- **Moneda:** la del movimiento es la de su cuenta; la copia la base de datos.
+- **Incluir en el espacio:** solo aplica a gastos e ingresos de cuentas privadas, y por defecto toma lo que diga la cuenta. En las compartidas, y en transferencias y ajustes, siempre es falso. Si una cuenta compartida se vuelve privada, sus movimientos quedan privados.
+- **Guardado idempotente:** el cliente genera el id del movimiento al abrir el registro. Guardar con un id que ya existe, y que quien llama puede escribir, lo actualiza; así un reintento no duplica.
+- **Deshacer:** al crear un movimiento, el aviso de guardado trae "Deshacer", que lo elimina con sus etiquetas y su diferido. Al editar no aparece.
+- **Borrar y editar:** se puede quien puede escribir en la cuenta de origen y además ve la cuenta destino. Así nadie cambia el saldo privado de otro.
 
 ### 4.3 Categorías y subcategorías
 
@@ -191,7 +207,12 @@ Selector global (como el de 1Money):
 - Opciones: Hoy, Día específico, Semana, Mes, Año, Siempre, Rango personalizado.
 - Flechas anterior/siguiente para moverse entre periodos del mismo tipo.
 - La selección es global: aplica a todas las pantallas y se recuerda por dispositivo.
+  - Se recuerda el **tipo**. Al abrir la app, Día, Semana, Mes y Año vuelven al periodo actual; Siempre y el rango personalizado se restauran tal cual.
+  - Sin nada recordado, se usa el periodo por defecto del espacio.
 - Periodo por defecto configurable (Mes).
+- La flecha mueve un rango personalizado en bloques de su mismo largo; Siempre no tiene flechas.
+- Nombres: "Hoy", "Ayer", "Jueves 26 nov", "Semana del 23 nov", "Diciembre" (con el año si no es el actual), "2026", "Siempre". El rango va al lado ("28 nov – 27 dic").
+- Presupuestos por periodo: el Mes usa el de su mes, y el Año suma los 12 meses. Día, Semana, Siempre y el rango personalizado no muestran presupuesto.
 
 Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
 
@@ -201,10 +222,22 @@ Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
 - Totales consolidados: convierten a la moneda principal con la tasa del día.
   - Fase 1: tasa manual.
   - Fase 2: TRM automática diaria, con opción de sobrescribirla.
+- **Tasas manuales (F1d):**
+  - Son del espacio; las escriben propietario o editor en Configuración → Monedas.
+  - Hay una por par y día, en cualquiera de los dos sentidos; guardar otra el mismo día la reemplaza.
+  - Se escriben como "1 US$ = $ X", con hasta 6 decimales.
+  - Un movimiento usa la tasa más reciente con fecha igual o anterior a la suya. Si no hay ninguna anterior, usa la más antigua, para no dejar sin convertir lo anterior a la primera tasa.
+  - Un saldo o total de hoy usa la tasa más reciente.
+  - Si hay cuentas en otra moneda y no hay tasa, la app la pide la primera vez que la necesita. Mientras falte, esos montos no suman y el total lo avisa.
 - Las transferencias entre monedas guardan los dos montos reales (la tasa efectiva queda implícita).
 - Formato configurable **por usuario**: separadores de miles y decimales, mostrar decimales sí/no. Por defecto el actual de 1Money: `-$ 1,234,567.90`.
   - Sin decimales, el monto se redondea a la unidad, alejándose de cero. Solo cambia lo que se muestra; lo guardado no cambia.
   - Al escribir, los separadores siguen el formato del usuario y se valida la agrupación de miles: en `1,234.56`, escribir "1,5" es un error, no 15.
+  - **Formato mientras se escribe (F1d)**, en los campos de monto y en el registro rápido:
+    - Los separadores de miles se ponen solos (`1.250.000`) y el cursor se queda junto al mismo dígito.
+    - Borrar sobre un separador borra el dígito de al lado.
+    - Escribir a mano el separador de miles y dejar mal la agrupación no se reinterpreta: el texto queda como está con el error. Mientras ese error siga, el campo no se reagrupa.
+    - Con `show_decimals` apagado, el teclado del registro rápido no ofrece la tecla decimal.
 - Cada moneda tiene un exponente ISO 4217 fijo para las unidades menores (COP, USD y EUR: 2) y un símbolo: COP `$`, USD `US$` (para no confundir dólares con pesos), EUR `€`; las demás usan su código.
 - Un único pipe o servicio formatea montos en toda la app.
 
@@ -252,6 +285,9 @@ El modelo de cuentas ya las soporta desde la fase 1 (saldos, pagos como transfer
   - Si la cuenta elegida es de tipo tarjeta de crédito, el registro muestra el campo "Cuotas" (por defecto 1).
   - Si Cuotas > 1, pide la tasa de interés mensual, prellenada con la tasa vigente de la tarjeta. 0 = sin interés, que es el caso más común hoy.
   - Desde la F1d se guardan cuotas y tasa con la compra. El reparto en presupuestos y el cálculo de intereses llegan en la F2; mientras tanto la compra cuenta completa en su fecha.
+  - Se guardan en `installment_plans` (`card_deferral`), que apunta a la compra: el plan se borra con ella y sigue su cuenta y su fecha. Si la compra deja de ser un gasto con tarjeta, el plan se borra.
+  - Hasta que exista el historial de tasas de la tarjeta (F2), la tasa se prellena con 0.
+  - Cuotas de 1 a 48; tasa mensual desde 0 hasta menos de 100 %.
 - Pago de la tarjeta: transferencia desde la cuenta pagadora. Intereses y cuota de manejo son gastos en Financieros.
 
 **d) Me deben**
@@ -309,8 +345,8 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
 ### Encabezado global
 
 - Selector de espacio (solo si el usuario tiene más de uno).
-- Total de cuentas.
-- Selector de periodo: flechas + chip con el rango; al tocarlo abre un bottom sheet con las opciones de §4.5.
+- Total de cuentas: el mismo de la pestaña Cuentas (las cuentas activas que el usuario ve con "incluir en el total", incluidas sus privadas), en la moneda principal. Si falta una tasa, lo avisa.
+- Selector de periodo: flechas + chip con el nombre y el rango; al tocarlo abre las opciones de §4.5 (bottom sheet en compacta, diálogo en los demás tamaños).
 
 ### Categorías (inicio)
 
@@ -322,8 +358,14 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
   - relleno según el presupuesto consumido;
   - una marca si se pasó del presupuesto.
 - En el centro del donut: total de gastos y total de ingresos del periodo.
+- El donut se segmenta por categoría, con el color de cada una.
 - Tocar una categoría abre el registro rápido.
 - Desde la F1b2 la grilla existe sin montos; los montos y el registro rápido llegan en la F1d.
+- Montos (F1d):
+  - Van en la moneda principal y cuentan lo compartido del espacio (§4.7).
+  - Cada categoría suma sus subcategorías.
+  - Con los presupuestos apagados no se muestra el restante.
+  - En ingresos, el restante es lo que falta para el ingreso esperado.
 - **Modo edición:** el lápiz del encabezado abre `/categorias/editar`. Es la misma grilla con una burbuja "+" para crear; tocar una categoría abre su pantalla, y las burbujas se reordenan arrastrándolas. Configuración → Categorías lleva al mismo lugar: un solo flujo con dos puntos de entrada.
 - **Pantalla de categoría:** nombre grande en el encabezado, badge de ícono y color, etiquetas por defecto y la lista de subcategorías con "Añadir subcategoría".
   - Si la categoría es nueva, añadir una subcategoría la guarda primero.
@@ -339,6 +381,27 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
 - Nota opcional.
 - "Incluir en el espacio", solo si la cuenta es privada.
 - Meta: guardar un gasto típico en 3 toques. En escritorio, todo usable con teclado.
+
+Detalle (F1d):
+
+- **Forma:** bottom sheet en compacta; diálogo de dos columnas en los demás tamaños (teclado a la izquierda, campos a la derecha). Es el mismo organismo (`cc-quick-entry-sheet`) para crear y editar gastos, ingresos, transferencias y ajustes.
+- **Los 3 toques:** categoría → monto → ✓. Cuenta, fecha (hoy) y etiquetas ya vienen puestas.
+- **Teclado:**
+  - Edita una expresión con suma y resta, que se muestra formateada (`12.000 + 3.500`) con el resultado debajo. ✓ la evalúa y guarda.
+  - ✓ y Guardar quedan deshabilitados mientras se guarda.
+- **Campos:**
+  - Subcategoría en chips de selección única.
+  - Cuenta en un selector.
+  - Fecha: Hoy, Ayer u otra (calendario nativo en línea).
+  - "Etiquetas y nota", plegado.
+  - Con TC, "Cuotas" y, si son más de 1, la tasa mensual.
+- **Etiquetas:** mientras el usuario no las toque, siguen a la categoría elegida (las de la categoría más las de la subcategoría).
+- **En escritorio:**
+  - El foco empieza en el monto. Dígitos, `+`, `-`, el separador decimal y Backspace editan la expresión desde cualquier parte del diálogo, salvo en los campos de texto.
+  - Tab recorre los campos; Enter o Ctrl/⌘+S guardan; Esc cierra.
+- **Transferencia:** origen y destino, sin categoría ni etiquetas. Si cambia la moneda, se ven dos montos ("Sale" y "Llega") y se toca uno para escribirlo.
+- **Ajuste:** "Sube" o "Baja" el saldo, monto, fecha y nota.
+- **Después de guardar:** un aviso ("Gasto guardado"), que al crear trae "Deshacer". Editar trae "Eliminar", que devuelve la intención y la pantalla confirma.
 
 ### Cuentas
 
@@ -360,11 +423,22 @@ Lo mínimo para guardar es el nombre; el saldo arranca en 0 y lo demás viene pr
 
 **Gestión:** crear y editar cuentas y categorías son pantallas con ruta propia. Las etiquetas y las subcategorías se crean y editan en un sheet.
 
-- `/cuentas/nueva?grupo=…` y `/cuentas/:id`;
+- `/cuentas/nueva?grupo=…`, `/cuentas/:id` (detalle) y `/cuentas/:id/editar`;
 - `/categorias/editar`, `/categorias/editar/nueva?clase=…` y `/categorias/editar/:id`;
 - `/configuracion/etiquetas`.
 
 Los organismos de estas pantallas y sheets son los que el asistente reutiliza tal cual.
+
+**Detalle de cuenta (F1d):**
+
+- Se abre al tocar una cuenta; en expandida, en el panel de detalle.
+- Muestra el saldo y la lista de movimientos agrupada por día (los más recientes primero, de a 50), con el monto con signo según la cuenta.
+- Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo.
+- Una transferencia desde o hacia una cuenta que el usuario no ve dice "Cuenta privada de X".
+- Acciones:
+  - Editar: la pantalla de la cuenta, que al cerrar vuelve al detalle y al eliminar vuelve a la lista.
+  - Transferir: el registro rápido en modo transferencia, con esta cuenta como origen.
+  - Ajustar al saldo real: se escribe el saldo que muestra el banco, como lo ve el usuario (las deudas en positivo), y se crea un ajuste por la diferencia.
 
 ### Transacciones
 
@@ -418,6 +492,7 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
   - periodo por defecto;
   - presupuesto on/off;
   - categorías, etiquetas y cuentas;
+  - monedas (`/configuracion/monedas`, F1d): una sección por moneda en uso distinta de la principal, con la tasa vigente, su historial y "Nueva tasa";
   - configuración inicial: completar el asistente o revisarlo (solo el propietario).
 
 ---
@@ -449,8 +524,10 @@ credit_card_details (account_id, credit_limit, statement_day, payment_day, month
 card_rates (account_id, effective_from, monthly_rate)
 loan_details (account_id, principal, disbursed_on, effective_annual_rate, term_months, payment_day, monthly_insurance)
 
-installment_plans (id, space_id, account_id, kind, source_transaction_id, installments, rate, start_date)
+installment_plans (id, space_id, account_id, kind, source_transaction_id, installments, rate, start_date, created_at)
   kind: loan_schedule | debt_plan | card_deferral
+  -- F1d: solo card_deferral. source_transaction_id = la compra (única, se borra con ella);
+  -- rate mensual como fracción (0 = sin interés, < 1)
 installments (id, plan_id, number, due_date, principal, interest, fees, status, operation_id)
 
 categories (id, space_id, parent_id, kind, name, icon, color, sort_order, archived_at, created_at)
@@ -460,15 +537,24 @@ category_default_tags (space_id, category_id, tag_id)
   -- space_id redundante a propósito: con FKs compuestas (space_id, id) no se mezclan espacios
 
 transactions (id, space_id, type, date, amount, currency, account_id, to_account_id, to_amount,
-              category_id, note, include_in_space, operation_id, financing_plan_id,
-              source, status, external_id, created_by, created_at, updated_at)
-transaction_tags (transaction_id, tag_id)
+              category_id, adjustment_direction, note, include_in_space, operation_id,
+              financing_plan_id, source, status, external_id, created_by, created_at, updated_at)
+  type: expense | income | transfer | adjustment
+  adjustment_direction: increase | decrease   -- solo en ajustes; amount siempre > 0
+  source: manual | recurring | email | shortcut | import · status: confirmed | pending
+  -- id lo genera el cliente (guardado idempotente); currency la copia un trigger desde la cuenta
+  -- FKs compuestas (space_id, …) a cuentas y categorías, on delete restrict
+  -- financing_plan_id: compras financiadas con un préstamo (F2)
+transaction_tags (space_id, transaction_id, tag_id)
+  -- space_id redundante a propósito, como en category_default_tags
 
 budgets (id, space_id, category_id, amount, currency, effective_from, created_at)
   -- category_id puede ser de gasto (presupuesto) o de ingreso (ingreso mensual esperado)
   -- amount >= 0 (0 = sin monto desde ese periodo); effective_from = día 1 del mes que nombra el periodo
   -- única por (category_id, effective_from); FK compuesta (space_id, category_id), on delete cascade
-exchange_rates (date, base, quote, rate, source)
+exchange_rates (id, space_id, date, base, quote, rate, source, created_at)
+  -- 1 base = rate quote; source manual (del espacio) | trm (space_id null, F2)
+  -- una por (espacio, par sin importar el sentido, fecha)
 recurring_templates (fase 3)
 ```
 
@@ -479,7 +565,10 @@ recurring_templates (fase 3)
 | `spaces`, `space_settings`, `categories`, `tags`, `budgets` | Miembros del espacio | Propietario o editor (configuración y miembros: solo propietario) |
 | `accounts` | Compartidas: miembros. Privadas: solo el dueño | Compartidas: propietario o editor. Privadas: solo el dueño, y además debe ser propietario o editor |
 | `category_default_tags` | Miembros del espacio | Propietario o editor |
-| `transactions` | Visible si la cuenta o la cuenta destino es visible para el usuario, o si `include_in_space = true` | Quien puede escribir en la cuenta de origen |
+| `transactions` | Visible si la cuenta o la cuenta destino es visible para el usuario, o si `include_in_space = true` | Quien puede escribir en la cuenta de origen; la cuenta destino tiene que verla |
+| `transaction_tags` | Si se ve el movimiento | Si se puede escribir el movimiento |
+| `installment_plans` | Si se ve la cuenta o la compra | Quien puede escribir en la cuenta |
+| `exchange_rates` | Miembros del espacio (y las comunes, F2) | Propietario o editor; no se editan, se reemplazan |
 
 - Funciones auxiliares: `is_space_member(space_id)`, `space_role(space_id)`, `is_space_editor(space_id)`, `can_see_account(account_id)`.
 - Un editor no puede volver privada la cuenta compartida de otro miembro: la política de escritura se evalúa también sobre la fila nueva.
@@ -488,6 +577,17 @@ recurring_templates (fase 3)
   - `set_default_account(space_id, account_id)` acepta solo cuentas activas del espacio y visibles para quien llama. Con cualquier otra cuenta responde el mismo error, para no filtrar si existe.
   - `reorder_categories(ids)` reordena hermanos y respeta la RLS.
 - RPC de la F1c: `create_category_tree(space_id, kind, tree)` crea categorías con sus subcategorías en una sola transacción (todo o nada), con `SECURITY INVOKER`: aplican la RLS y los triggers de categorías.
+- RPCs de la F1d, todos con `SECURITY INVOKER`:
+  - `save_transaction(...)` crea o actualiza (según exista el id) un movimiento con sus etiquetas y su diferido, todo o nada.
+  - `category_totals(space_id, from, to, budget_months)` devuelve por categoría el monto en la moneda principal (cada categoría suma sus subcategorías), el presupuesto, el restante y las monedas sin tasa. Usa el alcance Espacio.
+  - `accounts_total(space_id, on_date)` es el total del encabezado.
+  - `save_exchange_rate(...)` reemplaza la tasa del mismo par y día.
+- Triggers de la F1d:
+  - la moneda e "incluir en el espacio" del movimiento;
+  - la clase de la categoría y el monto destino;
+  - el bloqueo de tipo y moneda de cuentas con movimientos;
+  - la coherencia del diferido con su compra;
+  - borrar un espacio borra primero sus movimientos, para que las FKs restrict no frenen la cascada.
 - `budgets`: los clientes insertan filas y solo cambian `amount` y `currency`; un cambio desde otro periodo es una fila nueva.
 - `icon` y `color` guardan claves del catálogo de íconos y de la paleta (§13.3), nunca valores hex.
 - Saldos: vista SQL. Reportes: funciones RPC con `SECURITY INVOKER` (respetan RLS) que reciben un rango de fechas y el alcance. El cliente calcula el rango a partir de la configuración de periodo.
@@ -559,6 +659,8 @@ recurring_templates (fase 3)
 - [x] Entorno de desarrollo de base de datos: Supabase local en Docker (`supabase start`), con seed propio. Las pruebas pgTAP corren solo en local (en Windows `supabase test db` siempre usa un contenedor). Producción solo con `--remote=<ref>` explícito.
 - [x] Postgres 17 en local y en producción (17.12): el esquema usa `on delete set null (columna)` y `nulls not distinct`.
 - [x] F1b: el detalle de las reglas de cuentas, categorías, etiquetas, montos e íconos está en §4.1, §4.3, §4.4, §4.6, §8 y §13.3.
+- [x] F1d: ajuste con dirección y monto positivo; saldos desde la fecha del saldo inicial; tasas manuales por espacio con su regla de fecha; guardado idempotente con "Deshacer"; periodo recordado por tipo; montos formateados mientras se escribe. Detalle en §4.1, §4.2, §4.5, §4.6, §5.1 c, §7 y §8.
+- [x] Datos reales desde la F1d: respaldo de producción (`npm run db:backup`) antes de cada `db push`, y prueba de migraciones con esos datos en local (`npm run db:restore-local`). Las reglas viven en `CLAUDE.md`.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
