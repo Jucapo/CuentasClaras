@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.6 · 26-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.7 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -165,7 +165,8 @@ Los ajustes sirven para conciliar con el saldo real del banco.
 - Una subcategoría puede no tener color propio: hereda el de su categoría. Una subcategoría no puede tener hijos ni ser de otra clase que su padre, y la clase no cambia después de crearla.
 - Eliminar: solo si no tiene movimientos (si tiene, se archiva). Eliminar una categoría elimina sus subcategorías, con una confirmación que las nombra.
 - **Etiquetas por defecto:** una categoría o subcategoría puede traer etiquetas que se aplican solas al registrar (editables en el momento). Ej.: Casa › Arriendo → `Fijos`.
-- Espacios nuevos: las categorías se crean en el asistente de configuración inicial (§7), desde cero o partiendo de la plantilla sugerida (Anexo A). No se importa nada de 1Money.
+  - Se asignan desde los dos lados: en la pantalla de categoría (y el sheet de subcategoría) se eligen sus etiquetas; en el sheet de una etiqueta, "¿En qué categorías se pone sola?" muestra el árbol de categorías y subcategorías con casillas, independientes entre sí.
+- Espacios nuevos: las categorías de gasto y de ingreso se crean en el asistente de configuración inicial (§7), desde cero o partiendo de la plantilla sugerida (Anexo A). No se importa nada de 1Money.
 
 ### 4.4 Etiquetas
 
@@ -210,6 +211,10 @@ Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
 ### 4.7 Presupuestos
 
 - Pertenecen al espacio. Un monto por categoría de gasto que se repite cada periodo mensual hasta que se cambia (vigencia desde un periodo).
+  - La vigencia se guarda como el primer día del mes con que se nombra el periodo (el mes en que termina, §4.5), así que cambiar el día de inicio del mes no mueve los presupuestos.
+  - Cada monto lleva su moneda; por defecto la principal del espacio. Mientras no haya conversión (F1d), los totales se muestran por moneda.
+  - Un monto de 0 quita el presupuesto desde ese periodo.
+  - La misma tabla guarda el **ingreso mensual esperado** de las categorías de ingreso, con las mismas reglas.
 - Cuentan los movimientos compartidos del espacio: los de cuentas compartidas más los de cuentas privadas marcados "incluir en el espacio".
 - Vista: gastado, presupuestado y restante por categoría, más el total. El restante también aparece en las burbujas de la pantalla de inicio.
 - Interruptor para mostrar u ocultar presupuestos.
@@ -383,19 +388,24 @@ Reportes de §6 para el periodo seleccionado.
 
 Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configuración del espacio y la situación financiera actual.
 
-- Pasos:
-  1. **Espacio y preferencias:** nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana.
-  2. **Situación financiera actual:** cuentas, ahorros, deudas y "me deben", cada una con su saldo actual. Moneda por cuenta (p. ej. USD) y cuenta predeterminada. Las deudas piden solo nombre, tipo y saldo; los datos de tasa, plazo y cuotas se completan en la F2.
-  3. **Ingresos:** categorías de ingreso (fuentes) y, opcional, el monto mensual esperado de cada una.
-  4. **Categorías de gasto:** empezar desde cero o partir de la plantilla sugerida (Anexo A), y editar categorías y subcategorías con ícono y color.
-  5. **Etiquetas:** crear etiquetas (p. ej. Fijos) y asignar etiquetas por defecto a subcategorías.
-  6. **Presupuesto (opcional):** monto mensual por categoría de gasto.
-  7. **Resumen:** todo lo configurado, con opción de volver a cualquier paso antes de terminar.
+- Pasos (rutas bajo `/bienvenida`):
+  1. **Espacio y preferencias** (`espacio`): nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana. Con el espacio ya creado (retomar o revisar), el paso guarda cambios en vez de crear otro.
+  2. **Situación financiera actual** (`cuentas`): cuentas, ahorros, deudas y "me deben", cada una con su saldo actual, agrupadas y con sus totales. "Agregar" abre "¿Qué vas a crear?" y la pantalla de cuenta; al guardar vuelve al paso. Al final, la cuenta predeterminada. Moneda por cuenta (p. ej. USD). Las deudas piden solo nombre, tipo y saldo; los datos de tasa, plazo y cuotas se completan en la F2.
+  3. **Ingresos** (`ingresos`): categorías de ingreso (fuentes) en la grilla en modo edición y, opcional, el monto mensual esperado de cada una (§4.7).
+  4. **Categorías de gasto** (`gastos`): la grilla en modo edición, con la pantalla de categoría.
+  5. **Etiquetas** (`etiquetas`, opcional): crear etiquetas con su sheet, que también dice en qué categorías se pone sola cada una (§4.3). Sugiere `Fijos` mientras no exista.
+  6. **Presupuesto** (`presupuesto`, opcional): monto mensual por categoría de gasto, con el total por moneda junto al ingreso esperado.
+  7. **Resumen** (`resumen`): una fila por paso con lo configurado y un enlace para volver a él; "Terminar" marca el asistente como completo.
+- Ingresos y gastos, sin categorías de esa clase, ofrecen empezar desde cero o partir de la plantilla sugerida (Anexo A). La plantilla es una lista para marcar, con todo marcado: desmarcar una categoría desmarca sus subcategorías y marcar una subcategoría marca su categoría. Lo marcado se crea en una sola transacción (`create_category_tree`) y el paso sigue en la grilla para ajustarlo.
 - Comportamiento:
-  - El progreso se guarda en cada paso: si se cierra la app, se retoma donde quedó.
-  - Los pasos opcionales se pueden saltar.
-  - Reutiliza los mismos formularios de gestión de cuentas, categorías y etiquetas (sin duplicar código).
-  - Se puede volver a abrir desde Configuración para revisar o completar la configuración.
+  - Reutiliza las pantallas y sheets de gestión tal cual (cuenta, categoría, subcategoría, etiqueta, ícono y color, monto). Las pantallas de cuenta y categoría vuelven a su ruta padre, así que bajo un paso vuelven al paso.
+  - El progreso (`onboarding_step`, pasos completados en orden) se guarda al completar cada paso; revisar un paso anterior no lo hace retroceder. Se puede abrir cualquier paso hasta el pendiente; con el asistente completo, todos.
+  - Mientras el asistente no esté completo y nunca se haya pospuesto, entrar a la app lo retoma en el paso pendiente (también si se cerró la app a mitad de camino).
+  - "Terminar más tarde" lleva a la app y guarda `onboarding_postponed_at`: desde ahí la app no vuelve a abrirlo sola, en ningún dispositivo. Mientras no esté completo, la pantalla de inicio muestra la tarjeta "Completa tu configuración · Faltan N pasos · Continuar" y Configuración, "Completar configuración inicial".
+  - Los pasos opcionales dicen "Saltar" mientras no tienen nada y "Continuar" cuando sí.
+  - Terminar el paso 7 guarda `onboarding_completed_at`. Configuración → "Revisar configuración inicial" lo vuelve a abrir en el resumen; terminar otra vez conserva la primera fecha.
+  - Solo el propietario ve el asistente, la tarjeta y la fila de Configuración, porque la configuración del espacio es suya.
+  - Layout (§13.5): en compacta y mediana, un paso por pantalla con el progreso arriba ("Paso 3 de 7" y una barra por pasos) y las acciones abajo; en expandida, los pasos en una columna lateral y el paso al lado. Los flujos que se abren desde un paso ocupan la pantalla completa en compacta y mediana, y el panel del paso en expandida.
 
 ### Configuración
 
@@ -407,7 +417,8 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
   - primer día del mes y de la semana;
   - periodo por defecto;
   - presupuesto on/off;
-  - categorías, etiquetas y cuentas.
+  - categorías, etiquetas y cuentas;
+  - configuración inicial: completar el asistente o revisarlo (solo el propietario).
 
 ---
 
@@ -422,7 +433,8 @@ space_members (space_id, user_id, role, default_account_id, joined_at)
   role: owner | editor | viewer
 space_invitations (id, space_id, email, role, token_hash, invited_by, expires_at, accepted_at)
 space_settings (space_id, main_currency, month_start_day, week_start, budgets_enabled, default_period,
-                onboarding_step, onboarding_completed_at)
+                onboarding_step, onboarding_completed_at, onboarding_postponed_at)
+  -- onboarding_step: pasos del asistente completados en orden (create_space deja 1)
 user_settings (user_id, theme, number_format, show_decimals, home_screen, last_space_id)
 
 accounts (id, space_id, owner_id, visibility, name, kind, account_group, currency,
@@ -452,8 +464,10 @@ transactions (id, space_id, type, date, amount, currency, account_id, to_account
               source, status, external_id, created_by, created_at, updated_at)
 transaction_tags (transaction_id, tag_id)
 
-budgets (id, space_id, category_id, amount, effective_from)
+budgets (id, space_id, category_id, amount, currency, effective_from, created_at)
   -- category_id puede ser de gasto (presupuesto) o de ingreso (ingreso mensual esperado)
+  -- amount >= 0 (0 = sin monto desde ese periodo); effective_from = día 1 del mes que nombra el periodo
+  -- única por (category_id, effective_from); FK compuesta (space_id, category_id), on delete cascade
 exchange_rates (date, base, quote, rate, source)
 recurring_templates (fase 3)
 ```
@@ -473,6 +487,8 @@ recurring_templates (fase 3)
 - RPCs de la F1b:
   - `set_default_account(space_id, account_id)` acepta solo cuentas activas del espacio y visibles para quien llama. Con cualquier otra cuenta responde el mismo error, para no filtrar si existe.
   - `reorder_categories(ids)` reordena hermanos y respeta la RLS.
+- RPC de la F1c: `create_category_tree(space_id, kind, tree)` crea categorías con sus subcategorías en una sola transacción (todo o nada), con `SECURITY INVOKER`: aplican la RLS y los triggers de categorías.
+- `budgets`: los clientes insertan filas y solo cambian `amount` y `currency`; un cambio desde otro periodo es una fila nueva.
 - `icon` y `color` guardan claves del catálogo de íconos y de la paleta (§13.3), nunca valores hex.
 - Saldos: vista SQL. Reportes: funciones RPC con `SECURITY INVOKER` (respetan RLS) que reciben un rango de fechas y el alcance. El cliente calcula el rango a partir de la configuración de periodo.
 
@@ -543,6 +559,7 @@ recurring_templates (fase 3)
 - [x] Entorno de desarrollo de base de datos: Supabase local en Docker (`supabase start`), con seed propio. Las pruebas pgTAP corren solo en local (en Windows `supabase test db` siempre usa un contenedor). Producción solo con `--remote=<ref>` explícito.
 - [x] Postgres 17 en local y en producción (17.12): el esquema usa `on delete set null (columna)` y `nulls not distinct`.
 - [x] F1b: el detalle de las reglas de cuentas, categorías, etiquetas, montos e íconos está en §4.1, §4.3, §4.4, §4.6, §8 y §13.3.
+- [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
 
@@ -661,11 +678,17 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 
 **Una sola versión de cada flujo:** si un flujo nuevo reemplaza a otro, el anterior se elimina.
 
+**Asistente** (F1c)
+
+- Los flujos de crear o editar salen a su ruta padre (navegación relativa), así que la misma pantalla sirve bajo su lista y bajo un paso del asistente, y vuelve a donde se abrió.
+- Compacta y mediana: un paso por pantalla con el progreso arriba y las acciones fijas abajo (en mediana, en una tarjeta centrada). Expandida: los pasos en una columna lateral y el paso en el panel de al lado.
+- Un flujo abierto desde un paso ocupa la pantalla completa en compacta y mediana; en expandida, el panel del paso, con la columna de pasos visible.
+
 ---
 
 ## Anexo A — Plantilla sugerida de categorías
 
-Opcional en el asistente: se puede editar todo o empezar desde cero.
+Opcional en el asistente, para gastos e ingresos: se marca qué incluir, se puede editar todo después o empezar desde cero. Los íconos y colores de cada categoría viven en `core/config/category-template.ts`.
 
 **Gastos**
 
@@ -687,4 +710,4 @@ Opcional en el asistente: se puede editar todo o empezar desde cero.
 
 **Ingresos:** Salario, Trabajo independiente, Intereses, Otros.
 
-**Etiquetas sugeridas:** Fijos.
+**Etiquetas sugeridas:** Fijos (el asistente la ofrece mientras no exista).
