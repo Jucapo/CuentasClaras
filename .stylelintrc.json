@@ -46,5 +46,6 @@
         "declaration-property-value-disallowed-list": null
       }
     }
-  ]
+  ],
+  "ignoreFiles": ["src/styles/_theme-colors.scss"]
 }

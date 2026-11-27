@@ -1,11 +1,16 @@
 @use '@angular/material' as mat;
 @use 'breakpoints';
+@use 'theme-colors';
 
 // The single place for the theme: Material 3 palettes and Material component overrides.
-// TODO: replace the provisional palettes with the final brand colors.
-// If the primary color changes, update `theme_color` in public/manifest.webmanifest and src/index.html.
-$primary-palette: mat.$spring-green-palette;
-$tertiary-palette: mat.$azure-palette;
+// Palettes are generated with HCT from the brand seeds (spec §13.2), never tuned by hand:
+//   ng generate @angular/material:theme-color --primary-color="#1E4E8C" --tertiary-color="#3FB6E8"
+//     --secondary-color="" --neutral-color="" --neutral-variant-color="" --error-color=""
+//     --include-high-contrast=false --directory=src/styles/ --is-scss=true --interactive=false
+// If a seed changes, regenerate them and update `theme_color` and `background_color` in
+// public/manifest.webmanifest and `theme-color` in src/index.html.
+$primary-palette: theme-colors.$primary-palette;
+$tertiary-palette: theme-colors.$tertiary-palette;
 
 html {
   // Follows the OS unless the user picked a mode (ThemeService sets data-theme).
@@ -26,6 +31,15 @@ html {
 // Foreground on palette colors (icon badges, swatches): the palette guarantees 3:1 against white.
 :root {
   --cc-on-palette: #fff;
+}
+
+// cc-tabs: no divider under the tabs, only the indicator of the active one (spec §13.3).
+cc-tabs {
+  @include mat.tabs-overrides(
+    (
+      divider-height: 0,
+    )
+  );
 }
 
 // Overlays (OverlayService): dialogs on wide screens, bottom sheets on phones.
