@@ -585,9 +585,9 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
 Detalle (F1e):
 
 - **Orden:**
-  - "Tú": el perfil y las preferencias.
-  - "Espacio": el formulario, los catálogos, las monedas y la configuración inicial.
-  - "Sesión".
+  - Primero el usuario: "Tu perfil" y "Preferencias".
+  - Luego el espacio: "Espacio", la configuración inicial y los catálogos (con monedas).
+  - Al final, "Sesión".
 - **Perfil:** el nombre visible (`profiles.display_name`), que es el que ven los demás miembros. El avatar llega cuando haya almacenamiento de archivos.
 - **Pantalla de inicio:** Cuentas, Categorías, Transacciones, Presupuesto o Resumen. Abrir la app en `/` lleva a ella.
 - **Periodo por defecto:** Día, Semana, Mes, Año o Siempre. Solo se usa en los dispositivos que no recuerdan otro (§4.5).

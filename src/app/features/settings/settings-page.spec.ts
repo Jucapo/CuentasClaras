@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { ActionResult } from '../../core/action-result';
 import { AuthService } from '../../core/auth/auth.service';
+import { ProfileService } from '../../core/profiles/profile.service';
 import {
   SpaceMembership,
   SpacePatch,
@@ -23,6 +24,7 @@ describe('SettingsPage', () => {
   const updateActiveSpace = vi.fn<(patch: SpacePatch) => Promise<ActionResult>>();
   const updateActiveSettings = vi.fn<(patch: SpaceSettingsPatch) => Promise<ActionResult>>();
   const update = vi.fn<(patch: UserSettingsPatch) => Promise<ActionResult>>();
+  const updateDisplayName = vi.fn<(name: string) => Promise<ActionResult>>();
   const signOut = vi.fn<() => Promise<void>>();
   const show = vi.fn();
 
@@ -30,7 +32,7 @@ describe('SettingsPage', () => {
     const home = membershipFixture('space-home', 'Hogar', role);
     active.set({ ...home, settings: { ...home.settings, month_start_day: 28 } });
     settings.set(userSettingsFixture({ theme: 'dark' }));
-    for (const mock of [updateActiveSpace, updateActiveSettings, update]) {
+    for (const mock of [updateActiveSpace, updateActiveSettings, update, updateDisplayName]) {
       mock.mockReset().mockResolvedValue({ ok: true });
     }
     signOut.mockReset().mockResolvedValue();
@@ -57,6 +59,13 @@ describe('SettingsPage', () => {
           },
         },
         { provide: UserSettingsService, useValue: { settings, update } },
+        {
+          provide: ProfileService,
+          useValue: {
+            profile: signal({ user_id: 'ana', display_name: 'ana', avatar_url: null }),
+            updateDisplayName,
+          },
+        },
         { provide: ToastService, useValue: { show } },
       ],
     });
@@ -100,8 +109,49 @@ describe('SettingsPage', () => {
       main_currency: 'COP',
       month_start_day: 28,
       week_start: 'monday',
+      default_period: 'month',
+      budgets_enabled: true,
     });
     expect(show).toHaveBeenCalledWith('Espacio guardado.');
+  });
+
+  it('lets the owner choose the default period and turn the budgets off', async () => {
+    await setup();
+    const budgets = element().querySelector(
+      'form[aria-label="Espacio"] [role="switch"]',
+    ) as HTMLElement;
+    budgets.click();
+    await fixture.whenStable();
+
+    await submit('Espacio');
+
+    expect(updateActiveSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ budgets_enabled: false }),
+    );
+  });
+
+  it('saves the display name of the user, trimmed by the service', async () => {
+    await setup();
+    const name = element().querySelector('form[aria-label="Tu perfil"] input') as HTMLInputElement;
+    expect(name.value).toBe('ana');
+    name.value = 'Ana María';
+    name.dispatchEvent(new Event('input'));
+
+    await submit('Tu perfil');
+
+    expect(updateDisplayName).toHaveBeenCalledWith('Ana María');
+    expect(show).toHaveBeenCalledWith('Perfil guardado.');
+  });
+
+  it('does not save an empty display name', async () => {
+    await setup();
+    const name = element().querySelector('form[aria-label="Tu perfil"] input') as HTMLInputElement;
+    name.value = '   ';
+    name.dispatchEvent(new Event('input'));
+
+    await submit('Tu perfil');
+
+    expect(updateDisplayName).not.toHaveBeenCalled();
   });
 
   it('does not update the space when its name, icon and color did not change', async () => {
@@ -174,6 +224,7 @@ describe('SettingsPage', () => {
 
     expect(update).toHaveBeenCalledWith({
       theme: 'dark',
+      home_screen: 'categories',
       number_format: 'comma_dot',
       show_decimals: true,
     });

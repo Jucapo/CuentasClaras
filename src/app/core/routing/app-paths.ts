@@ -78,5 +78,14 @@ export const TEMPLATE_PATH = 'plantilla';
 /** Screen opened at `/` after signing in. */
 export const DEFAULT_HOME_PATH = APP_PATHS.categories;
 
+/** Path of each screen the app can open on (`user_settings.home_screen`, spec §7). */
+export const HOME_SCREEN_PATHS = {
+  accounts: APP_PATHS.accounts,
+  categories: APP_PATHS.categories,
+  transactions: APP_PATHS.transactions,
+  budget: APP_PATHS.budget,
+  summary: APP_PATHS.summary,
+} as const;
+
 /** Query param that carries the URL to return to after signing in. */
 export const REDIRECT_QUERY_PARAM = 'redirect';

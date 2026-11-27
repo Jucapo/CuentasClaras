@@ -1,6 +1,54 @@
 <cc-page-header title="Configuración" />
 
 <div class="sections">
+  <cc-section title="Tu perfil" description="El nombre que ven los demás miembros del espacio.">
+    <cc-form label="Tu perfil" [form]="profileForm">
+      <cc-text-field
+        label="Nombre visible"
+        autocomplete="name"
+        [formField]="profileForm.displayName"
+      />
+      <cc-form-actions align="end" [error]="profileError()">
+        <cc-button type="submit" loadingLabel="Guardando" [loading]="profileForm().submitting()">
+          Guardar
+        </cc-button>
+      </cc-form-actions>
+    </cc-form>
+  </cc-section>
+
+  <cc-section title="Preferencias" description="Solo para ti, en todos tus espacios.">
+    <cc-form label="Preferencias" [form]="preferencesForm">
+      <cc-select label="Tema" [options]="themeOptions" [formField]="preferencesForm.theme" />
+      <cc-select
+        label="Pantalla de inicio"
+        hint="La que se abre al entrar a la app."
+        [options]="homeScreenOptions"
+        [formField]="preferencesForm.homeScreen"
+      />
+      <cc-number-format-form [fields]="preferencesForm.numberFormat" />
+      @if (!layout.isCompact()) {
+        <!-- Device preference: applies at once, outside the saved preferences (spec §13.5). -->
+        <cc-switch
+          icon="keyboard"
+          [row]="true"
+          label="Atajos de teclado"
+          hint="N crea y E edita las categorías. Se guarda en este dispositivo."
+          [checked]="shortcuts.singleKeyEnabled()"
+          (checkedChange)="shortcuts.setSingleKeyEnabled($event)"
+        />
+      }
+      <cc-form-actions align="end" [error]="preferencesError()">
+        <cc-button
+          type="submit"
+          loadingLabel="Guardando"
+          [loading]="preferencesForm().submitting()"
+        >
+          Guardar
+        </cc-button>
+      </cc-form-actions>
+    </cc-form>
+  </cc-section>
+
   <cc-section title="Espacio" [description]="spaceDescription()">
     <cc-form label="Espacio" [form]="spaceForm">
       <div class="space-appearance">
@@ -15,6 +63,19 @@
         <span class="space-appearance-label">Ícono y color</span>
       </div>
       <cc-space-preferences-form [fields]="spaceForm.space" />
+      <cc-select
+        label="Periodo por defecto"
+        hint="Se usa en los dispositivos que no recuerdan otro."
+        [options]="defaultPeriodOptions"
+        [formField]="spaceForm.defaultPeriod"
+      />
+      <cc-switch
+        icon="savings"
+        [row]="true"
+        label="Mostrar presupuestos"
+        hint="En Presupuesto y en las burbujas de Categorías."
+        [formField]="spaceForm.budgetsEnabled"
+      />
       @if (canConfigure()) {
         <cc-form-actions align="end" [error]="spaceError()">
           <cc-button type="submit" loadingLabel="Guardando" [loading]="spaceForm().submitting()">
@@ -81,33 +142,6 @@
         <cc-icon ccListItemLeading name="currency_exchange" />
       </cc-list-item>
     </div>
-  </cc-section>
-
-  <cc-section title="Preferencias" description="Solo para ti, en todos tus espacios.">
-    <cc-form label="Preferencias" [form]="preferencesForm">
-      <cc-select label="Tema" [options]="themeOptions" [formField]="preferencesForm.theme" />
-      <cc-number-format-form [fields]="preferencesForm.numberFormat" />
-      @if (!layout.isCompact()) {
-        <!-- Device preference: applies at once, outside the saved preferences (spec §13.5). -->
-        <cc-switch
-          icon="keyboard"
-          [row]="true"
-          label="Atajos de teclado"
-          hint="N crea y E edita las categorías. Se guarda en este dispositivo."
-          [checked]="shortcuts.singleKeyEnabled()"
-          (checkedChange)="shortcuts.setSingleKeyEnabled($event)"
-        />
-      }
-      <cc-form-actions align="end" [error]="preferencesError()">
-        <cc-button
-          type="submit"
-          loadingLabel="Guardando"
-          [loading]="preferencesForm().submitting()"
-        >
-          Guardar
-        </cc-button>
-      </cc-form-actions>
-    </cc-form>
   </cc-section>
 
   <cc-section title="Sesión" [description]="sessionDescription()">
