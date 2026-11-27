@@ -215,15 +215,17 @@ test('an account is adjusted to its real balance', async ({ page, isMobile }) =>
   await expect(balance).toHaveValue('330,000');
   await sheet.getByRole('button', { name: 'Listo' }).click();
 
-  await expect(sheet).toBeHidden();
-  expect(api.rpcCalls('save_transaction')).toEqual([
-    expect.objectContaining({
-      entry_type: 'adjustment',
-      entry_account_id: 'acc-cash',
-      entry_adjustment_direction: 'increase',
-      entry_amount: 500_000,
-    }),
-  ]);
+  // The panel only returns the balance; the adjustment is saved after it closes.
+  await expect
+    .poll(() => api.rpcCalls('save_transaction'))
+    .toEqual([
+      expect.objectContaining({
+        entry_type: 'adjustment',
+        entry_account_id: 'acc-cash',
+        entry_adjustment_direction: 'increase',
+        entry_amount: 500_000,
+      }),
+    ]);
   await expect(page.getByRole('region', { name: 'Saldo' })).toContainText('$ 330,000.00');
   await expect(page.getByText('Ajuste de saldo')).toBeVisible();
 });
