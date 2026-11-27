@@ -4,6 +4,7 @@ import { Button } from '../../atoms/button/button';
 import { BudgetKind } from '../../molecules/budget-pill/budget-pill';
 import { BudgetRow } from '../../molecules/budget-row/budget-row';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
+import { AmountCalculatorData } from '../amount-calculator/amount-calculator';
 import { BudgetAmountChange, BudgetList, BudgetListEntry } from '../budget-list/budget-list';
 
 /** What the detail of a category shows (spec §4.7). */
@@ -31,7 +32,31 @@ const BUDGET_DETAIL_TEXT = {
   empty: 'Sin presupuesto',
   transactions: 'Ver transacciones',
   remove: 'Quitar presupuesto',
+  calculatorLabel: { expense: 'Presupuesto para el mes', income: 'Ingreso esperado para el mes' },
 } as const;
+
+/** The calculator of a line of the detail, with the line's figures as context; null if absent. */
+export function budgetCalculatorData(
+  detail: BudgetDetailData,
+  lineId: string,
+): AmountCalculatorData | null {
+  const line = detail.lines.find((candidate) => candidate.id === lineId);
+  if (!line?.progress) {
+    return null;
+  }
+  return {
+    title: `${detail.title} › ${line.name}`,
+    period: detail.period,
+    figures: line.progress,
+    figuresCurrency: line.progress.currency,
+    kind: detail.kind,
+    counted: line.progress.counted ?? detail.counted,
+    color: line.color,
+    label: BUDGET_DETAIL_TEXT.calculatorLabel[detail.kind],
+    value: line.amount?.amount ?? null,
+    currency: line.amount?.currency ?? detail.currency,
+  };
+}
 
 /**
  * The detail of a budget category (spec §4.7): the period with what was spent, left and budgeted,

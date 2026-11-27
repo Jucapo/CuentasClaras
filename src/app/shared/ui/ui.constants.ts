@@ -19,6 +19,7 @@ export const UI_TEXT = {
   cancel: 'Cancelar',
   done: 'Listo',
   save: 'Guardar',
+  saving: 'Guardando',
   moreOptions: 'Más opciones',
   dragToReorder: 'Arrastra para reordenar. Con el teclado: Alt y las flechas.',
   gridEditHelp: 'Toca una categoría para editarla. Mantenla presionada y arrástrala para moverla.',

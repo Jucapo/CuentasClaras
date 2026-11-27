@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { BudgetFigures } from '../../../../domain/budgets/budget-lines';
 import {
   evaluateAmount,
@@ -18,7 +18,6 @@ import { BudgetRow } from '../../molecules/budget-row/budget-row';
 import { Keypad, keypadKeyOf } from '../../molecules/keypad/keypad';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
 import { MONEY_FORMAT } from '../../money/money-format';
-import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
 import { AMOUNT_EXPRESSION_MESSAGES } from '../quick-entry/quick-entry.model';
 
@@ -47,8 +46,9 @@ const OPERATOR_KEYS: readonly KeypadKey[] = ['plus', 'minus', 'times', 'divide']
 /**
  * The calculator of a budget row (spec §4.7): the keypad of the quick entry over the amount, with
  * the context of the row on top. The first digit replaces the amount it opened with, while an
- * operator works on it; ✓ (or Enter) returns the result in minor units. A sheet in the compact
- * window class, a dialog elsewhere, where the physical keyboard types too.
+ * operator works on it; ✓ (or Enter) emits the result in minor units, and the physical keyboard
+ * types too. A view inside the detail's sheet (`backButton`), or its own dialog through
+ * `cc-amount-calculator-sheet`.
  */
 @Component({
   selector: 'cc-amount-calculator',
@@ -58,45 +58,62 @@ const OPERATOR_KEYS: readonly KeypadKey[] = ['plus', 'minus', 'times', 'divide']
   host: { '(keydown)': 'onKeydown($event)' },
 })
 export class AmountCalculator {
-  protected readonly data = inject<AmountCalculatorData>(OVERLAY_DATA);
-  private readonly handle = inject<OverlayHandle<number>>(OverlayHandle);
+  readonly data = input.required<AmountCalculatorData>();
+  /** ← instead of ✕, for a view inside another overlay. */
+  readonly backButton = input(false);
+  /** Saving the result: keys are ignored until it ends. */
+  readonly busy = input(false);
+  /** The result, in minor units of `data.currency`; never negative. */
+  readonly done = output<number>();
+  readonly closed = output<void>();
+  readonly back = output<void>();
+
   private readonly format = inject(MONEY_FORMAT);
 
   protected readonly ui = UI_TEXT;
-  private readonly exponent = currencyMinorUnits(this.data.currency);
-  private readonly expression = signal(
-    this.data.value === null ? '' : expressionFromMinor(this.data.value, this.exponent),
-  );
+  private readonly exponent = computed(() => currencyMinorUnits(this.data().currency));
+  private readonly expression = linkedSignal(() => {
+    const value = this.data().value;
+    return value === null ? '' : expressionFromMinor(value, this.exponent());
+  });
   /** Until a key is pressed, the amount it opened with. */
-  private fresh = true;
+  private readonly fresh = linkedSignal({ source: this.data, computation: () => true });
   protected readonly error = signal<string | null>(null);
 
   protected readonly decimalSeparator = computed(
     () => NUMBER_FORMAT_SEPARATORS[this.format().numberFormat].decimal,
   );
-  protected readonly showDecimal = computed(() => this.format().showDecimals && this.exponent > 0);
+  protected readonly showDecimal = computed(
+    () => this.format().showDecimals && this.exponent() > 0,
+  );
   protected readonly display = computed(() => {
     const expression = this.expression();
     const format = this.format();
     return {
       expression: hasOperator(expression) ? formatExpression(expression, format.numberFormat) : '',
       result: formatMoney(
-        evaluateExpression(expression, this.exponent),
-        this.data.currency,
+        evaluateExpression(expression, this.exponent()),
+        this.data().currency,
         format,
       ),
     };
   });
 
   protected press(key: KeypadKey): void {
+    if (this.busy()) {
+      return;
+    }
     this.error.set(null);
-    const replaces = this.fresh && !OPERATOR_KEYS.includes(key) && key !== 'backspace';
-    this.fresh = false;
-    this.expression.set(pressKey(replaces ? '' : this.expression(), key, this.exponent));
+    const replaces = this.fresh() && !OPERATOR_KEYS.includes(key) && key !== 'backspace';
+    this.fresh.set(false);
+    this.expression.set(pressKey(replaces ? '' : this.expression(), key, this.exponent()));
   }
 
   protected submit(): void {
-    const evaluation = evaluateAmount(this.expression(), this.exponent);
+    if (this.busy()) {
+      return;
+    }
+    const evaluation = evaluateAmount(this.expression(), this.exponent());
     if (!evaluation.ok) {
       this.error.set(AMOUNT_EXPRESSION_MESSAGES[evaluation.error]);
       return;
@@ -105,11 +122,7 @@ export class AmountCalculator {
       this.error.set(NEGATIVE_MESSAGE);
       return;
     }
-    this.handle.close(evaluation.value);
-  }
-
-  protected close(): void {
-    this.handle.close();
+    this.done.emit(evaluation.value);
   }
 
   protected onKeydown(event: KeyboardEvent): void {

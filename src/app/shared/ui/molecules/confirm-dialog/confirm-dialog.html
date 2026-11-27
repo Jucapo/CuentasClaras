@@ -1,16 +1,1 @@
-<cc-overlay-panel [title]="options.title" [hideClose]="true" (closed)="answer(false)">
-  <p class="message">{{ options.message }}</p>
-  @if (options.details?.length) {
-    <ul class="details">
-      @for (detail of options.details; track $index) {
-        <li>{{ detail }}</li>
-      }
-    </ul>
-  }
-  <ng-container ccOverlayActions>
-    <cc-button variant="text" (click)="answer(false)">{{ cancelLabel }}</cc-button>
-    <cc-button [danger]="!!options.destructive" (click)="answer(true)">
-      {{ options.confirmLabel }}
-    </cc-button>
-  </ng-container>
-</cc-overlay-panel>
+<cc-confirm-panel [options]="options" (answered)="handle.close($event)" />

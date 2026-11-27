@@ -2,7 +2,9 @@
   <h2 class="cc-visually-hidden" [id]="titleId">{{ title() }}</h2>
 } @else {
   <header class="header">
-    @if (!hideClose()) {
+    @if (backButton()) {
+      <cc-icon-button icon="arrow_back" [label]="backLabel" (click)="back.emit()" />
+    } @else if (!hideClose()) {
       <cc-icon-button icon="close" [label]="closeLabel" (click)="closed.emit()" />
     }
     <h2 class="title" [id]="titleId">{{ title() }}</h2>

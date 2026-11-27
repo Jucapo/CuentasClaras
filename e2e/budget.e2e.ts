@@ -17,6 +17,7 @@ function detail(page: Page, isMobile: boolean): Locator {
   return isMobile ? page.locator('.mat-bottom-sheet-container') : page.locator('cc-budget-detail');
 }
 
+/** The calculator and the confirmation: views of the same sheet on phones, dialogs beside the pane. */
 function overlay(page: Page, isMobile: boolean): Locator {
   return page.locator(isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container');
 }
@@ -122,6 +123,67 @@ test('the calculator multiplies the amount and saves the result', async ({ page,
     method: 'PATCH',
     body: expect.objectContaining({ amount: 240000000 }),
   });
+  // Back in the detail (the same sheet on phones), with the row updated.
+  await expect(detail(page, isMobile).getByRole('textbox', { name: 'General' })).toHaveValue(
+    '2,400,000',
+  );
+  await expect(page.locator('.mat-bottom-sheet-container, mat-dialog-container')).toHaveCount(
+    isMobile ? 1 : 0,
+  );
+});
+
+test('in a sheet, the calculator and the confirmation are views that go back to the detail', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'Beside the pane they are dialogs.');
+  // Short enough for the detail to scroll.
+  await page.setViewportSize({ width: page.viewportSize()?.width ?? 400, height: 520 });
+  const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_BUDGETS });
+  await page.goto('/presupuesto');
+  await page.getByRole('button', { name: /^Hogar/ }).click();
+  const sheet = page.locator('.mat-bottom-sheet-container');
+  const calculatorButton = sheet.getByRole('button', { name: 'Calculadora de Servicios públicos' });
+  const scroller = sheet.locator('cc-budget-detail .body');
+  await scroller.evaluate((element) => (element.scrollTop = element.scrollHeight));
+  const scrolled = await scroller.evaluate((element) => element.scrollTop);
+  expect(scrolled).toBeGreaterThan(0);
+
+  // The system back button leaves the calculator and keeps the sheet.
+  await calculatorButton.click();
+  await expect(sheet.getByRole('heading', { name: 'Hogar › Servicios públicos' })).toBeFocused();
+  await expect(sheet.getByRole('textbox', { name: 'Arriendo' })).toHaveCount(0);
+  await page.goBack();
+  await expect(sheet.getByRole('textbox', { name: 'Arriendo' })).toBeVisible();
+  await expect(calculatorButton).toBeFocused();
+  expect(await scroller.evaluate((element) => element.scrollTop)).toBe(scrolled);
+  await expect(page).toHaveURL(/\/presupuesto$/);
+
+  // ← too.
+  await calculatorButton.click();
+  await sheet.getByRole('button', { name: 'Volver' }).click();
+  await expect(calculatorButton).toBeFocused();
+
+  // The confirmation: ←, Cancelar and the system back button go back without removing anything.
+  const removeButton = sheet.getByRole('button', { name: 'Quitar presupuesto' });
+  await removeButton.click();
+  await expect(
+    sheet.getByRole('heading', { name: '¿Quitar el presupuesto de Hogar?' }),
+  ).toBeFocused();
+  await sheet.getByRole('button', { name: 'Volver' }).click();
+  await removeButton.click();
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
+  await removeButton.click();
+  await page.goBack();
+  await expect(removeButton).toBeFocused();
+  await expect(sheet.getByRole('textbox', { name: 'General' })).toHaveValue('200,000');
+  expect(budgetWrites(api.writes())).toEqual([]);
+
+  // Back in the detail, the system back button closes the sheet without leaving the page.
+  await page.goBack();
+  await expect(sheet).toHaveCount(0);
+  await expect(page).toHaveURL(/\/presupuesto$/);
+  await expect(page.getByRole('button', { name: /^Hogar/ })).toBeVisible();
 });
 
 test('"Ver transacciones" opens Transacciones filtered by the category', async ({
@@ -153,7 +215,8 @@ test('"Quitar presupuesto" asks and leaves the category without one', async ({
   await expect(
     confirm.getByRole('heading', { name: '¿Quitar el presupuesto de Hogar?' }),
   ).toBeVisible();
-  await confirm.getByRole('button', { name: 'Quitar' }).click();
+  await captureViewport(page, 'presupuesto-quitar');
+  await confirm.getByRole('button', { name: 'Quitar', exact: true }).click();
 
   // General, Arriendo and Servicios públicos, each keeping December as it was.
   await expect
@@ -164,6 +227,8 @@ test('"Quitar presupuesto" asks and leaves the category without one', async ({
         ).length,
     )
     .toBe(3);
+  // Back in the detail, without a budget.
+  await expect(detail(page, isMobile).getByRole('textbox', { name: 'General' })).toHaveValue('');
 });
 
 test('a year adds up its months without editing', async ({ page, isMobile }) => {

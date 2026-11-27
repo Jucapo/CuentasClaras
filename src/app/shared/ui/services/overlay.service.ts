@@ -8,18 +8,32 @@ import { LayoutService } from './layout.service';
 /** Data handed to the component shown in an overlay. */
 export const OVERLAY_DATA = new InjectionToken<unknown>('OVERLAY_DATA');
 
+/** Leaves a view entered with `OverlayHandle.enterView` from the interface (its ←). */
+export type LeaveView = () => void;
+
 /** Lets the component inside an overlay close it with a result. */
 export class OverlayHandle<R> {
   private closeOverlay: ((result?: R) => void) | null = null;
+  private openView: ((onBack: () => void) => LeaveView) | null = null;
 
   /** Closes the overlay; no result means it was dismissed. */
   close(result?: R): void {
     this.closeOverlay?.(result);
   }
 
+  /**
+   * Enters a view inside the overlay, e.g. a calculator within a detail (spec §13.5: still one
+   * overlay). The system back button then calls `onBack` and stays in the overlay; the returned
+   * function leaves the view from the interface.
+   */
+  enterView(onBack: () => void): LeaveView {
+    return this.openView?.(onBack) ?? (() => undefined);
+  }
+
   /** Connects the handle to the opened overlay. */
-  attach(close: (result?: R) => void): void {
+  attach(close: (result?: R) => void, enterView?: (onBack: () => void) => LeaveView): void {
     this.closeOverlay = close;
+    this.openView = enterView ?? null;
   }
 }
 
@@ -42,7 +56,11 @@ const PANEL_CLASS = { dialog: 'cc-overlay-dialog', sheet: 'cc-overlay-sheet' } a
 /** Key of the history entry an open overlay adds, so "back" closes it instead of navigating. */
 const HISTORY_KEY = 'ccOverlay';
 
+/** Key of the history entry a view inside an overlay adds, so "back" leaves only the view. */
+const VIEW_HISTORY_KEY = 'ccOverlayView';
+
 let nextOverlayId = 1;
+let nextViewId = 1;
 
 /**
  * Shows a component as a bottom sheet in the compact window class and as a dialog in the others
@@ -90,7 +108,10 @@ export class OverlayService {
         ...config,
         panelClass: [PANEL_CLASS.sheet, sizeClass],
       });
-      handle.attach((result) => ref.dismiss(result));
+      handle.attach(
+        (result) => ref.dismiss(result),
+        (onBack) => history.enterView(onBack),
+      );
       closed = ref.afterDismissed();
     } else {
       const { MatDialog } = await import('@angular/material/dialog');
@@ -98,10 +119,14 @@ export class OverlayService {
         ...config,
         panelClass: [PANEL_CLASS.dialog, sizeClass],
       });
-      handle.attach((result) => ref.close(result));
+      handle.attach(
+        (result) => ref.close(result),
+        (onBack) => history.enterView(onBack),
+      );
       closed = ref.afterClosed();
     }
 
+    // Views are entered once the overlay is open, after this.
     const history = this.trackHistory(() => handle.close());
     const result = await firstValueFrom(closed);
     await history.release();
@@ -110,15 +135,16 @@ export class OverlayService {
 
   /**
    * Adds a history entry for the overlay: popping it ("back") dismisses the overlay, and closing
-   * the overlay any other way removes the entry. No entry while a navigation is running, e.g. the
-   * confirmation of a guard.
+   * the overlay any other way removes the entry, and those of its views. No entry while a
+   * navigation is running, e.g. the confirmation of a guard.
    */
-  private trackHistory(dismiss: () => void): { release: () => Promise<void> } {
+  private trackHistory(dismiss: () => void): OverlayHistory {
     const window = this.window;
     if (!window || this.router.currentNavigation() !== null) {
-      return { release: async () => undefined };
+      return { enterView: () => () => undefined, release: async () => undefined };
     }
     const id = nextOverlayId++;
+    const views = new Set<() => void>();
     const isOpen = () => (overlayIdIn(window.history.state) ?? 0) >= id;
     window.history.pushState(
       { ...window.history.state, [HISTORY_KEY]: id },
@@ -149,20 +175,42 @@ export class OverlayService {
     window.addEventListener('popstate', onPopState);
 
     return {
-      release: async () => {
-        const ownsCurrentEntry = overlayIdIn(window.history.state) === id;
-        stopListening();
-        if (ownsCurrentEntry) {
-          await new Promise<void>((resolve) => {
-            const done = () => {
-              window.removeEventListener('popstate', done);
-              window.clearTimeout(timer);
-              resolve();
-            };
-            const timer = window.setTimeout(done, OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS);
-            window.addEventListener('popstate', done);
+      enterView: (onBack) => {
+        const viewId = nextViewId++;
+        // Copies the overlay's id, so the overlay stays open on this entry and the one below.
+        window.history.pushState(
+          { ...window.history.state, [VIEW_HISTORY_KEY]: viewId },
+          '',
+          window.location.href,
+        );
+        const onViewPopState = () => {
+          if (viewIdIn(window.history.state) !== viewId) {
+            stopView();
+            onBack();
+          }
+        };
+        const stopView = () => {
+          views.delete(stopView);
+          window.removeEventListener('popstate', onViewPopState);
+        };
+        views.add(stopView);
+        window.addEventListener('popstate', onViewPopState);
+        return () => {
+          if (!views.has(stopView)) {
+            return;
+          }
+          stopView();
+          if (viewIdIn(window.history.state) === viewId) {
             window.history.back();
-          });
+          }
+        };
+      },
+      release: async () => {
+        views.forEach((stopView) => stopView());
+        stopListening();
+        // The overlay's entry, and the one of a view left open on top of it.
+        while (overlayIdIn(window.history.state) === id && (await goBack(window))) {
+          // Each step waits for its popstate.
         }
         // The router handles popstate in a later task; once it has, a navigation of the caller
         // is the newest one and is not cancelled by it.
@@ -172,10 +220,41 @@ export class OverlayService {
   }
 }
 
-function overlayIdIn(state: unknown): number | null {
+/** The history entries of an open overlay. */
+interface OverlayHistory {
+  /** Adds the entry of a view inside the overlay; see `OverlayHandle.enterView`. */
+  readonly enterView: (onBack: () => void) => LeaveView;
+  /** Removes the entries once the overlay closed. */
+  readonly release: () => Promise<void>;
+}
+
+/** Goes one entry back; false if the browser did not move in time. */
+function goBack(window: Window): Promise<boolean> {
+  return new Promise((resolve) => {
+    const done = (moved: boolean) => {
+      window.removeEventListener('popstate', onPopState);
+      window.clearTimeout(timer);
+      resolve(moved);
+    };
+    const onPopState = () => done(true);
+    const timer = window.setTimeout(() => done(false), OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS);
+    window.addEventListener('popstate', onPopState);
+    window.history.back();
+  });
+}
+
+function idIn(state: unknown, key: string): number | null {
   if (typeof state !== 'object' || state === null) {
     return null;
   }
-  const value = (state as Record<string, unknown>)[HISTORY_KEY];
+  const value = (state as Record<string, unknown>)[key];
   return typeof value === 'number' ? value : null;
+}
+
+function overlayIdIn(state: unknown): number | null {
+  return idIn(state, HISTORY_KEY);
+}
+
+function viewIdIn(state: unknown): number | null {
+  return idIn(state, VIEW_HISTORY_KEY);
 }

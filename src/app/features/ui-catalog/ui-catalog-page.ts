@@ -56,10 +56,16 @@ import {
   AmountCalculator,
   AmountCalculatorData,
 } from '../../shared/ui/organisms/amount-calculator/amount-calculator';
+import { AmountCalculatorSheet } from '../../shared/ui/organisms/amount-calculator-sheet/amount-calculator-sheet';
 import {
   BudgetDetail,
   BudgetDetailData,
 } from '../../shared/ui/organisms/budget-detail/budget-detail';
+import {
+  BudgetDetailSheet,
+  BudgetDetailSheetData,
+} from '../../shared/ui/organisms/budget-detail-sheet/budget-detail-sheet';
+import { ConfirmPanel } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
 import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
@@ -222,6 +228,8 @@ interface WindowClassDemo {
     BudgetPill,
     BudgetRow,
     BudgetDetail,
+    AmountCalculator,
+    ConfirmPanel,
     FilterChips,
     StatGroup,
     QuickEntry,
@@ -672,21 +680,43 @@ export class UiCatalogPage {
     this.paneEntryKey.update((key) => key + 1);
   }
 
+  protected readonly calculatorDemo: AmountCalculatorData = {
+    title: 'Mercado › Supermercado',
+    period: '1 dic – 31 dic',
+    figures: { spent: 65000000, budget: 60000000 },
+    figuresCurrency: 'COP',
+    kind: 'expense',
+    counted: true,
+    color: 'green',
+    label: 'Presupuesto para el mes',
+    value: 60000000,
+    currency: 'COP',
+  };
+  protected readonly removeQuestionDemo = {
+    title: '¿Quitar el presupuesto de Mercado?',
+    message: 'Se quitan el General y los de sus subcategorías (solo diciembre).',
+    confirmLabel: 'Quitar',
+    destructive: true,
+  } as const;
+
   protected openCalculator(): void {
-    void this.overlay.open<number, AmountCalculatorData>(AmountCalculator, {
-      label: 'Mercado › Supermercado',
+    void this.overlay.open<number, AmountCalculatorData>(AmountCalculatorSheet, {
+      label: this.calculatorDemo.title,
       size: 'calculator',
+      data: this.calculatorDemo,
+    });
+  }
+
+  /** The detail as a sheet, with the calculator and the confirmation as views inside it. */
+  protected openBudgetDetail(): void {
+    void this.overlay.open<unknown, BudgetDetailSheetData>(BudgetDetailSheet, {
+      label: this.budgetDetailDemo.title,
+      size: 'entry',
       data: {
-        title: 'Mercado › Supermercado',
-        period: '1 dic – 31 dic',
-        figures: { spent: 65000000, budget: 60000000 },
-        figuresCurrency: 'COP',
-        kind: 'expense',
-        counted: true,
-        color: 'green',
-        label: 'Presupuesto para el mes',
-        value: 60000000,
-        currency: 'COP',
+        detail: signal(this.budgetDetailDemo),
+        save: async () => true,
+        removeQuestion: () => this.removeQuestionDemo,
+        remove: async () => true,
       },
     });
   }

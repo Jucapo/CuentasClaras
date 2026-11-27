@@ -869,6 +869,17 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-confirm-panel"
+        description="Confirmación: su propio overlay (ConfirmService) o una vista dentro de otro, con ← y guardando"
+        layout="column"
+      >
+        <ng-template>
+          <cc-confirm-panel [options]="removeQuestionDemo" />
+          <cc-confirm-panel [options]="removeQuestionDemo" [backButton]="true" [busy]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-nav-item" description="Activo (ruta actual) e inactivo">
         <ng-template>
           <cc-nav-item label="Catálogo" icon="palette" [link]="['/', paths.uiCatalog]" />
@@ -1149,14 +1160,27 @@
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-budget-detail · cc-amount-calculator"
-        description="Detalle de una categoría (panel en expandida, sheet en compacta) y la calculadora"
+        name="cc-budget-detail · cc-budget-detail-sheet"
+        description="Detalle de una categoría: panel en expandida; en compacta, un sheet con la calculadora y la confirmación como vistas (←)"
         layout="column"
       >
         <ng-template>
           <cc-budget-detail [detail]="budgetDetailDemo" />
+          <cc-button variant="tonal" icon="savings" (click)="openBudgetDetail()">
+            Abrir como sheet
+          </cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-amount-calculator · cc-amount-calculator-sheet"
+        description="Calculadora como vista dentro de otro overlay (←) y como diálogo propio"
+        layout="column"
+      >
+        <ng-template>
+          <cc-amount-calculator [data]="calculatorDemo" [backButton]="true" />
           <cc-button variant="tonal" icon="calculate" (click)="openCalculator()">
-            Calculadora
+            Calculadora en diálogo
           </cc-button>
         </ng-template>
       </app-catalog-entry>

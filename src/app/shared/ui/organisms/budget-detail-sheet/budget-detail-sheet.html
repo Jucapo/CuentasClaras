@@ -1,10 +1,30 @@
+<!-- The detail stays while a view covers it, so it keeps its rows and its scroll. -->
 @if (data.detail(); as detail) {
   <cc-budget-detail
+    [hidden]="!inDetail()"
     [detail]="detail"
     (changed)="data.save($event)"
-    (calculate)="close({ kind: 'calculate', lineId: $event })"
-    (remove)="close({ kind: 'remove' })"
-    (transactions)="close({ kind: 'transactions' })"
+    (calculate)="calculate($event)"
+    (remove)="askRemove()"
+    (transactions)="close('transactions')"
     (closed)="close()"
+  />
+}
+@if (calculator(); as view) {
+  <cc-amount-calculator
+    class="view"
+    [data]="view.data"
+    [backButton]="true"
+    [busy]="busy()"
+    (done)="calculated(view.lineId, view.data.currency, $event)"
+    (back)="back()"
+  />
+} @else if (removal(); as view) {
+  <cc-confirm-panel
+    class="view"
+    [options]="view.question"
+    [backButton]="true"
+    [busy]="busy()"
+    (answered)="answered($event)"
   />
 }

@@ -22,12 +22,12 @@ import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
+import { ConfirmOptions } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
 import { MONEY_FORMAT } from '../../shared/ui/money/money-format';
+import { AmountCalculatorData } from '../../shared/ui/organisms/amount-calculator/amount-calculator';
+import { AmountCalculatorSheet } from '../../shared/ui/organisms/amount-calculator-sheet/amount-calculator-sheet';
 import {
-  AmountCalculator,
-  AmountCalculatorData,
-} from '../../shared/ui/organisms/amount-calculator/amount-calculator';
-import {
+  budgetCalculatorData,
   BudgetDetail,
   BudgetDetailData,
 } from '../../shared/ui/organisms/budget-detail/budget-detail';
@@ -55,7 +55,7 @@ import {
   scopeLabels,
   scopeNote,
 } from './budget-texts';
-import { BudgetCategoryView, BudgetLineView } from './budget-views';
+import { BudgetCategoryView } from './budget-views';
 import { BudgetEdit, MonthlyAmounts } from './monthly-amounts';
 
 /** What the screen shows for the selected period and the budget switch (spec §4.7). */
@@ -194,75 +194,36 @@ export class BudgetPage {
   }
 
   protected save(change: BudgetAmountChange): void {
-    const edit = this.edit();
-    if (edit) {
-      void this.amounts.save(change, edit);
-    }
+    void this.saveChange(change);
   }
 
-  /** The calculator of a line; its result is saved with the scope of the edit. */
+  /** The calculator of a line in the pane, as a dialog; its result is saved with the scope. */
   protected async calculate(categoryId: string, lineId: string): Promise<void> {
-    const category = this.find(categoryId);
-    const line = category?.lines.find((candidate) => candidate.id === lineId);
-    const edit = this.edit();
-    if (!category || !line || !edit) {
+    const detail = this.detailFor(categoryId);
+    const data = detail && budgetCalculatorData(detail, lineId);
+    if (!data || !this.edit()) {
       return;
     }
-    const currency = line.amount?.currency ?? this.currency();
-    const value = await this.overlay.open<number, AmountCalculatorData>(AmountCalculator, {
-      label: this.lineTitle(category, line),
+    const value = await this.overlay.open<number, AmountCalculatorData>(AmountCalculatorSheet, {
+      label: data.title,
       size: 'calculator',
-      data: {
-        title: this.lineTitle(category, line),
-        period: this.periodText(),
-        figures: line.figures,
-        figuresCurrency: this.currency(),
-        kind: category.kind,
-        counted: category.counted,
-        color: line.color,
-        label: category.kind === 'income' ? BUDGET_TEXT.expectedLabel : BUDGET_TEXT.calculatorLabel,
-        value: line.amount?.amount ?? null,
-        currency,
-      },
+      data,
     });
     if (value !== undefined) {
-      await this.amounts.save(
-        { categoryId: line.id, amount: value, currency, revert: NOTHING_TO_REVERT },
-        edit,
-      );
+      await this.saveChange({
+        categoryId: lineId,
+        amount: value,
+        currency: data.currency,
+        revert: NOTHING_TO_REVERT,
+      });
     }
   }
 
-  /** "Quitar presupuesto": 0 in its General and each subcategory with an amount, after asking. */
+  /** "Quitar presupuesto" in the pane, after asking. */
   protected async remove(categoryId: string): Promise<void> {
-    const category = this.find(categoryId);
-    const edit = this.edit();
-    const labels = this.scopeTexts();
-    if (!category || !edit || !labels) {
-      return;
-    }
-    const confirmed = await this.confirm.confirm({
-      ...removeConfirm(category.name, labels[edit.scope]),
-      destructive: true,
-    });
-    if (!confirmed) {
-      return;
-    }
-    for (const line of category.lines) {
-      if (line.amount && line.amount.amount > 0) {
-        const saved = await this.amounts.save(
-          {
-            categoryId: line.id,
-            amount: 0,
-            currency: line.amount.currency,
-            revert: NOTHING_TO_REVERT,
-          },
-          edit,
-        );
-        if (!saved.ok) {
-          return;
-        }
-      }
+    const question = this.removeQuestion(categoryId);
+    if (question && (await this.confirm.confirm(question))) {
+      await this.removeBudget(categoryId);
     }
   }
 
@@ -292,8 +253,8 @@ export class BudgetPage {
   }
 
   /**
-   * The detail in a sheet. A sheet never opens another (spec §13.5): it closes with what to do,
-   * and after the calculator or removing the budget it opens again on the same category.
+   * The detail in a sheet (a dialog in the medium class). The calculator and the confirmation to
+   * remove are views inside it (spec §13.5); only "Ver transacciones" closes it.
    */
   private async openSheet(categoryId: string): Promise<void> {
     this.sheetId.set(categoryId);
@@ -302,23 +263,60 @@ export class BudgetPage {
       {
         label: this.find(categoryId)?.name ?? BUDGET_TEXT.title,
         size: 'entry',
-        data: { detail: this.sheetDetail, save: (change) => this.save(change) },
+        data: {
+          detail: this.sheetDetail,
+          save: (change) => this.saveChange(change),
+          removeQuestion: () => this.removeQuestion(categoryId),
+          remove: () => this.removeBudget(categoryId),
+        },
       },
     );
     this.sheetId.set(null);
-    if (!intent) {
-      return;
+    if (intent === 'transactions') {
+      this.viewTransactions(categoryId);
     }
-    switch (intent.kind) {
-      case 'calculate':
-        await this.calculate(categoryId, intent.lineId);
-        return this.openSheet(categoryId);
-      case 'remove':
-        await this.remove(categoryId);
-        return this.openSheet(categoryId);
-      case 'transactions':
-        this.viewTransactions(categoryId);
+  }
+
+  /** Saves with the scope of the edit; false when it failed (already told) or is read-only. */
+  private async saveChange(change: BudgetAmountChange): Promise<boolean> {
+    const edit = this.edit();
+    return edit ? (await this.amounts.save(change, edit)).ok : false;
+  }
+
+  private removeQuestion(categoryId: string): ConfirmOptions | null {
+    const category = this.find(categoryId);
+    const edit = this.edit();
+    const labels = this.scopeTexts();
+    if (!category || !edit || !labels) {
+      return null;
     }
+    return { ...removeConfirm(category.name, labels[edit.scope]), destructive: true };
+  }
+
+  /** "Quitar presupuesto": 0 in its General and each subcategory with an amount, with the scope. */
+  private async removeBudget(categoryId: string): Promise<boolean> {
+    const category = this.find(categoryId);
+    const edit = this.edit();
+    if (!category || !edit) {
+      return false;
+    }
+    for (const line of category.lines) {
+      if (line.amount && line.amount.amount > 0) {
+        const saved = await this.amounts.save(
+          {
+            categoryId: line.id,
+            amount: 0,
+            currency: line.amount.currency,
+            revert: NOTHING_TO_REVERT,
+          },
+          edit,
+        );
+        if (!saved.ok) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   private edit(): BudgetEdit | null {
@@ -338,10 +336,6 @@ export class BudgetPage {
 
   private periodText(): string {
     return this.periods.rangeText() || this.periods.title();
-  }
-
-  private lineTitle(category: BudgetCategoryView, line: BudgetLineView): string {
-    return `${category.name} › ${line.name}`;
   }
 
   private detailFor(categoryId: string): BudgetDetailData | null {

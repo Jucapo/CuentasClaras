@@ -23,10 +23,6 @@ export const BUDGET_TEXT = {
   offOthers: 'El propietario del espacio los apagó.',
   enable: 'Mostrar presupuestos',
   pickOne: 'Elige una categoría para ver y cambiar su presupuesto.',
-  transactions: 'Ver transacciones',
-  remove: 'Quitar presupuesto',
-  calculatorLabel: 'Presupuesto para el mes',
-  expectedLabel: 'Ingreso esperado para el mes',
 } as const;
 
 /** A month mid-sentence, e.g. "diciembre", with its year when it is not the one of `today`. */
