@@ -44,29 +44,30 @@ test('back closes the open sheet and stays on the page', async ({ page, isMobile
 test('leaving a flow with unsaved changes asks first', async ({ page, isMobile }) => {
   await page.goto('/cuentas');
   await page.getByRole('link', { name: /Efectivo/ }).click();
+  await page.getByRole('link', { name: 'Editar cuenta' }).click();
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
+
+  // Without changes it leaves right away, back to the account's detail.
+  await page.getByRole('button', { name: 'Volver', exact: true }).click();
   await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
 
-  // Without changes it leaves right away.
-  await page.getByRole('button', { name: 'Volver' }).click();
-  await expect(page).toHaveURL(/\/cuentas$/);
-
-  await page.getByRole('link', { name: /Efectivo/ }).click();
+  await page.getByRole('link', { name: 'Editar cuenta' }).click();
   await page.getByLabel('Nombre', { exact: true }).fill('Billetera');
-  await page.getByRole('button', { name: 'Volver' }).click();
+  await page.getByRole('button', { name: 'Volver', exact: true }).click();
   const confirm = overlay(page, isMobile);
   await expect(confirm.getByRole('heading', { name: '¿Descartar los cambios?' })).toBeVisible();
   await confirm.getByRole('button', { name: 'Cancelar' }).click();
-  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
   await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Billetera');
 
   // The system back button asks too, and cancelling keeps the screen and the history.
   await goBack(page);
   await expect(confirm.getByRole('heading', { name: '¿Descartar los cambios?' })).toBeVisible();
   await confirm.getByRole('button', { name: 'Cancelar' }).click();
-  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
 
-  await page.getByRole('button', { name: 'Volver' }).click();
+  await page.getByRole('button', { name: 'Volver', exact: true }).click();
   await confirm.getByRole('button', { name: 'Descartar' }).click();
-  await expect(page).toHaveURL(/\/cuentas$/);
-  await expect(page.getByRole('link', { name: /Efectivo/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+  await expect(page.getByRole('heading', { name: 'Efectivo', level: 1 })).toBeVisible();
 });

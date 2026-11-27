@@ -120,7 +120,7 @@ describe('toTransactionEntry', () => {
       amount: 1_550_000,
       accountId: 'cash',
       categoryId: 'food',
-      toAccountId: '',
+      toAccountId: null,
       toAmount: null,
       adjustmentDirection: null,
       note: 'Almuerzo',

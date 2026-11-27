@@ -59,6 +59,7 @@ test('medium screens use a rail, one pane at a time and dialogs', async ({ page,
   await expect(page.getByRole('heading', { name: 'Cuentas', level: 1 })).toBeHidden();
   await capture(page, 'layout-mediano-cuenta');
 
+  await page.getByRole('link', { name: 'Editar cuenta' }).click();
   await page.getByRole('button', { name: /^Tipo/ }).click();
   await expect(page.locator('mat-dialog-container')).toBeVisible();
 });

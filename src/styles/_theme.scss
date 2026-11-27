@@ -72,7 +72,7 @@ html[data-theme='dark'],
 }
 
 // Chips in one row that scrolls sideways (cc-chip-choice), so a long list never pushes the keypad.
-.cc-chip-row .mdc-evolution-chip-set__chips {
+.cc-chip-row > [role='presentation'] {
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;

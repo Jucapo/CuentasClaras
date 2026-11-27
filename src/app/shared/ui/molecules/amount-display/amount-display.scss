@@ -1,6 +1,7 @@
 :host {
   display: block;
   min-width: 0;
+  container-type: inline-size;
 }
 
 .display {
@@ -58,6 +59,13 @@ button.display {
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// Side by side (a transfer between currencies) each display is narrow: smaller digits fit.
+@container (max-width: 15rem) {
+  .result {
+    font: var(--mat-sys-title-large);
+  }
 }
 
 .error {

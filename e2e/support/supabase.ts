@@ -112,6 +112,8 @@ export async function mockDataApi(
     category_default_tags: structuredClone(catalog?.defaultTags ?? []) as Row[],
     budgets: structuredClone(catalog?.budgets ?? []) as Row[],
   };
+  const transactions = structuredClone(catalog?.transactions ?? []) as Row[];
+  const exchangeRates = structuredClone(catalog?.exchangeRates ?? []) as Row[];
   const spaceSettings: Row = {
     space_id: E2E_SPACE.id,
     main_currency: 'COP',
@@ -168,6 +170,22 @@ export async function mockDataApi(
         }
       });
     }
+    if (name === 'save_transaction') {
+      return route.fulfill({ json: saveTransaction(transactions, tables['accounts'], body) });
+    }
+    if (name === 'save_exchange_rate') {
+      saveExchangeRate(exchangeRates, body);
+    }
+    if (name === 'category_totals') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      return route.fulfill({
+        json: categoryTotals(ledger, tables['categories'], tables['budgets'], body, spaceSettings),
+      });
+    }
+    if (name === 'accounts_total') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      return route.fulfill({ json: accountsTotal(ledger, body, spaceSettings) });
+    }
     return route.fulfill({ status: 204 });
   });
   // Registered after the catch-all above: the last matching route wins.
@@ -186,10 +204,22 @@ export async function mockDataApi(
     route.fulfill({
       json: tables['accounts'].map((account) => ({
         account_id: account['id'],
-        balance: account['initial_balance'],
+        balance: balanceOf(account, transactions),
       })),
     }),
   );
+  for (const url of [
+    `${SUPABASE_URL}/rest/v1/transactions`,
+    `${SUPABASE_URL}/rest/v1/transactions?*`,
+  ]) {
+    await page.route(url, (route) => answerTransactions(route, transactions, writes));
+  }
+  for (const url of [
+    `${SUPABASE_URL}/rest/v1/exchange_rates`,
+    `${SUPABASE_URL}/rest/v1/exchange_rates?*`,
+  ]) {
+    await page.route(url, (route) => answerTable(route, 'exchange_rates', exchangeRates, writes));
+  }
   for (const table of Object.keys(tables)) {
     // An insert that selects nothing back has no query string at all.
     for (const url of [`${SUPABASE_URL}/rest/v1/${table}`, `${SUPABASE_URL}/rest/v1/${table}?*`]) {
@@ -315,6 +345,306 @@ function withDefaults(table: string, rows: readonly Row[], item: Row): Row {
     ).length;
   }
   return row;
+}
+
+/** Accounts, movements and rates, as the totals RPCs read them. */
+interface Ledger {
+  readonly accounts: readonly Row[];
+  readonly transactions: readonly Row[];
+  readonly rates: readonly Row[];
+}
+
+/** How a movement changes an account, as the account_balances view counts it. */
+function deltaFor(movement: Row, accountId: unknown): number {
+  const amount = Number(movement['amount']);
+  if (movement['type'] === 'transfer' && movement['to_account_id'] === accountId) {
+    return Number(movement['to_amount'] ?? amount);
+  }
+  if (movement['account_id'] !== accountId) {
+    return 0;
+  }
+  return movement['type'] === 'income' || movement['adjustment_direction'] === 'increase'
+    ? amount
+    : -amount;
+}
+
+/** Plays the part of account_balances: confirmed movements from the initial balance date. */
+function balanceOf(account: Row, transactions: readonly Row[]): number {
+  return transactions
+    .filter(
+      (movement) =>
+        movement['status'] === 'confirmed' &&
+        String(movement['date']) >= String(account['initial_balance_date']),
+    )
+    .reduce(
+      (total, movement) => total + deltaFor(movement, account['id']),
+      Number(account['initial_balance']),
+    );
+}
+
+/** The latest rate on or before a date, else the oldest one, in either direction (spec §4.6). */
+function rateBetween(rates: readonly Row[], from: string, to: string, date: string): number | null {
+  if (from === to) {
+    return 1;
+  }
+  const pair = rates.filter(
+    (rate) =>
+      (rate['base'] === from && rate['quote'] === to) ||
+      (rate['base'] === to && rate['quote'] === from),
+  );
+  const before = pair
+    .filter((rate) => String(rate['date']) <= date)
+    .sort((a, b) => String(b['date']).localeCompare(String(a['date'])));
+  const chosen =
+    before[0] ?? [...pair].sort((a, b) => String(a['date']).localeCompare(String(b['date'])))[0];
+  if (!chosen) {
+    return null;
+  }
+  return chosen['base'] === from ? Number(chosen['rate']) : 1 / Number(chosen['rate']);
+}
+
+function convert(
+  ledger: Ledger,
+  amount: number,
+  from: string,
+  to: string,
+  date: string,
+): number | null {
+  const rate = rateBetween(ledger.rates, from, to, date);
+  // Every currency of the fixtures has two decimals.
+  return rate === null ? null : Math.round(amount * rate);
+}
+
+/** Plays the part of save_transaction: updates the movement with that id or creates it. */
+function saveTransaction(
+  transactions: Row[],
+  accounts: readonly Row[],
+  body: Record<string, unknown>,
+) {
+  const account = accounts.find((candidate) => candidate['id'] === body['entry_account_id']);
+  const id = String(body['target_id']);
+  const existing = transactions.find((movement) => movement['id'] === id);
+  const now = new Date().toISOString();
+  const type = body['entry_type'];
+  const categorized = type === 'expense' || type === 'income';
+  const row: Row = {
+    id,
+    space_id: body['target_space_id'],
+    type,
+    date: body['entry_date'],
+    amount: body['entry_amount'],
+    currency: account?.['currency'] ?? 'COP',
+    account_id: body['entry_account_id'],
+    to_account_id: body['entry_to_account_id'] ?? null,
+    to_amount: body['entry_to_amount'] ?? null,
+    category_id: body['entry_category_id'] ?? null,
+    adjustment_direction: body['entry_adjustment_direction'] ?? null,
+    note: String(body['entry_note'] ?? '').trim() || null,
+    include_in_space:
+      categorized && account?.['visibility'] === 'private'
+        ? (body['entry_include_in_space'] ?? existing?.['include_in_space'] ?? false)
+        : false,
+    operation_id: null,
+    financing_plan_id: null,
+    source: 'manual',
+    status: 'confirmed',
+    external_id: null,
+    created_by: E2E_USER.id,
+    created_at: existing?.['created_at'] ?? now,
+    updated_at: now,
+    tag_ids: body['entry_tag_ids'] ?? [],
+    installments: body['entry_installments'] ?? 1,
+    rate: body['entry_monthly_rate'] ?? 0,
+  };
+  if (existing) {
+    Object.assign(existing, row);
+  } else {
+    transactions.push(row);
+  }
+  return id;
+}
+
+/** Plays the part of save_exchange_rate: one rate per pair and day, in either direction. */
+function saveExchangeRate(rates: Row[], body: Record<string, unknown>): void {
+  const pair = [body['base_currency'], body['quote_currency']].sort().join('/');
+  const kept = rates.filter(
+    (rate) =>
+      !(
+        rate['date'] === body['rate_date'] &&
+        [rate['base'], rate['quote']].sort().join('/') === pair
+      ),
+  );
+  kept.push({
+    id: `rate-${nextId++}`,
+    space_id: body['target_space_id'],
+    date: body['rate_date'],
+    base: body['base_currency'],
+    quote: body['quote_currency'],
+    rate: body['rate_value'],
+    source: 'manual',
+  });
+  rates.splice(0, rates.length, ...kept);
+}
+
+/** Plays the part of category_totals: what the space shares, rolled up, with budgets. */
+function categoryTotals(
+  ledger: Ledger,
+  categories: readonly Row[],
+  budgets: readonly Row[],
+  body: Record<string, unknown>,
+  settings: Row,
+) {
+  const main = String(settings['main_currency']);
+  const from = body['from_date'] as string | null;
+  const to = body['to_date'] as string | null;
+  const months = (body['budget_months'] as string[] | undefined) ?? [];
+  const own = new Map<unknown, number>();
+  const missing = new Map<unknown, Set<string>>();
+  for (const movement of ledger.transactions) {
+    const date = String(movement['date']);
+    const account = ledger.accounts.find((candidate) => candidate['id'] === movement['account_id']);
+    const shared = movement['include_in_space'] === true || account?.['visibility'] === 'shared';
+    if (
+      movement['status'] !== 'confirmed' ||
+      (movement['type'] !== 'expense' && movement['type'] !== 'income') ||
+      (from !== null && date < from) ||
+      (to !== null && date > to) ||
+      !shared
+    ) {
+      continue;
+    }
+    const category = movement['category_id'];
+    const converted = convert(
+      ledger,
+      Number(movement['amount']),
+      String(movement['currency']),
+      main,
+      date,
+    );
+    if (converted === null) {
+      missing.set(category, (missing.get(category) ?? new Set()).add(String(movement['currency'])));
+    } else {
+      own.set(category, (own.get(category) ?? 0) + converted);
+    }
+  }
+  return categories.map((category) => {
+    const isTop = category['parent_id'] === null;
+    const children = categories.filter((child) => child['parent_id'] === category['id']);
+    const amount =
+      (own.get(category['id']) ?? 0) +
+      (isTop ? children.reduce((sum, child) => sum + (own.get(child['id']) ?? 0), 0) : 0);
+    const inForce = months
+      .map(
+        (month) =>
+          budgets
+            .filter(
+              (budget) =>
+                budget['category_id'] === category['id'] &&
+                String(budget['effective_from']) <= month,
+            )
+            .sort((a, b) =>
+              String(b['effective_from']).localeCompare(String(a['effective_from'])),
+            )[0],
+      )
+      .filter((budget): budget is Row => !!budget && Number(budget['amount']) > 0);
+    const budget =
+      isTop && inForce.length > 0
+        ? inForce.reduce(
+            (sum, row) =>
+              sum +
+              (convert(
+                ledger,
+                Number(row['amount']),
+                String(row['currency']),
+                main,
+                to ?? '9999-12-31',
+              ) ?? 0),
+            0,
+          )
+        : null;
+    return {
+      category_id: category['id'],
+      parent_id: category['parent_id'],
+      kind: category['kind'],
+      amount,
+      budget,
+      remaining: budget === null ? null : budget - amount,
+      missing_rate_currencies: [...(missing.get(category['id']) ?? [])],
+    };
+  });
+}
+
+/** Plays the part of accounts_total: active accounts included in the total, converted. */
+function accountsTotal(ledger: Ledger, body: Record<string, unknown>, settings: Row) {
+  const main = String(settings['main_currency']);
+  const onDate = String(body['on_date']);
+  let total = 0;
+  const missing = new Set<string>();
+  for (const account of ledger.accounts) {
+    if (!account['include_in_total'] || account['archived_at']) {
+      continue;
+    }
+    const converted = convert(
+      ledger,
+      balanceOf(account, ledger.transactions),
+      String(account['currency']),
+      main,
+      onDate,
+    );
+    if (converted === null) {
+      missing.add(String(account['currency']));
+    } else {
+      total += converted;
+    }
+  }
+  return { total, currency: main, missing_rate_currencies: [...missing].sort() };
+}
+
+/** Movements: filtered by account, with their tags, author and deferral embedded. */
+function answerTransactions(route: Route, transactions: Row[], writes: RecordedWrite[]) {
+  const request = route.request();
+  const url = new URL(request.url());
+  const method = request.method();
+  if (method === 'DELETE') {
+    const id = url.searchParams.get('id')?.replace(/^eq\./, '');
+    writes.push({ method: 'DELETE', table: 'transactions', body: null, query: url.search });
+    const deleted = transactions.filter((movement) => movement['id'] === id);
+    transactions.splice(
+      0,
+      transactions.length,
+      ...transactions.filter((movement) => movement['id'] !== id),
+    );
+    return route.fulfill({ json: deleted.map(({ id: deletedId }) => ({ id: deletedId })) });
+  }
+  // or=(account_id.eq.X,to_account_id.eq.X)
+  const accountId = /account_id\.eq\.([^,)]+)/.exec(url.searchParams.get('or') ?? '')?.[1];
+  const rows = transactions
+    .filter(
+      (movement) =>
+        !accountId ||
+        movement['account_id'] === accountId ||
+        movement['to_account_id'] === accountId,
+    )
+    .sort(
+      (a, b) =>
+        String(b['date']).localeCompare(String(a['date'])) ||
+        String(b['created_at']).localeCompare(String(a['created_at'])),
+    );
+  if (method === 'HEAD') {
+    return route.fulfill({
+      status: 200,
+      headers: { 'content-range': `*/${rows.length}` },
+      body: '',
+    });
+  }
+  return route.fulfill({
+    json: rows.map(({ tag_ids, installments, rate, ...movement }) => ({
+      ...movement,
+      transaction_tags: (tag_ids as string[]).map((tagId) => ({ tag_id: tagId })),
+      author: { display_name: 'E2E' },
+      deferral: Number(installments) > 1 ? [{ installments, rate }] : [],
+    })),
+  });
 }
 
 function membershipRow(defaultAccountId: string | null, settings: Row) {
