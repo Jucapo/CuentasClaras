@@ -1,13 +1,13 @@
 import { Component, computed, effect, inject, input, linkedSignal, untracked } from '@angular/core';
 import { apply, disabled, form, submit } from '@angular/forms/signals';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ActionResult } from '../../../core/action-result';
 import { isInUse } from '../../../core/catalogs/catalog-result';
 import { CategoriesService } from '../../../core/categories/categories.service';
 import { Category } from '../../../core/categories/category.models';
 import { TagsService } from '../../../core/categories/tags.service';
 import { CATEGORY_KIND_PARAM, categoryKindFromParam } from '../../../core/config/catalog.constants';
-import { APP_PATHS, CATEGORY_PATHS, CATEGORY_QUERY_PARAMS } from '../../../core/routing/app-paths';
+import { CATEGORY_QUERY_PARAMS } from '../../../core/routing/app-paths';
 import { HasUnsavedChanges } from '../../../core/routing/unsaved-changes.guard';
 import { SpaceService } from '../../../core/spaces/space.service';
 import { effectiveColor } from '../../../domain/categories/category-tree';
@@ -42,7 +42,8 @@ const ADD_SUBCATEGORY_STATE = 'ccAddSubcategory';
 
 /**
  * A category as a flow (spec §7, §13.5): name, icon and color, default tags and subcategories,
- * which open in a sheet. Creating at `/categorias/editar/nueva?clase=…`, editing at `…/:id`.
+ * which open in a sheet. Creating at `…/nueva?clase=…`, editing at `…/:id`, under the edit mode or
+ * a wizard step; leaving goes back to that parent route.
  */
 @Component({
   selector: 'app-category-page',
@@ -60,6 +61,7 @@ export class CategoryPage implements HasUnsavedChanges {
   private readonly tags = inject(TagsService);
   private readonly spaces = inject(SpaceService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly overlay = inject(OverlayService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
@@ -175,7 +177,7 @@ export class CategoryPage implements HasUnsavedChanges {
   }
 
   protected async close(): Promise<void> {
-    await this.router.navigate(this.gridPath(), { queryParams: this.kindParams() });
+    await this.router.navigate(['..'], { relativeTo: this.route, queryParams: this.kindParams() });
   }
 
   /** New categories are saved first: their subcategories need them in the database. */
@@ -193,7 +195,8 @@ export class CategoryPage implements HasUnsavedChanges {
       return;
     }
     void this.toast.show('Categoría guardada.');
-    await this.router.navigate([...this.gridPath(), id], {
+    await this.router.navigate(['..', id], {
+      relativeTo: this.route,
       queryParams: this.kindParams(),
       replaceUrl: true,
       state: { [ADD_SUBCATEGORY_STATE]: true },
@@ -403,10 +406,6 @@ export class CategoryPage implements HasUnsavedChanges {
       color: effectiveColor(child, this.existing()),
       subtitle: tags.length > 0 ? tags.join(' · ') : undefined,
     };
-  }
-
-  private gridPath(): string[] {
-    return ['/', APP_PATHS.categories, CATEGORY_PATHS.edit];
   }
 
   private kindParams(): Record<string, string> {

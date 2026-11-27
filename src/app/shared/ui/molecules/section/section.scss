@@ -29,3 +29,14 @@
   color: var(--mat-sys-on-surface-variant);
   overflow-wrap: anywhere;
 }
+
+:host(.highlight) {
+  .section {
+    background-color: var(--mat-sys-secondary-container);
+  }
+
+  .title,
+  .description {
+    color: var(--mat-sys-on-secondary-container);
+  }
+}

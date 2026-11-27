@@ -48,9 +48,12 @@ describe('SettingsPage', () => {
           useValue: {
             active,
             activeSpace: computed(() => active()?.space ?? null),
+            activeSettings: computed(() => active()?.settings ?? null),
             canConfigure: computed(() => active()?.role === 'owner'),
             updateActiveSpace,
             updateActiveSettings,
+            // The real method: it only decides what to send to the two mocks above.
+            saveActivePreferences: SpaceService.prototype.saveActivePreferences,
           },
         },
         { provide: UserSettingsService, useValue: { settings, update } },
@@ -129,6 +132,40 @@ describe('SettingsPage', () => {
     expect(element().textContent).toContain(
       'Solo el propietario puede cambiar la configuración del espacio.',
     );
+  });
+
+  it('invites the owner to complete the setup wizard while it is pending', async () => {
+    await setup();
+
+    const row = element().querySelector('a[href="/bienvenida"]');
+    expect(row?.textContent).toContain('Completar configuración inicial');
+    expect(row?.textContent).toContain('Faltan 6 pasos');
+  });
+
+  it('lets the owner review the setup wizard once complete', async () => {
+    await setup();
+    active.update(
+      (membership) =>
+        membership && {
+          ...membership,
+          settings: {
+            ...membership.settings,
+            onboarding_step: 7,
+            onboarding_completed_at: '2026-11-26T10:00:00Z',
+          },
+        },
+    );
+    await fixture.whenStable();
+
+    expect(element().querySelector('a[href="/bienvenida"]')?.textContent).toContain(
+      'Revisar configuración inicial',
+    );
+  });
+
+  it('leaves the setup wizard to the owner', async () => {
+    await setup('editor');
+
+    expect(element().querySelector('a[href="/bienvenida"]')).toBeNull();
   });
 
   it('saves the theme and the number format of the user', async () => {

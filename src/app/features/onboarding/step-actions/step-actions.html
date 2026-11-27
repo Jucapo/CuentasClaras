@@ -1,0 +1,17 @@
+@if (shownError(); as message) {
+  <cc-message>{{ message }}</cc-message>
+}
+<div class="buttons">
+  @if (backLink(); as link) {
+    <cc-button variant="text" icon="arrow_back" [link]="link">Atrás</cc-button>
+  }
+  <cc-button
+    class="main"
+    [type]="type()"
+    [loading]="loading()"
+    [loadingLabel]="busyLabel()"
+    (click)="act()"
+  >
+    {{ label() }}
+  </cc-button>
+</div>

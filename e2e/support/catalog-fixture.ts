@@ -8,6 +8,7 @@ export interface CatalogFixture {
   readonly tags: readonly Record<string, unknown>[];
   readonly defaultTags: readonly Record<string, unknown>[];
   readonly defaultAccountId: string | null;
+  readonly budgets?: readonly Record<string, unknown>[];
 }
 
 function account(

@@ -1,15 +1,15 @@
-<cc-page-header
-  title="Tu espacio"
-  subtitle="El espacio agrupa tus cuentas, categorías y presupuesto. Puedes cambiar todo después en Configuración."
-/>
-
 <cc-form [form]="stepForm">
-  <cc-space-preferences-form [fields]="stepForm.space" />
-  <cc-number-format-form [fields]="stepForm.numberFormat" />
+  <cc-wizard-step [title]="step.title" [help]="step.help">
+    <cc-space-preferences-form [fields]="stepForm.space" />
+    <cc-number-format-form [fields]="stepForm.numberFormat" />
 
-  <cc-form-actions [error]="errorMessage()">
-    <cc-button type="submit" loadingLabel="Creando el espacio" [loading]="stepForm().submitting()">
-      Continuar
-    </cc-button>
-  </cc-form-actions>
+    <app-step-actions
+      ccWizardStepActions
+      action="submit"
+      [step]="step.id"
+      [busy]="stepForm().submitting()"
+      [busyLabel]="busyLabel()"
+      [error]="errorMessage()"
+    />
+  </cc-wizard-step>
 </cc-form>

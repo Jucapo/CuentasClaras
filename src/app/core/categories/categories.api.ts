@@ -6,9 +6,10 @@ import {
   LOAD_ERROR_MESSAGE,
   NOT_ALLOWED_MESSAGE,
 } from '../supabase/data-error-messages';
-import { TablesInsert } from '../supabase/database.types';
+import { TemplateCategory } from '../../domain/categories/category-template';
+import { Json, TablesInsert } from '../supabase/database.types';
 import { SupabaseService } from '../supabase/supabase.service';
-import { Category, CategoryPatch, NewCategory } from './category.models';
+import { Category, CategoryKind, CategoryPatch, NewCategory } from './category.models';
 
 /** Shown when a category (or one of its subcategories) has movements (from F1d). */
 export const CATEGORY_IN_USE_MESSAGE =
@@ -88,6 +89,54 @@ export class CategoriesApi {
       category_ids: [...ids],
     });
     return error ? actionFailed(dataErrorMessage(error, status)) : ACTION_OK;
+  }
+
+  /** Creates categories with their subcategories in one transaction (RPC `create_category_tree`). */
+  async createTree(
+    spaceId: string,
+    kind: CategoryKind,
+    tree: readonly TemplateCategory[],
+  ): Promise<ActionResult> {
+    const { error, status } = await this.client.rpc('create_category_tree', {
+      target_space_id: spaceId,
+      category_kind: kind,
+      tree: tree as unknown as Json,
+    });
+    return error ? actionFailed(dataErrorMessage(error, status)) : ACTION_OK;
+  }
+
+  /** Adds and removes links so the tag applies by default to exactly `categoryIds`. */
+  async setTagCategories(
+    spaceId: string,
+    tagId: string,
+    current: readonly string[],
+    categoryIds: readonly string[],
+  ): Promise<ActionResult> {
+    const removed = current.filter((id) => !categoryIds.includes(id));
+    const added = categoryIds.filter((id) => !current.includes(id));
+    if (removed.length > 0) {
+      const { error, status } = await this.client
+        .from('category_default_tags')
+        .delete()
+        .eq('tag_id', tagId)
+        .in('category_id', removed);
+      if (error) {
+        return actionFailed(dataErrorMessage(error, status));
+      }
+    }
+    if (added.length > 0) {
+      const { error, status } = await this.client.from('category_default_tags').insert(
+        added.map((categoryId) => ({
+          space_id: spaceId,
+          category_id: categoryId,
+          tag_id: tagId,
+        })),
+      );
+      if (error) {
+        return actionFailed(dataErrorMessage(error, status));
+      }
+    }
+    return ACTION_OK;
   }
 
   /** Adds and removes default tags so the category ends with exactly `tagIds`. */

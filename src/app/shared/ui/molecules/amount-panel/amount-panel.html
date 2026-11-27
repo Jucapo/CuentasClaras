@@ -1,12 +1,17 @@
 <cc-overlay-panel [title]="data.title" (closed)="close()">
   <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
   <cc-form [form]="form">
-    <cc-money-field
-      [label]="data.label"
-      [currency]="data.currency"
-      [allowNegative]="data.allowNegative ?? false"
-      [hint]="data.hint"
-      [formField]="form.amount"
-    />
+    <div class="fields">
+      @if (data.currencyEditable) {
+        <cc-currency-select label="Moneda" [formField]="form.currency" />
+      }
+      <cc-money-field
+        [label]="data.label"
+        [currency]="form.currency().value()"
+        [allowNegative]="data.allowNegative ?? false"
+        [hint]="data.hint"
+        [formField]="form.amount"
+      />
+    </div>
   </cc-form>
 </cc-overlay-panel>

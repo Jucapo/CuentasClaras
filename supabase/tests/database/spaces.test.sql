@@ -2,7 +2,7 @@
 -- members, configured only by the owner.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(40);
 
 -- Ana owns "Hogar" with Beto (editor) and Dani (viewer). Caro owns her own space.
 insert into auth.users (id, email) values
@@ -191,6 +191,13 @@ select is_empty(
   'an editor cannot change the space settings (configuration is owner-only)'
 );
 select is_empty(
+  format(
+    'update public.space_settings set onboarding_postponed_at = now() where space_id = %L returning 1',
+    current_setting('t.space')
+  ),
+  'an editor cannot postpone the setup wizard'
+);
+select is_empty(
   format($$update public.spaces set name = 'Editor' where id = %L returning 1$$, current_setting('t.space')),
   'an editor cannot rename the space'
 );
@@ -214,6 +221,14 @@ select isnt_empty(
     current_setting('t.space')
   ),
   'the owner changes the space settings'
+);
+select isnt_empty(
+  format(
+    $$update public.space_settings set onboarding_step = 3, onboarding_postponed_at = now()
+      where space_id = %L returning 1$$,
+    current_setting('t.space')
+  ),
+  'the owner saves the wizard progress and postpones it'
 );
 select isnt_empty(
   format($$update public.spaces set name = 'Casa' where id = %L returning 1$$, current_setting('t.space')),

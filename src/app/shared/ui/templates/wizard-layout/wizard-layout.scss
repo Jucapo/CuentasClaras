@@ -1,38 +1,123 @@
-.wizard-layout {
+:host {
   display: flex;
   flex-direction: column;
-  align-items: center;
   min-height: 100dvh;
-  padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4)
-    calc(var(--cc-safe-area-bottom) + var(--cc-space-5));
-  background-color: var(--mat-sys-surface-container);
-}
-
-// Auto margins center the card without pushing it above the top edge when it is taller.
-.wizard-card {
-  width: 100%;
-  max-width: var(--cc-wizard-max-width);
-  margin-block: auto;
-  padding: var(--cc-space-5);
-  border-radius: var(--cc-radius-lg);
   background-color: var(--mat-sys-surface);
+
+  // No shell header above the wizard: a flow's bar sticks to the top.
+  --cc-flow-bar-top: 0;
 }
 
-.wizard-header {
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-3)) var(--cc-space-4) var(--cc-space-2);
+}
+
+.top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--cc-space-3);
-  margin-bottom: var(--cc-space-5);
 }
 
-.actions {
+.top-actions,
+.side-actions {
   display: flex;
   align-items: center;
 }
 
 .progress {
-  margin: 0 0 var(--cc-space-2);
+  margin: var(--cc-space-2) 0 0;
   font: var(--mat-sys-label-large);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+}
+
+// Compact: a step per screen, edge to edge.
+:host(.window-compact) .card {
+  padding-bottom: var(--cc-safe-area-bottom);
+}
+
+// Medium: the same, in a centered card.
+:host(.window-medium) {
+  background-color: var(--mat-sys-surface-container);
+
+  .top,
+  .card {
+    width: 100%;
+    max-width: var(--cc-wizard-max-width);
+    margin-inline: auto;
+  }
+
+  .content {
+    padding: 0 var(--cc-space-4) calc(var(--cc-safe-area-bottom) + var(--cc-space-5));
+  }
+
+  .card {
+    flex: 0 1 auto;
+    overflow: clip;
+    border-radius: var(--cc-radius-lg);
+    background-color: var(--mat-sys-surface);
+  }
+}
+
+:host(.window-medium.immersive) .content {
+  padding: 0;
+}
+
+:host(.window-medium.immersive) .card {
+  flex: 1 1 auto;
+  border-radius: 0;
+}
+
+// Expanded: the steps in a side column, the step next to it.
+:host(.window-expanded) {
+  flex-direction: row;
+  background-color: var(--mat-sys-surface-container);
+
+  .side {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--cc-space-5);
+    width: var(--cc-wizard-side-width);
+    height: 100dvh;
+    padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-4) var(--cc-space-5);
+  }
+
+  .side-steps {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  .content {
+    min-width: 0;
+    padding: var(--cc-space-5) var(--cc-space-5) var(--cc-space-5) 0;
+  }
+
+  .card {
+    max-width: var(--cc-content-max-width);
+    margin-inline: auto;
+
+    // Clip, not hidden: the sticky bar of an open flow keeps sticking to the window.
+    overflow: clip;
+    border-radius: var(--cc-radius-lg);
+    background-color: var(--mat-sys-surface);
+  }
 }

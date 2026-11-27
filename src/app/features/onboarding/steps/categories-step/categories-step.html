@@ -1,0 +1,57 @@
+<cc-wizard-step [title]="step().title" [help]="step().help">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <div role="list" aria-label="¿Cómo quieres empezar?">
+      <cc-list-item
+        role="listitem"
+        [title]="templateChoice().title"
+        [subtitle]="templateChoice().subtitle"
+        [link]="templateLink()"
+      >
+        <cc-icon-badge ccListItemLeading icon="auto_awesome" color="violet" />
+      </cc-list-item>
+      <cc-list-item
+        role="listitem"
+        title="Empezar desde cero"
+        subtitle="Crea tus categorías una por una."
+        [link]="newLink()"
+        [queryParams]="kindParams()"
+      >
+        <cc-icon-badge ccListItemLeading icon="add" color="slate" />
+      </cc-list-item>
+    </div>
+  } @else {
+    @if (canEdit()) {
+      <p class="help">{{ help }}</p>
+    }
+    <cc-category-grid
+      mode="edit"
+      [label]="gridLabel()"
+      [centerLabel]="kindLabel()"
+      [items]="items()"
+      [addLabel]="canEdit() ? 'Nueva' : null"
+      [reorderable]="canEdit()"
+      (opened)="open($event)"
+      (add)="create()"
+      (reorder)="reorder($event)"
+    />
+
+    @if (isIncome()) {
+      <cc-section
+        title="Ingreso mensual esperado"
+        description="Opcional. Cuánto esperas recibir al mes en cada una; se repite hasta que lo cambies."
+      >
+        <cc-budget-list
+          label="Ingreso mensual esperado por categoría"
+          totalLabel="Total esperado al mes"
+          [entries]="amountEntries()"
+          [totals]="amountTotals()"
+          (opened)="amounts.edit($event)"
+        />
+      </cc-section>
+    }
+  }
+
+  <app-step-actions ccWizardStepActions [step]="step().id" />
+</cc-wizard-step>

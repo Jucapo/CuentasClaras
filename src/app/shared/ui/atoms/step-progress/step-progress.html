@@ -1,0 +1,17 @@
+<div
+  class="segments"
+  role="progressbar"
+  aria-valuemin="1"
+  [attr.aria-valuemax]="states().length"
+  [attr.aria-valuenow]="current()"
+  [attr.aria-valuetext]="label()"
+  [attr.aria-label]="label()"
+>
+  @for (state of states(); track $index) {
+    <span
+      class="segment"
+      [class.done]="state === 'done'"
+      [class.current]="state === 'current'"
+    ></span>
+  }
+</div>

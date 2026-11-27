@@ -1,14 +1,28 @@
-<main class="wizard-layout">
-  <section class="wizard-card">
-    <header class="wizard-header">
+<ng-template #actions><ng-content select="[ccWizardActions]" /></ng-template>
+
+@if (layout.isExpanded()) {
+  <aside class="side">
+    <cc-brand />
+    @if (steps().length > 0) {
+      <cc-wizard-steps class="side-steps" label="Pasos de la configuración" [steps]="steps()" />
+    }
+    <div class="side-actions"><ng-container [ngTemplateOutlet]="actions" /></div>
+  </aside>
+} @else if (!immersive()) {
+  <header class="top">
+    <div class="top-bar">
       <cc-brand />
-      <div class="actions">
-        <ng-content select="[ccWizardActions]" />
-      </div>
-    </header>
+      <div class="top-actions"><ng-container [ngTemplateOutlet]="actions" /></div>
+    </div>
     @if (progress(); as progress) {
       <p class="progress">{{ progress }}</p>
+      @if (steps().length > 0) {
+        <cc-step-progress [states]="states()" [label]="progress" />
+      }
     }
-    <ng-content />
-  </section>
+  </header>
+}
+
+<main class="content">
+  <div class="card"><ng-content /></div>
 </main>

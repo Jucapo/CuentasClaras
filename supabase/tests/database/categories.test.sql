@@ -1,8 +1,9 @@
 -- Categories: two levels at most, a subcategory keeps the kind of its parent and may inherit its
--- color; members read, owners and editors write; reorder_categories only moves siblings.
+-- color; members read, owners and editors write; reorder_categories only moves siblings;
+-- create_category_tree creates a whole template or nothing.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(39);
 
 -- Ana owns "Hogar" with Beto (editor) and Dani (viewer). Caro owns her own space.
 insert into auth.users (id, email) values
@@ -221,6 +222,15 @@ select throws_ok(
   null,
   'a viewer cannot reorder categories'
 );
+select throws_ok(
+  format(
+    $$select public.create_category_tree(%L, 'expense', '[{"name": "Lector", "icon": "home", "color": "green"}]')$$,
+    current_setting('t.space')
+  ),
+  '42501',
+  null,
+  'a viewer cannot create categories from the template'
+);
 
 -- ── Editor ───────────────────────────────────────────────────────────────────
 set local request.jwt.claims to '{"sub": "b0000000-0000-4000-8000-000000000000"}';
@@ -265,6 +275,56 @@ select throws_ok(
   'reorder_categories rejects repeated ids'
 );
 
+-- ── Template ─────────────────────────────────────────────────────────────────
+select lives_ok(
+  format(
+    $$select public.create_category_tree(%L, 'expense', '[
+      {"name": "Transporte", "icon": "directions_car", "color": "blue",
+       "children": [{"name": "Peajes", "icon": "toll"}, {"name": "Parqueadero", "icon": "local_parking"}]},
+      {"name": "Regalos", "icon": "redeem", "color": "pink"}
+    ]')$$,
+    current_setting('t.space')
+  ),
+  'an editor creates categories with subcategories from the template'
+);
+select results_eq(
+  format(
+    $$select c.name, c.sort_order, c.color::text, p.name from public.categories c
+      left join public.categories p on p.id = c.parent_id
+      where c.space_id = %L and c.name in ('Transporte', 'Peajes', 'Parqueadero', 'Regalos')
+      order by c.parent_id nulls first, c.sort_order$$,
+    current_setting('t.space')
+  ),
+  $$values ('Transporte', 3, 'blue'::text, null::text), ('Regalos', 4, 'pink', null),
+           ('Peajes', 0, null, 'Transporte'), ('Parqueadero', 1, null, 'Transporte')$$,
+  'template categories go last, keep their order and their subcategories inherit the color'
+);
+select throws_ok(
+  format(
+    $$select public.create_category_tree(%L, 'expense', '[
+      {"name": "Nueva", "icon": "home", "color": "green", "children": [{"name": "Hija", "icon": "home"}]},
+      {"name": "salud", "icon": "home", "color": "green"}
+    ]')$$,
+    current_setting('t.space')
+  ),
+  '23505',
+  null,
+  'a repeated name stops the template'
+);
+select is_empty(
+  format($$select 1 from public.categories where space_id = %L and name in ('Nueva', 'Hija')$$, current_setting('t.space')),
+  'a template that fails creates nothing'
+);
+select throws_ok(
+  format(
+    $$select public.create_category_tree(%L, 'income', '[{"name": "Rara", "icon": "Casa Grande", "color": "green"}]')$$,
+    current_setting('t.space')
+  ),
+  '23514',
+  null,
+  'template icons are catalog keys'
+);
+
 -- ── Non-member ───────────────────────────────────────────────────────────────
 set local request.jwt.claims to '{"sub": "c0000000-0000-4000-8000-000000000000"}';
 select is_empty(
@@ -280,6 +340,15 @@ select throws_ok(
 select is_empty(
   format($$update public.categories set name = 'Intrusa' where id = %L returning 1$$, current_setting('t.home')),
   'a non-member cannot edit the categories of the space'
+);
+select throws_ok(
+  format(
+    $$select public.create_category_tree(%L, 'expense', '[{"name": "Intrusa", "icon": "home", "color": "green"}]')$$,
+    current_setting('t.space')
+  ),
+  '42501',
+  null,
+  'a non-member cannot create categories in the space from the template'
 );
 
 -- ── Deleting a category deletes its subcategories ────────────────────────────

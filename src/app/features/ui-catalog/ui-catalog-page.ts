@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { apply, disabled, form, FormField, required } from '@angular/forms/signals';
 import { ACTION_OK } from '../../core/action-result';
-import { ACCOUNT_GROUP_CHOICES } from '../../core/config/catalog.constants';
 import { NUMBER_FORMAT_DEFAULTS, SPACE_DEFAULTS } from '../../core/config/space.constants';
 import { NAV_ITEMS } from '../../core/layout/nav-items';
 import { APP_PATHS } from '../../core/routing/app-paths';
@@ -28,7 +27,11 @@ import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
 import { TextField } from '../../shared/ui/atoms/text-field/text-field';
 import { TitleField } from '../../shared/ui/atoms/title-field/title-field';
 import { AccountRow } from '../../shared/ui/molecules/account-row/account-row';
-import { AmountPanel, AmountPanelData } from '../../shared/ui/molecules/amount-panel/amount-panel';
+import {
+  AmountPanel,
+  AmountPanelData,
+  AmountPanelResult,
+} from '../../shared/ui/molecules/amount-panel/amount-panel';
 import { AppearanceEditor } from '../../shared/ui/molecules/appearance-editor/appearance-editor';
 import { AppearancePicker } from '../../shared/ui/molecules/appearance-picker/appearance-picker';
 import { Brand } from '../../shared/ui/molecules/brand/brand';
@@ -43,7 +46,6 @@ import { Form } from '../../shared/ui/molecules/form/form';
 import { IconGrid } from '../../shared/ui/molecules/icon-grid/icon-grid';
 import { ListItem } from '../../shared/ui/molecules/list-item/list-item';
 import { NavItem } from '../../shared/ui/molecules/nav-item/nav-item';
-import { OptionPanel, OptionPanelData } from '../../shared/ui/molecules/option-panel/option-panel';
 import { OverlayPanel } from '../../shared/ui/molecules/overlay-panel/overlay-panel';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
@@ -92,6 +94,16 @@ import { AuthLayout } from '../../shared/ui/templates/auth-layout/auth-layout';
 import { FlowLayout } from '../../shared/ui/templates/flow-layout/flow-layout';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { WizardLayout } from '../../shared/ui/templates/wizard-layout/wizard-layout';
+import { WizardStep } from '../../shared/ui/templates/wizard-step/wizard-step';
+import { Checkbox } from '../../shared/ui/atoms/checkbox/checkbox';
+import { StepProgress, StepProgressState } from '../../shared/ui/atoms/step-progress/step-progress';
+import { WizardStepItem, WizardSteps } from '../../shared/ui/molecules/wizard-steps/wizard-steps';
+import { BudgetList, BudgetListEntry } from '../../shared/ui/organisms/budget-list/budget-list';
+import {
+  CategoryChecklist,
+  CategoryChecklistNode,
+} from '../../shared/ui/organisms/category-checklist/category-checklist';
+import { chooseAccountGroup } from '../accounts/account-group-chooser';
 import { CatalogEntry } from './catalog-entry/catalog-entry';
 import { FixedLayout } from './fixed-layout/fixed-layout';
 
@@ -159,6 +171,12 @@ interface WindowClassDemo {
     FlowLayout,
     ListDetailLayout,
     WizardLayout,
+    WizardStep,
+    Checkbox,
+    StepProgress,
+    WizardSteps,
+    BudgetList,
+    CategoryChecklist,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -351,6 +369,73 @@ export class UiCatalogPage {
       muted: true,
     },
   ];
+  protected readonly checklistNodes: readonly CategoryChecklistNode[] = [
+    {
+      id: 'c1',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      children: [
+        { id: 'c2', name: 'Arriendo', icon: 'key', color: null },
+        { id: 'c3', name: 'Servicios públicos', icon: 'bolt', color: 'amber' },
+      ],
+    },
+    { id: 'c9', name: 'Regalos', icon: 'redeem', color: 'pink', children: [] },
+  ];
+  protected readonly templateSelection = signal<readonly string[]>(['c1', 'c2', 'c3']);
+  protected readonly tagSelection = signal<readonly string[]>(['c2']);
+  protected readonly budgetEntries: readonly BudgetListEntry[] = [
+    {
+      id: 'c1',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      amount: { currency: 'COP', amount: 300000000 },
+    },
+    { id: 'c4', name: 'Mercado', icon: 'shopping_cart', color: 'green', amount: null },
+    {
+      id: 'c7',
+      name: 'Ocio',
+      icon: 'sports_esports',
+      color: 'purple',
+      amount: { currency: 'USD', amount: 20000 },
+    },
+  ];
+  protected readonly budgetTotals: readonly CurrencyAmount[] = [
+    { currency: 'COP', amount: 300000000 },
+    { currency: 'USD', amount: 20000 },
+  ];
+  protected readonly progressStates: readonly StepProgressState[] = [
+    'done',
+    'done',
+    'current',
+    'pending',
+    'pending',
+    'pending',
+    'pending',
+  ];
+  protected readonly wizardSteps: readonly WizardStepItem[] = [
+    { id: 'space', title: 'Tu espacio', state: 'done', link: ['/', APP_PATHS.uiCatalog] },
+    {
+      id: 'accounts',
+      title: 'Tu situación actual',
+      state: 'current',
+      link: ['/', APP_PATHS.uiCatalog],
+    },
+    { id: 'income', title: 'Ingresos', state: 'available', link: ['/', APP_PATHS.uiCatalog] },
+    {
+      id: 'budget',
+      title: 'Presupuesto',
+      state: 'locked',
+      note: 'Opcional',
+      link: ['/', APP_PATHS.uiCatalog],
+    },
+  ];
+  /** The wizard in each window class it changes with (spec §13.5). */
+  protected readonly wizardClasses: readonly WindowClassDemo[] = [
+    { value: 'compact', label: 'compacta', description: 'Un paso por pantalla, progreso arriba' },
+    { value: 'expanded', label: 'expandida', description: 'Pasos en una columna lateral' },
+  ];
   protected readonly tagEntries: readonly TagListEntry[] = [
     { id: 'fixed', name: 'Fijos', color: 'indigo', subtitle: 'Por defecto en 2 categorías' },
     { id: 'trips', name: 'Viajes', color: 'blue', subtitle: 'Archivada', archived: true },
@@ -403,26 +488,27 @@ export class UiCatalogPage {
   }
 
   protected openOptions(): void {
-    const groups = Object.values(ACCOUNT_GROUP_CHOICES);
-    void this.overlay.open<string, OptionPanelData<string>>(OptionPanel, {
-      label: '¿Qué vas a crear?',
+    void chooseAccountGroup(this.overlay);
+  }
+
+  protected openBudgetAmount(): void {
+    void this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
+      label: 'Presupuesto de Hogar',
+      autoFocus: 'input',
       data: {
-        title: '¿Qué vas a crear?',
-        mode: 'action',
-        prominent: true,
-        options: groups.map((choice) => ({
-          value: choice.param,
-          label: choice.label,
-          description: choice.example,
-          icon: choice.icon,
-          color: choice.color,
-        })),
+        title: 'Presupuesto de Hogar',
+        label: 'Presupuesto mensual',
+        hint: 'Se repite cada mes hasta que lo cambies. Escribe 0 para quitarlo.',
+        currency: 'COP',
+        currencyEditable: true,
+        value: 300000000,
+        requiredMessage: 'Escribe el monto; puede ser 0.',
       },
     });
   }
 
   protected openAmount(): void {
-    void this.overlay.open<number, AmountPanelData>(AmountPanel, {
+    void this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
       label: 'Lo que debes',
       autoFocus: 'input',
       data: {
@@ -455,11 +541,12 @@ export class UiCatalogPage {
 
   protected openTag(): void {
     void this.overlay.open<unknown, TagSheetData>(TagSheet, {
-      label: 'Nueva etiqueta',
-      autoFocus: 'input',
+      label: 'Etiqueta',
       data: {
-        title: 'Nueva etiqueta',
-        value: { name: '', color: 'indigo' },
+        title: 'Etiqueta',
+        value: { name: 'Fijos', color: 'indigo', categoryIds: ['c2'] },
+        categories: [{ label: 'Gastos', nodes: this.checklistNodes }],
+        actions: { archived: false, canDelete: true },
         save: async () => ACTION_OK,
       },
     });

@@ -33,3 +33,9 @@
 .rail-demo {
   height: var(--cc-catalog-frame-height);
 }
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--cc-space-2);
+}

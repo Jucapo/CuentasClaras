@@ -1,0 +1,8 @@
+<header class="header">
+  <h1 class="title">{{ title() }}</h1>
+  @if (help(); as help) {
+    <p class="help">{{ help }}</p>
+  }
+</header>
+<div class="body"><ng-content /></div>
+<footer class="actions"><ng-content select="[ccWizardStepActions]" /></footer>

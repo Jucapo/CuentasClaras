@@ -1,10 +1,11 @@
 import { Component, computed, effect, inject } from '@angular/core';
-import { ActivatedRouteSnapshot, Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { Button } from '../../../shared/ui/atoms/button/button';
 import { IconButton } from '../../../shared/ui/atoms/icon-button/icon-button';
 import { AppShell } from '../../../shared/ui/templates/app-shell/app-shell';
 import { AuthService } from '../../auth/auth.service';
 import { APP_PATHS, ROUTE_DATA_KEYS } from '../../routing/app-paths';
+import { activeRouteData } from '../../routing/route-chain';
 import { NAV_ITEMS } from '../nav-items';
 
 /** Signed-in area: fills the app shell template and leaves it when the session ends. */
@@ -24,15 +25,11 @@ export class Shell {
   protected readonly routeFlags = computed(() => {
     // Only a dependency: the snapshot changes on every successful navigation.
     this.router.lastSuccessfulNavigation();
-    let route: ActivatedRouteSnapshot | null = this.router.routerState.snapshot.root;
-    let flow = false;
-    let listDetail = false;
-    while (route) {
-      flow ||= route.data[ROUTE_DATA_KEYS.flow] === true;
-      listDetail ||= route.data[ROUTE_DATA_KEYS.listDetail] === true;
-      route = route.firstChild;
-    }
-    return { flow, listDetail };
+    const data = activeRouteData(this.router);
+    return {
+      flow: data[ROUTE_DATA_KEYS.flow] === true,
+      listDetail: data[ROUTE_DATA_KEYS.listDetail] === true,
+    };
   });
 
   constructor() {

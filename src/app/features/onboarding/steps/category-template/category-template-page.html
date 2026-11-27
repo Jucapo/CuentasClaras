@@ -1,0 +1,31 @@
+<cc-flow-layout [title]="title()" (closed)="close()">
+  <cc-button
+    ccFlowAction
+    shortcut="Control+S Meta+S"
+    loadingLabel="Creando"
+    [disabled]="selected().length === 0"
+    [loading]="creating()"
+    (click)="create()"
+  >
+    {{ createLabel() }}
+  </cc-button>
+
+  <div class="content">
+    <p class="help">
+      Marca lo que quieres incluir. Después puedes cambiar nombres, íconos y colores, o agregar más.
+    </p>
+    <div class="bulk">
+      <cc-button variant="text" icon="check" (click)="selectAll(true)">Marcar todo</cc-button>
+      <cc-button variant="text" icon="close" (click)="selectAll(false)">Desmarcar todo</cc-button>
+    </div>
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+    <cc-category-checklist
+      [label]="title()"
+      [linked]="true"
+      [nodes]="nodes()"
+      [(selected)]="selected"
+    />
+  </div>
+</cc-flow-layout>

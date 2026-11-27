@@ -17,7 +17,11 @@ import { DateField } from '../../atoms/date-field/date-field';
 import { Switch } from '../../atoms/switch/switch';
 import { TitleField } from '../../atoms/title-field/title-field';
 import { MONEY_FORMAT } from '../../money/money-format';
-import { AmountPanel, AmountPanelData } from '../../molecules/amount-panel/amount-panel';
+import {
+  AmountPanel,
+  AmountPanelData,
+  AmountPanelResult,
+} from '../../molecules/amount-panel/amount-panel';
 import { AppearancePicker } from '../../molecules/appearance-picker/appearance-picker';
 import { Disclosure } from '../../molecules/disclosure/disclosure';
 import { FieldRow } from '../../molecules/field-row/field-row';
@@ -135,7 +139,7 @@ export class AccountEditor {
   protected async editBalance(): Promise<void> {
     const balance = this.fields().balance;
     const { label, hint } = this.balanceText();
-    const amount = await this.overlay.open<number, AmountPanelData>(AmountPanel, {
+    const result = await this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
       label,
       autoFocus: 'input',
       data: {
@@ -149,8 +153,8 @@ export class AccountEditor {
         requiredMessage: ACCOUNT_FORM_MESSAGES.balanceRequired,
       },
     });
-    if (amount !== undefined) {
-      balance().value.set(amount);
+    if (result) {
+      balance().value.set(result.amount);
     }
     balance().markAsTouched();
   }

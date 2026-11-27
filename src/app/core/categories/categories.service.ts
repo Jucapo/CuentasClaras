@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { buildCategoryTree, CategoryNode } from '../../domain/categories/category-tree';
+import { TemplateCategory } from '../../domain/categories/category-template';
 import { actionFailed, ActionResult, ACTION_OK, DataResult } from '../action-result';
 import { DeleteResult } from '../catalogs/catalog-result';
 import { SpaceService } from '../spaces/space.service';
@@ -81,6 +82,42 @@ export class CategoriesService {
     const tagged = await this.api.setDefaultTags(spaceId, id, current.default_tag_ids, tagIds);
     this.store.reload();
     return tagged;
+  }
+
+  /** Creates categories with their subcategories at once, e.g. from the suggested template. */
+  async createTree(kind: CategoryKind, tree: readonly TemplateCategory[]): Promise<ActionResult> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    if (!spaceId) {
+      return actionFailed(GENERIC_DATA_ERROR_MESSAGE);
+    }
+    const created = await this.api.createTree(spaceId, kind, tree);
+    if (created.ok) {
+      this.store.reload();
+    }
+    return created;
+  }
+
+  /** Ids of the categories where a tag applies by default. */
+  categoriesWithTag(tagId: string): string[] {
+    return this.categories()
+      .filter((category) => category.default_tag_ids.includes(tagId))
+      .map((category) => category.id);
+  }
+
+  /** Makes a tag apply by default to exactly these categories (spec §4.3). */
+  async setTagCategories(tagId: string, categoryIds: readonly string[]): Promise<ActionResult> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    if (!spaceId) {
+      return actionFailed(GENERIC_DATA_ERROR_MESSAGE);
+    }
+    const saved = await this.api.setTagCategories(
+      spaceId,
+      tagId,
+      this.categoriesWithTag(tagId),
+      categoryIds,
+    );
+    this.store.reload();
+    return saved;
   }
 
   /** Archives (hides) or restores a category. */

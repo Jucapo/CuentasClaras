@@ -23,6 +23,24 @@
     </cc-form>
   </cc-section>
 
+  @if (canConfigure()) {
+    <cc-section
+      title="Configuración inicial"
+      description="El asistente que guía la configuración del espacio."
+    >
+      <div role="list">
+        <cc-list-item
+          role="listitem"
+          [title]="onboardingRow().title"
+          [subtitle]="onboardingRow().subtitle"
+          [link]="onboardingLink"
+        >
+          <cc-icon ccListItemLeading name="auto_awesome" />
+        </cc-list-item>
+      </div>
+    </cc-section>
+  }
+
   <cc-section title="Catálogos" description="Las cuentas, categorías y etiquetas del espacio.">
     <div role="list">
       <cc-list-item

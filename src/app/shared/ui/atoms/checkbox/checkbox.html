@@ -1,0 +1,20 @@
+<mat-checkbox
+  [id]="controlId"
+  [checked]="checked()"
+  [disabled]="disabled()"
+  [required]="required()"
+  (change)="checked.set($event.checked)"
+  (focusout)="touch.emit()"
+>
+  <span class="label">
+    @if (icon(); as icon) {
+      <cc-icon-badge size="sm" [icon]="icon" [color]="color()" />
+    }
+    <span class="text">{{ label() }}</span>
+  </span>
+</mat-checkbox>
+@if (errorMessage(); as message) {
+  <p class="supporting-text error" role="alert">{{ message }}</p>
+} @else if (hint(); as hint) {
+  <p class="supporting-text">{{ hint }}</p>
+}

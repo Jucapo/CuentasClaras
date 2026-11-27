@@ -1,0 +1,35 @@
+<div class="rows" role="list" [attr.aria-label]="label()">
+  @for (entry of entries(); track entry.id) {
+    <cc-list-item
+      role="listitem"
+      [title]="entry.name"
+      [actionable]="true"
+      (activate)="opened.emit(entry.id)"
+    >
+      <cc-icon-badge ccListItemLeading [icon]="entry.icon" [color]="entry.color" />
+      <span ccListItemTrailing class="amount">
+        @if (entry.amount; as amount) {
+          <cc-amount tone="neutral" [amount]="amount.amount" [currency]="amount.currency" />
+        } @else {
+          <span class="empty">{{ emptyText() }}</span>
+        }
+      </span>
+    </cc-list-item>
+  }
+</div>
+
+@if (totals().length > 0) {
+  <div class="total">
+    <span class="total-texts">
+      <span class="total-label">{{ totalLabel() }}</span>
+      @if (totalNote(); as note) {
+        <span class="total-note">{{ note }}</span>
+      }
+    </span>
+    <span class="total-amounts">
+      @for (total of totals(); track total.currency) {
+        <cc-amount tone="neutral" [amount]="total.amount" [currency]="total.currency" />
+      }
+    </span>
+  </div>
+}

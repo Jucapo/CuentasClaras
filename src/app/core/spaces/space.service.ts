@@ -130,6 +130,28 @@ export class SpaceService {
     }
   }
 
+  /** Saves what changed in the active space, then its settings (owner only). */
+  async saveActivePreferences(
+    space: SpacePatch,
+    settings: SpaceSettingsPatch,
+  ): Promise<ActionResult> {
+    const current = this.activeSpace();
+    const changed: SpacePatch = {};
+    for (const key of ['name', 'icon', 'color'] as const) {
+      const value = space[key];
+      if (value !== undefined && value !== current?.[key]) {
+        changed[key] = value;
+      }
+    }
+    if (Object.keys(changed).length > 0) {
+      const updated = await this.updateActiveSpace(changed);
+      if (!updated.ok) {
+        return updated;
+      }
+    }
+    return this.updateActiveSettings(settings);
+  }
+
   /** Saves preferences of the active space (owner only). */
   async updateActiveSettings(patch: SpaceSettingsPatch): Promise<ActionResult> {
     const active = this.active();

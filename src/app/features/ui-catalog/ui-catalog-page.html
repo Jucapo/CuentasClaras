@@ -249,6 +249,28 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-checkbox"
+        description="Marcada, sin marcar, con badge y deshabilitada"
+        layout="column"
+      >
+        <ng-template>
+          <cc-checkbox label="Mostrar decimales" [formField]="demo.decimals" />
+          <cc-checkbox label="Hogar" icon="home" color="orange" [formField]="demo.budgets" />
+          <cc-checkbox label="Bloqueada" [formField]="demo.lockedSwitch" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-step-progress"
+        description="Hechos, el actual y pendientes"
+        layout="column"
+      >
+        <ng-template>
+          <cc-step-progress label="Paso 3 de 7" [states]="progressStates" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-message"
         description="error (alert) · info (status)"
         layout="column"
@@ -321,6 +343,23 @@
           <cc-section title="Espacio" description="Solo el propietario cambia la configuración.">
             <cc-text-field label="Nombre del espacio" [formField]="demo.locked" />
           </cc-section>
+          <cc-section
+            variant="highlight"
+            title="Completa tu configuración"
+            description="Faltan 4 pasos."
+          >
+            <cc-form-actions align="start"><cc-button>Continuar</cc-button></cc-form-actions>
+          </cc-section>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-wizard-steps"
+        description="Hecho, actual, disponible y fuera de alcance"
+        layout="column"
+      >
+        <ng-template>
+          <cc-wizard-steps label="Pasos de ejemplo" [steps]="wizardSteps" />
         </ng-template>
       </app-catalog-entry>
 
@@ -446,6 +485,7 @@
         <ng-template>
           <cc-button variant="tonal" (click)="openOptions()">¿Qué vas a crear?</cc-button>
           <cc-button variant="tonal" (click)="openAmount()">Lo que debes</cc-button>
+          <cc-button variant="tonal" (click)="openBudgetAmount()">Monto con moneda</cc-button>
         </ng-template>
       </app-catalog-entry>
 
@@ -731,6 +771,42 @@
           <cc-tag-list [tags]="tagEntries" />
         </ng-template>
       </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-list"
+        description="Montos mensuales por categoría y totales por moneda"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-list
+            label="Presupuesto de ejemplo"
+            totalLabel="Total al mes"
+            totalNote="Ingreso esperado: $ 6,000,000.00"
+            [entries]="budgetEntries"
+            [totals]="budgetTotals"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-checklist"
+        description="Plantilla (enlazada) y dónde se pone una etiqueta (independiente)"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-checklist
+            label="Plantilla de ejemplo"
+            [linked]="true"
+            [nodes]="checklistNodes"
+            [(selected)]="templateSelection"
+          />
+          <cc-category-checklist
+            label="Categorías de una etiqueta"
+            [nodes]="checklistNodes"
+            [(selected)]="tagSelection"
+          />
+        </ng-template>
+      </app-catalog-entry>
     </div>
   </cc-section>
 
@@ -748,14 +824,31 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-wizard-layout" [framed]="true">
-        <ng-template>
-          <cc-wizard-layout progress="Paso 2 de 7">
-            <cc-button ccWizardActions variant="text">Cerrar sesión</cc-button>
-            <cc-page-header title="Tu espacio" subtitle="Contenido del paso." />
-          </cc-wizard-layout>
-        </ng-template>
-      </app-catalog-entry>
+      @for (windowClass of wizardClasses; track windowClass.value) {
+        <app-catalog-entry
+          [name]="'cc-wizard-layout + cc-wizard-step · ' + windowClass.label"
+          [description]="windowClass.description"
+          [framed]="true"
+        >
+          <ng-template>
+            <app-fixed-layout [windowClass]="windowClass.value">
+              <cc-wizard-layout progress="Paso 2 de 4" [steps]="wizardSteps">
+                <cc-button ccWizardActions variant="text">Terminar más tarde</cc-button>
+                <cc-wizard-step
+                  title="Tu situación actual"
+                  help="Agrega tus cuentas, ahorros, deudas y lo que te deben, con el saldo de hoy."
+                >
+                  <cc-account-list [groups]="accountGroups" />
+                  <div ccWizardStepActions class="step-actions">
+                    <cc-button variant="text" icon="arrow_back">Atrás</cc-button>
+                    <cc-button>Continuar</cc-button>
+                  </div>
+                </cc-wizard-step>
+              </cc-wizard-layout>
+            </app-fixed-layout>
+          </ng-template>
+        </app-catalog-entry>
+      }
 
       @for (windowClass of shellClasses; track windowClass.value) {
         <app-catalog-entry
