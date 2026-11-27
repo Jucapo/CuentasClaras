@@ -16,17 +16,32 @@ export const APP_PATHS = {
   uiCatalog: 'ui',
 } as const;
 
-/** Child paths of Configuración that manage the space catalogs. */
+/** Child paths of Configuración. */
 export const SETTINGS_PATHS = {
-  categories: 'categorias',
   tags: 'etiquetas',
+} as const;
+
+/** Child paths of Categorías: the edit mode, with each category's screen below it. */
+export const CATEGORY_PATHS = {
+  edit: 'editar',
 } as const;
 
 /** Path segment of the "create" screens (cuenta, categoría y etiqueta son femeninas). */
 export const NEW_ITEM_PATH = 'nueva';
 
-/** Query params of the new category screen: its kind and, for a subcategory, its parent. */
-export const CATEGORY_QUERY_PARAMS = { kind: 'clase', parent: 'padre' } as const;
+/** Query param with the category kind shown (Gastos / Ingresos) or created. */
+export const CATEGORY_QUERY_PARAMS = { kind: 'clase' } as const;
+
+/** Query param of the new account screen with the group picked in "¿Qué vas a crear?". */
+export const ACCOUNT_QUERY_PARAMS = { group: 'grupo' } as const;
+
+/** Route `data` flags the shell reads from the active route chain (spec §13.5). */
+export const ROUTE_DATA_KEYS = {
+  /** A create or edit flow: full screen in the compact window class. */
+  flow: 'flow',
+  /** List and detail side by side in the expanded window class. */
+  listDetail: 'listDetail',
+} as const;
 
 /** Child paths of the setup wizard, one per step. */
 export const ONBOARDING_STEP_PATHS = {

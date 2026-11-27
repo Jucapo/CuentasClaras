@@ -17,3 +17,8 @@ body {
   font: var(--mat-sys-body-medium);
   -webkit-tap-highlight-color: transparent;
 }
+
+// Components hide parts with [hidden]; no display rule may override it.
+[hidden] {
+  display: none !important;
+}

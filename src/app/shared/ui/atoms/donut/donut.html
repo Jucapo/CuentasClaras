@@ -1,0 +1,10 @@
+<svg class="ring" aria-hidden="true" [attr.viewBox]="geometry.viewBox">
+  <circle
+    class="track"
+    [attr.cx]="geometry.center"
+    [attr.cy]="geometry.center"
+    [attr.r]="geometry.radius"
+    [attr.stroke-width]="geometry.stroke"
+  />
+</svg>
+<div class="center"><ng-content /></div>

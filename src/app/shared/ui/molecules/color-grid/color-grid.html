@@ -1,0 +1,19 @@
+<div class="grid" role="group" [attr.aria-label]="text.colorGrid">
+  @if (inheritFrom() !== null) {
+    <cc-color-swatch
+      [color]="null"
+      [label]="text.inheritColor"
+      [selected]="value() === null"
+      (click)="value.set(null)"
+    />
+  }
+  @for (color of palette; track color.key) {
+    <cc-color-swatch
+      [color]="color.key"
+      [label]="color.label"
+      [selected]="color.key === value()"
+      [attr.data-color]="color.key"
+      (click)="value.set(color.key)"
+    />
+  }
+</div>

@@ -4,14 +4,22 @@ import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
 import {
   APP_PATHS,
+  CATEGORY_PATHS,
   DEFAULT_HOME_PATH,
   NEW_ITEM_PATH,
   ONBOARDING_STEP_PATHS,
+  ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
 } from './core/routing/app-paths';
+import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
 import { noSpaceGuard, spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
 import { ONBOARDING_STEP_DATA_KEY, ONBOARDING_STEPS } from './features/onboarding/onboarding-steps';
+
+/** A create or edit flow: full screen in the compact window class (spec §13.5). */
+const FLOW = { [ROUTE_DATA_KEYS.flow]: true };
+/** List and detail side by side in the expanded window class (spec §13.5). */
+const LIST_DETAIL = { [ROUTE_DATA_KEYS.listDetail]: true };
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
@@ -80,30 +88,62 @@ export const routes: Routes = [
       {
         path: APP_PATHS.accounts,
         title: 'Cuentas',
+        data: LIST_DETAIL,
         loadComponent: () =>
           import('./features/accounts/accounts-page').then((m) => m.AccountsPage),
-      },
-      {
-        path: `${APP_PATHS.accounts}/${NEW_ITEM_PATH}`,
-        title: 'Nueva cuenta',
-        loadComponent: () =>
-          import('./features/accounts/account-edit/account-edit-page').then(
-            (m) => m.AccountEditPage,
-          ),
-      },
-      {
-        path: `${APP_PATHS.accounts}/:id`,
-        title: 'Cuenta',
-        loadComponent: () =>
-          import('./features/accounts/account-edit/account-edit-page').then(
-            (m) => m.AccountEditPage,
-          ),
+        children: [
+          {
+            path: NEW_ITEM_PATH,
+            title: 'Nueva cuenta',
+            data: FLOW,
+            canDeactivate: [unsavedChangesGuard],
+            loadComponent: () =>
+              import('./features/accounts/account-edit/account-edit-page').then(
+                (m) => m.AccountEditPage,
+              ),
+          },
+          {
+            path: ':id',
+            title: 'Cuenta',
+            data: FLOW,
+            canDeactivate: [unsavedChangesGuard],
+            loadComponent: () =>
+              import('./features/accounts/account-edit/account-edit-page').then(
+                (m) => m.AccountEditPage,
+              ),
+          },
+        ],
       },
       {
         path: APP_PATHS.categories,
         title: 'Categorías',
         loadComponent: () =>
           import('./features/categories/categories-page').then((m) => m.CategoriesPage),
+      },
+      {
+        path: `${APP_PATHS.categories}/${CATEGORY_PATHS.edit}`,
+        title: 'Editar categorías',
+        data: { ...LIST_DETAIL, ...FLOW },
+        loadComponent: () =>
+          import('./features/categories/categories-edit/categories-edit-page').then(
+            (m) => m.CategoriesEditPage,
+          ),
+        children: [
+          {
+            path: NEW_ITEM_PATH,
+            title: 'Nueva categoría',
+            canDeactivate: [unsavedChangesGuard],
+            loadComponent: () =>
+              import('./features/categories/category/category-page').then((m) => m.CategoryPage),
+          },
+          {
+            path: ':id',
+            title: 'Categoría',
+            canDeactivate: [unsavedChangesGuard],
+            loadComponent: () =>
+              import('./features/categories/category/category-page').then((m) => m.CategoryPage),
+          },
+        ],
       },
       {
         path: APP_PATHS.transactions,
@@ -128,46 +168,10 @@ export const routes: Routes = [
           import('./features/settings/settings-page').then((m) => m.SettingsPage),
       },
       {
-        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}`,
-        title: 'Categorías',
-        loadComponent: () =>
-          import('./features/settings/categories/categories-settings-page').then(
-            (m) => m.CategoriesSettingsPage,
-          ),
-      },
-      {
-        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/${NEW_ITEM_PATH}`,
-        title: 'Nueva categoría',
-        loadComponent: () =>
-          import('./features/settings/categories/category-edit/category-edit-page').then(
-            (m) => m.CategoryEditPage,
-          ),
-      },
-      {
-        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.categories}/:id`,
-        title: 'Categoría',
-        loadComponent: () =>
-          import('./features/settings/categories/category-edit/category-edit-page').then(
-            (m) => m.CategoryEditPage,
-          ),
-      },
-      {
         path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}`,
         title: 'Etiquetas',
         loadComponent: () =>
           import('./features/settings/tags/tags-settings-page').then((m) => m.TagsSettingsPage),
-      },
-      {
-        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/${NEW_ITEM_PATH}`,
-        title: 'Nueva etiqueta',
-        loadComponent: () =>
-          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
-      },
-      {
-        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}/:id`,
-        title: 'Etiqueta',
-        loadComponent: () =>
-          import('./features/settings/tags/tag-edit/tag-edit-page').then((m) => m.TagEditPage),
       },
     ],
   },

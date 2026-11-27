@@ -1,6 +1,10 @@
-// Material 3 window size classes. Sass variables because media queries cannot read CSS custom properties.
+// Material 3 window size classes (spec §13.5). Sass variables because media queries cannot read
+// CSS custom properties. WINDOW_BREAKPOINTS in src/app/shared/ui/ui.constants.ts must match.
 $bp-medium: 600px;
-$bp-wide: 840px;
+$bp-expanded: 840px;
+
+// Container width from which the category grid uses six columns instead of four.
+$cq-grid-wide: 36rem;
 
 @mixin medium {
   @media (min-width: $bp-medium) {
@@ -8,8 +12,14 @@ $bp-wide: 840px;
   }
 }
 
-@mixin wide {
-  @media (min-width: $bp-wide) {
+@mixin expanded {
+  @media (min-width: $bp-expanded) {
+    @content;
+  }
+}
+
+@mixin container-wide {
+  @container (min-width: #{$cq-grid-wide}) {
     @content;
   }
 }

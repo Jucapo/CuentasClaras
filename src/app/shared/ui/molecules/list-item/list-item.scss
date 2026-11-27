@@ -23,7 +23,21 @@
   text-decoration: none;
 }
 
-a.main {
+.main.selected {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+button.main {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: start;
+}
+
+a.main,
+button.main {
   cursor: pointer;
 
   &:hover {

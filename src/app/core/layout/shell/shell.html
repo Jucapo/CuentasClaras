@@ -5,6 +5,8 @@
   totalLabel="Total"
   total="—"
   periodLabel="Periodo"
+  [immersive]="routeFlags().flow"
+  [wideContent]="routeFlags().listDetail"
 >
   <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" [disabled]="true" />
   <cc-button ccShellPeriod variant="tonal" [disabled]="true">Este mes</cc-button>

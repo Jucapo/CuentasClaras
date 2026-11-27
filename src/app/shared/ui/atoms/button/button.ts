@@ -36,6 +36,8 @@ export class Button {
   readonly fullWidth = input(false);
   /** Error colors, for destructive actions such as deleting. */
   readonly danger = input(false);
+  /** Keyboard shortcut that triggers it, e.g. `Control+S`; announced with aria-keyshortcuts. */
+  readonly shortcut = input<string>();
 
   protected readonly spinnerDiameter = BUTTON_SPINNER_DIAMETER;
   // A bare mat-icon (not cc-icon) keeps Material's spacing for icons inside buttons.

@@ -4,34 +4,30 @@
 
 .instructions {
   margin: 0 0 var(--cc-space-2);
+  padding-inline: var(--cc-space-2);
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
 }
 
-.roots {
+.rows {
   display: flex;
   flex-direction: column;
-  gap: var(--cc-space-1);
 }
 
-.node {
-  border-radius: var(--cc-radius-md);
-  background-color: var(--mat-sys-surface-container-low);
-}
-
-.children {
-  display: flex;
-  flex-direction: column;
-  padding: 0 var(--cc-space-2) var(--cc-space-2) var(--cc-list-indent);
-}
-
-.child {
+.row {
   border-radius: var(--cc-radius-sm);
-  background-color: var(--mat-sys-surface-container-low);
+  background-color: var(--mat-sys-surface);
 }
 
-.add-child {
+.add {
   color: var(--mat-sys-primary);
+}
+
+// Lines the "+" up with the badges above.
+.add-icon {
+  display: inline-flex;
+  justify-content: center;
+  width: var(--cc-badge-size-md);
 }
 
 .handle {

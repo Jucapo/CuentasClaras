@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { BottomNav, NavLink } from './bottom-nav';
+import { NavLink } from '../../molecules/nav-item/nav-item';
+import { BottomNav } from './bottom-nav';
 
 @Component({
   imports: [BottomNav],

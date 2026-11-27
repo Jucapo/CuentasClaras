@@ -1,9 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { Account } from '../../core/accounts/account.models';
 import { AccountsService } from '../../core/accounts/accounts.service';
-import { ACCOUNT_GROUP_LABELS } from '../../core/config/catalog.constants';
+import {
+  ACCOUNT_GROUP_CHOICES,
+  ACCOUNT_GROUP_LABELS,
+  CreatableAccountGroup,
+} from '../../core/config/catalog.constants';
 import { SPACE_DEFAULTS } from '../../core/config/space.constants';
-import { APP_PATHS, NEW_ITEM_PATH } from '../../core/routing/app-paths';
+import { ACCOUNT_QUERY_PARAMS, APP_PATHS, NEW_ITEM_PATH } from '../../core/routing/app-paths';
 import { SpaceService } from '../../core/spaces/space.service';
 import {
   ACCOUNT_KIND_GROUP,
@@ -11,7 +16,11 @@ import {
   groupAccounts,
 } from '../../domain/accounts/account-kinds';
 import { Button } from '../../shared/ui/atoms/button/button';
+import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
+import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Message } from '../../shared/ui/atoms/message/message';
+import { Disclosure } from '../../shared/ui/molecules/disclosure/disclosure';
+import { OptionPanel, OptionPanelData } from '../../shared/ui/molecules/option-panel/option-panel';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import {
@@ -19,23 +28,45 @@ import {
   AccountListGroup,
   AccountListItem,
 } from '../../shared/ui/organisms/account-list/account-list';
+import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
+import { OverlayService } from '../../shared/ui/services/overlay.service';
+import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
+import { AccountEditPage } from './account-edit/account-edit-page';
 
-/** Accounts of the active space grouped as in spec §4.1, with totals per currency. */
+/**
+ * Accounts of the active space grouped as in spec §4.1, with totals per currency. Creating and
+ * editing open next to the list (expanded) or over it (spec §13.5).
+ */
 @Component({
   selector: 'app-accounts-page',
-  imports: [PageHeader, Button, Message, Section, AccountList],
+  imports: [
+    RouterOutlet,
+    ListDetailLayout,
+    PageHeader,
+    Button,
+    IconButton,
+    Icon,
+    Message,
+    Section,
+    Disclosure,
+    AccountList,
+  ],
   templateUrl: './accounts-page.html',
   styleUrl: './accounts-page.scss',
 })
 export class AccountsPage {
   private readonly accountsService = inject(AccountsService);
   private readonly spaces = inject(SpaceService);
+  private readonly overlay = inject(OverlayService);
+  private readonly router = inject(Router);
 
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly loaded = this.accountsService.loaded;
   protected readonly loadError = this.accountsService.loadError;
-  protected readonly newAccountLink = ['/', APP_PATHS.accounts, NEW_ITEM_PATH];
-  protected readonly showArchived = signal(false);
+  /** The account screen open in the detail pane, if any. */
+  private readonly detail = signal<AccountEditPage | null>(null);
+  protected readonly detailOpen = computed(() => this.detail() !== null);
+  private readonly selectedId = computed(() => this.detail()?.id() ?? null);
 
   private readonly mainCurrency = computed(
     () => this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency,
@@ -48,10 +79,54 @@ export class AccountsPage {
   );
 
   protected readonly isEmpty = computed(() => this.loaded() && this.active().length === 0);
-  protected readonly archivedCount = computed(() => this.archived().length);
+  protected readonly archivedLabel = computed(() => `Archivadas (${this.archived().length})`);
+  protected readonly hasArchived = computed(() => this.archived().length > 0);
   protected readonly totals = computed(() => accountsTotal(this.active(), this.mainCurrency()));
   protected readonly groups = computed(() => this.toGroups(this.active()));
   protected readonly archivedGroups = computed(() => this.toGroups(this.archived()));
+
+  constructor() {
+    useShortcuts({ n: () => void this.create() });
+  }
+
+  protected onActivate(component: unknown): void {
+    this.detail.set(component instanceof AccountEditPage ? component : null);
+  }
+
+  protected onDeactivate(): void {
+    this.detail.set(null);
+  }
+
+  /** "¿Qué vas a crear?" (spec §7), then the new account screen for the chosen group. */
+  protected async create(): Promise<void> {
+    if (!this.canEdit()) {
+      return;
+    }
+    const groups = Object.keys(ACCOUNT_GROUP_CHOICES) as CreatableAccountGroup[];
+    const group = await this.overlay.open<
+      CreatableAccountGroup,
+      OptionPanelData<CreatableAccountGroup>
+    >(OptionPanel, {
+      label: '¿Qué vas a crear?',
+      data: {
+        title: '¿Qué vas a crear?',
+        mode: 'action',
+        prominent: true,
+        options: groups.map((value) => ({
+          value,
+          label: ACCOUNT_GROUP_CHOICES[value].label,
+          description: ACCOUNT_GROUP_CHOICES[value].example,
+          icon: ACCOUNT_GROUP_CHOICES[value].icon,
+          color: ACCOUNT_GROUP_CHOICES[value].color,
+        })),
+      },
+    });
+    if (group) {
+      await this.router.navigate(['/', APP_PATHS.accounts, NEW_ITEM_PATH], {
+        queryParams: { [ACCOUNT_QUERY_PARAMS.group]: ACCOUNT_GROUP_CHOICES[group].param },
+      });
+    }
+  }
 
   private toGroups(accounts: readonly Account[]): AccountListGroup[] {
     return groupAccounts(accounts, this.mainCurrency()).map((summary) => ({
@@ -81,6 +156,7 @@ export class AccountsPage {
       notes: notes.join(' · ') || undefined,
       link: ['/', APP_PATHS.accounts, account.id],
       archived: !!account.archived_at,
+      selected: account.id === this.selectedId(),
     };
   }
 }

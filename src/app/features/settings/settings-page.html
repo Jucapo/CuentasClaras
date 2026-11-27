@@ -3,15 +3,16 @@
 <div class="sections">
   <cc-section title="Espacio" [description]="spaceDescription()">
     <cc-form label="Espacio" [form]="spaceForm">
-      <cc-space-preferences-form [fields]="spaceForm.space" />
-      <div class="pair">
-        <cc-icon-picker
-          label="Ícono del espacio"
-          [color]="spaceForm.color().value()"
+      <div class="space-appearance">
+        <cc-appearance-picker
+          label="Ícono y color del espacio"
+          size="lg"
           [formField]="spaceForm.icon"
+          [(color)]="spaceForm.color().value"
         />
-        <cc-color-picker label="Color del espacio" [formField]="spaceForm.color" />
+        <span class="space-appearance-label">Ícono y color</span>
       </div>
+      <cc-space-preferences-form [fields]="spaceForm.space" />
       @if (canConfigure()) {
         <cc-form-actions align="end" [error]="spaceError()">
           <cc-button type="submit" loadingLabel="Guardando" [loading]="spaceForm().submitting()">
@@ -55,6 +56,17 @@
     <cc-form label="Preferencias" [form]="preferencesForm">
       <cc-select label="Tema" [options]="themeOptions" [formField]="preferencesForm.theme" />
       <cc-number-format-form [fields]="preferencesForm.numberFormat" />
+      @if (!layout.isCompact()) {
+        <!-- Device preference: applies at once, outside the saved preferences (spec §13.5). -->
+        <cc-switch
+          icon="keyboard"
+          [row]="true"
+          label="Atajos de teclado"
+          hint="N crea y E edita las categorías. Se guarda en este dispositivo."
+          [checked]="shortcuts.singleKeyEnabled()"
+          (checkedChange)="shortcuts.setSingleKeyEnabled($event)"
+        />
+      }
       <cc-form-actions align="end" [error]="preferencesError()">
         <cc-button
           type="submit"

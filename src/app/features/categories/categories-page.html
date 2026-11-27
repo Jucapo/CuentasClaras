@@ -1,1 +1,29 @@
-<cc-page-header title="Categorías" />
+<cc-page-header title="Categorías">
+  @if (canEdit()) {
+    <cc-icon-button icon="edit" label="Editar categorías" shortcut="E" (click)="edit()" />
+  }
+</cc-page-header>
+
+<cc-tabs
+  label="Clase de categorías"
+  [options]="kindTabs"
+  [value]="kind()"
+  (valueChange)="changeKind($event)"
+>
+  <div class="content">
+    @if (loadError(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    } @else if (isEmpty()) {
+      <cc-section
+        [title]="emptyTitle()"
+        description="Crea las categorías en las que repartes tus gastos e ingresos."
+      >
+        @if (canEdit()) {
+          <cc-button icon="add" (click)="edit()">Crear categorías</cc-button>
+        }
+      </cc-section>
+    } @else {
+      <cc-category-grid [label]="gridLabel()" [centerLabel]="kindLabel()" [items]="items()" />
+    }
+  </div>
+</cc-tabs>

@@ -9,5 +9,8 @@ export const APP_BRAND_ICON: IconName = 'account_balance_wallet';
 /** localStorage key that caches the theme preference so it applies before the user loads. */
 export const THEME_STORAGE_KEY = 'cc-theme';
 
+/** localStorage key of the single-key keyboard shortcuts preference (per device, spec §13.5). */
+export const SHORTCUTS_STORAGE_KEY = 'cc-shortcuts';
+
 /** How long snack bar notifications stay visible. */
 export const SNACK_BAR_DURATION_MS = 4000;

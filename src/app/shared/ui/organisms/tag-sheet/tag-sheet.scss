@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  padding-top: var(--cc-space-2);
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.grid-title {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+}

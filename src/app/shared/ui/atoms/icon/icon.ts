@@ -3,7 +3,7 @@ import { MatIcon } from '@angular/material/icon';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
 
 /** Icon sizes, mapped to the --cc-icon-size-* tokens. */
-export type IconSize = 'sm' | 'md' | 'lg';
+export type IconSize = 'sm' | 'md' | 'lg' | 'xl';
 
 /** Material Symbols icon, rendered by codepoint. Decorative unless it gets a `label`. */
 @Component({

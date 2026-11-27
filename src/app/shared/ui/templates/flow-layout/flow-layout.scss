@@ -1,0 +1,57 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: var(--mat-sys-surface);
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--cc-z-app-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-2);
+  min-height: var(--cc-header-height);
+  padding: var(--cc-safe-area-top) var(--cc-space-4) 0 var(--cc-space-1);
+  background-color: var(--mat-sys-surface-container);
+}
+
+// In the medium window class the shell header stays on top, so the bar sticks below it.
+:host(.window-medium) .top-bar {
+  top: calc(var(--cc-header-height) + var(--cc-safe-area-top));
+  padding-top: 0;
+}
+
+:host(.window-expanded) .top-bar {
+  padding-top: 0;
+  border-radius: var(--cc-radius-lg) var(--cc-radius-lg) 0 0;
+}
+
+.title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font: var(--mat-sys-title-large);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--cc-space-2);
+}
+
+.action:empty {
+  display: none;
+}
+
+// The organisms inside bring their own header band and paddings.
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding-bottom: var(--cc-space-6);
+}

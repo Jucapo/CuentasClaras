@@ -1,0 +1,49 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  @if (data.mode === 'multiple') {
+    <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
+  }
+
+  @for (group of groups(); track group.label) {
+    <section class="group">
+      @if (group.label; as label) {
+        <h3 class="group-title">{{ label }}</h3>
+      }
+      <div
+        class="options"
+        [attr.role]="data.mode === 'single' ? 'radiogroup' : null"
+        [attr.aria-label]="data.mode === 'single' ? (group.label ?? data.title) : null"
+      >
+        @for (option of group.options; track $index) {
+          <button
+            type="button"
+            class="option"
+            [class.prominent]="data.prominent"
+            [class.picked]="isPicked(option)"
+            [attr.role]="role"
+            [attr.aria-checked]="role ? isPicked(option) : null"
+            (click)="choose(option)"
+          >
+            @if (option.icon; as icon) {
+              <cc-icon-badge
+                [icon]="icon"
+                [color]="option.color ?? null"
+                [size]="data.prominent ? 'lg' : 'md'"
+              />
+            }
+            <span class="texts">
+              <span class="label">{{ option.label }}</span>
+              @if (option.description; as description) {
+                <span class="description">{{ description }}</span>
+              }
+            </span>
+            @if (isPicked(option)) {
+              <cc-icon class="check" name="check" />
+            }
+          </button>
+        }
+      </div>
+    </section>
+  } @empty {
+    <p class="empty">{{ data.emptyText }}</p>
+  }
+</cc-overlay-panel>

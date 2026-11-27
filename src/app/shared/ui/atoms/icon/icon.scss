@@ -13,6 +13,10 @@
   --cc-icon-size: var(--cc-icon-size-lg);
 }
 
+:host(.size-xl) {
+  --cc-icon-size: var(--cc-icon-size-xl);
+}
+
 :host(.filled) {
   --cc-icon-fill: 1;
 }

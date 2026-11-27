@@ -1,0 +1,22 @@
+<label class="label" [for]="controlId">{{ label() }}</label>
+<input
+  #input
+  class="input"
+  type="text"
+  autocomplete="off"
+  [class.invalid]="!!errorMessage()"
+  [id]="controlId"
+  [value]="value()"
+  [disabled]="disabled()"
+  [required]="required()"
+  [placeholder]="placeholder()"
+  [attr.name]="name() || null"
+  [attr.maxlength]="maxLength() ?? null"
+  [attr.aria-invalid]="errorMessage() ? 'true' : null"
+  [attr.aria-describedby]="errorMessage() ? controlId + '-error' : null"
+  (input)="onInput($event)"
+  (blur)="touch.emit()"
+/>
+@if (errorMessage(); as message) {
+  <p class="error" role="alert" [id]="controlId + '-error'">{{ message }}</p>
+}

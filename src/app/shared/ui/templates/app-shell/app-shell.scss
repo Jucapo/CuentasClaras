@@ -1,7 +1,21 @@
 :host {
   display: flex;
-  flex-direction: column;
   min-height: 100dvh;
+}
+
+.nav-rail {
+  position: sticky;
+  top: 0;
+  flex: none;
+  height: 100dvh;
+  z-index: var(--cc-z-app-bar);
+}
+
+.main-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .shell-header {
@@ -54,6 +68,22 @@
   padding-bottom: calc(
     var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-4)
   );
+
+  // A full-screen flow has no bottom navigation to clear.
+  &.immersive {
+    padding: 0 0 var(--cc-safe-area-bottom);
+  }
+}
+
+:host(.with-rail) .shell-content {
+  padding-bottom: var(--cc-space-4);
+}
+
+:host(.with-rail.wide-content) {
+  .header-content,
+  .shell-content {
+    max-width: var(--cc-list-detail-max-width);
+  }
 }
 
 .bottom-nav {

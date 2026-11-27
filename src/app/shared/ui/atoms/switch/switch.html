@@ -1,14 +1,33 @@
-<mat-slide-toggle
-  [id]="controlId"
-  [checked]="checked()"
-  [disabled]="disabled()"
-  [required]="required()"
-  [aria-describedby]="hintId()"
-  (change)="checked.set($event.checked)"
-  (focusout)="touch.emit()"
->
-  {{ label() }}
-</mat-slide-toggle>
+@if (row()) {
+  <div class="row-layout" [class.disabled]="disabled()">
+    @if (icon(); as icon) {
+      <cc-icon class="row-icon" [name]="icon" />
+    }
+    <label class="row-label" [id]="labelId" [for]="buttonId">{{ label() }}</label>
+    <mat-slide-toggle
+      [id]="controlId"
+      [checked]="checked()"
+      [disabled]="disabled()"
+      [required]="required()"
+      [aria-labelledby]="labelId"
+      [aria-describedby]="hintId()"
+      (change)="checked.set($event.checked)"
+      (focusout)="touch.emit()"
+    />
+  </div>
+} @else {
+  <mat-slide-toggle
+    [id]="controlId"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    [required]="required()"
+    [aria-describedby]="hintId()"
+    (change)="checked.set($event.checked)"
+    (focusout)="touch.emit()"
+  >
+    {{ label() }}
+  </mat-slide-toggle>
+}
 @if (errorMessage(); as message) {
   <p class="supporting-text error" role="alert">{{ message }}</p>
 } @else if (hint(); as hint) {

@@ -8,17 +8,17 @@ import {
   SPACE_DEFAULTS,
   THEME_OPTIONS,
 } from '../../core/config/space.constants';
-import { APP_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
+import { APP_PATHS, CATEGORY_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
 import { SpaceMembership, SpacePatch, ThemePreference } from '../../core/spaces/space.models';
 import { SpaceService } from '../../core/spaces/space.service';
 import { UserSettingsService } from '../../core/user-settings/user-settings.service';
 import { Button } from '../../shared/ui/atoms/button/button';
 import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Select } from '../../shared/ui/atoms/select/select';
-import { ColorPicker } from '../../shared/ui/molecules/color-picker/color-picker';
+import { Switch } from '../../shared/ui/atoms/switch/switch';
+import { AppearancePicker } from '../../shared/ui/molecules/appearance-picker/appearance-picker';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
 import { Form } from '../../shared/ui/molecules/form/form';
-import { IconPicker } from '../../shared/ui/molecules/icon-picker/icon-picker';
 import { ListItem } from '../../shared/ui/molecules/list-item/list-item';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
@@ -31,6 +31,8 @@ import {
   spacePreferencesSchema,
 } from '../../shared/ui/organisms/space-preferences-form/space-preferences';
 import { SpacePreferencesForm } from '../../shared/ui/organisms/space-preferences-form/space-preferences-form';
+import { KeyboardShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
+import { LayoutService } from '../../shared/ui/services/layout.service';
 import { ToastService } from '../../shared/ui/services/toast.service';
 
 interface UserPreferences {
@@ -50,8 +52,8 @@ interface UserPreferences {
     Button,
     Icon,
     Select,
-    IconPicker,
-    ColorPicker,
+    AppearancePicker,
+    Switch,
     ListItem,
     SpacePreferencesForm,
     NumberFormatForm,
@@ -65,6 +67,8 @@ export class SettingsPage {
   private readonly spaces = inject(SpaceService);
   private readonly userSettings = inject(UserSettingsService);
   private readonly toast = inject(ToastService);
+  protected readonly layout = inject(LayoutService);
+  protected readonly shortcuts = inject(KeyboardShortcuts);
 
   protected readonly canConfigure = this.spaces.canConfigure;
   protected readonly themeOptions = THEME_OPTIONS;
@@ -73,7 +77,7 @@ export class SettingsPage {
   protected readonly signingOut = signal(false);
   protected readonly catalogLinks = {
     accounts: ['/', APP_PATHS.accounts],
-    categories: ['/', APP_PATHS.settings, SETTINGS_PATHS.categories],
+    categories: ['/', APP_PATHS.categories, CATEGORY_PATHS.edit],
     tags: ['/', APP_PATHS.settings, SETTINGS_PATHS.tags],
   };
 

@@ -1,0 +1,46 @@
+<div
+  class="grid"
+  role="list"
+  cdkDropList
+  cdkDropListOrientation="mixed"
+  [attr.aria-label]="label()"
+  [cdkDropListDisabled]="!reorderable()"
+  (cdkDropListDropped)="dropped($event)"
+>
+  <cc-donut class="donut" aria-hidden="true">
+    <span class="center-label">{{ centerLabel() }}</span>
+  </cc-donut>
+
+  @for (item of items(); track item.id; let index = $index) {
+    <div
+      class="cell"
+      role="listitem"
+      cdkDrag
+      [cdkDragDisabled]="!reorderable()"
+      [cdkDragStartDelay]="dragDelay"
+      [attr.data-id]="item.id"
+    >
+      <cc-category-bubble
+        [name]="item.name"
+        [icon]="item.icon"
+        [color]="item.color"
+        [variant]="mode()"
+        [selected]="item.id === selectedId()"
+        [describedBy]="reorderable() ? helpId : null"
+        [keyShortcuts]="reorderable() ? 'Alt+ArrowLeft Alt+ArrowRight' : null"
+        (activate)="opened.emit(item.id)"
+        (keydown)="onKeydown($event, index)"
+      />
+    </div>
+  }
+
+  @if (mode() === 'edit' && addLabel(); as addLabel) {
+    <div class="cell" role="listitem">
+      <cc-category-bubble variant="add" [name]="addLabel" (activate)="add.emit()" />
+    </div>
+  }
+</div>
+
+@if (reorderable() && items().length > 1) {
+  <p class="help" [id]="helpId">{{ keyboardHelp }}</p>
+}

@@ -1,0 +1,12 @@
+@if (showPreview()) {
+  <div class="preview" aria-hidden="true">
+    <cc-icon-badge size="xl" [icon]="icon()" [color]="shownColor()" />
+  </div>
+}
+<cc-tabs [label]="text.appearanceTitle" [options]="tabs" [(value)]="tab">
+  @if (tab() === 'icon') {
+    <cc-icon-grid [(value)]="icon" [color]="shownColor()" />
+  } @else {
+    <cc-color-grid [(value)]="color" [inheritFrom]="inheritFrom()" />
+  }
+</cc-tabs>

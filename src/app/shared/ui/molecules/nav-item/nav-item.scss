@@ -43,3 +43,36 @@
     color: var(--mat-sys-on-secondary-container);
   }
 }
+
+// Expanded rail: the indicator wraps icon and label in one pill.
+.nav-item.inline {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: var(--cc-space-3);
+  height: var(--cc-nav-rail-item-height);
+  padding-inline: var(--cc-space-4);
+  border-radius: var(--cc-radius-full);
+  transition: background-color var(--cc-transition-fast);
+
+  .nav-indicator {
+    width: auto;
+    height: auto;
+    background-color: transparent;
+  }
+
+  .nav-label {
+    font: var(--mat-sys-label-large);
+  }
+
+  &.active {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+@media (hover: hover) {
+  .nav-item:not(.active):hover .nav-indicator,
+  .nav-item.inline:not(.active):hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+}

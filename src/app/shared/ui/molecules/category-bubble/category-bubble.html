@@ -1,0 +1,27 @@
+@switch (variant()) {
+  @case ('view') {
+    <div class="bubble">
+      <span class="name">{{ name() }}</span>
+      <cc-icon-badge size="lg" [icon]="icon()" [color]="color()" />
+    </div>
+  }
+  @case ('edit') {
+    <button
+      type="button"
+      class="bubble interactive"
+      [attr.aria-current]="selected() ? 'true' : null"
+      [attr.aria-describedby]="describedBy()"
+      [attr.aria-keyshortcuts]="keyShortcuts()"
+      (click)="activate.emit()"
+    >
+      <span class="name">{{ name() }}</span>
+      <cc-icon-badge size="lg" [icon]="icon()" [color]="color()" />
+    </button>
+  }
+  @case ('add') {
+    <button type="button" class="bubble interactive" (click)="activate.emit()">
+      <span class="name">{{ name() }}</span>
+      <span class="add-circle"><cc-icon name="add" size="lg" /></span>
+    </button>
+  }
+}

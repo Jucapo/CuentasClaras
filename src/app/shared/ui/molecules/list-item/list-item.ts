@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatRipple } from '@angular/material/core';
 import { Params, RouterLink } from '@angular/router';
 import { LinkCommands } from '../../atoms/button/button';
@@ -7,8 +7,9 @@ import { Icon } from '../../atoms/icon/icon';
 
 /**
  * Row of a list: leading visual (`[ccListItemLeading]`), title and subtitle, trailing content
- * (`[ccListItemTrailing]`). With `link` the row navigates. `[ccListItemStart]` and
- * `[ccListItemEnd]` sit outside the link, for controls such as a drag handle.
+ * (`[ccListItemTrailing]`). With `link` the row navigates; with `actionable` it is a button that
+ * emits `activate` (e.g. to open a sheet). `[ccListItemStart]` and `[ccListItemEnd]` sit outside
+ * the link or button, for controls such as a drag handle.
  */
 @Component({
   selector: 'cc-list-item',
@@ -24,4 +25,9 @@ export class ListItem {
   readonly queryParams = input<Params | null>(null);
   /** Dims the row, e.g. for archived items. */
   readonly muted = input(false);
+  /** Without a link, renders a button that emits `activate`. */
+  readonly actionable = input(false);
+  /** Marks the row whose detail is open next to the list. */
+  readonly selected = input(false);
+  readonly activate = output<void>();
 }

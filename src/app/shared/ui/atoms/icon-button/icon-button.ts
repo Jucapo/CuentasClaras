@@ -17,6 +17,13 @@ export class IconButton {
   readonly label = input.required<string>();
   readonly link = input<LinkCommands>();
   readonly disabled = input(false);
+  /** Keyboard shortcut that triggers it, e.g. `N`; announced with aria-keyshortcuts and the title. */
+  readonly shortcut = input<string>();
+
+  protected readonly title = computed(() => {
+    const shortcut = this.shortcut();
+    return shortcut ? `${this.label()} (${shortcut})` : null;
+  });
 
   protected readonly glyph = computed(() => iconGlyph(this.icon()));
 }

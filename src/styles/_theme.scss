@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use 'breakpoints';
 
 // The single place for the theme: Material 3 palettes and Material component overrides.
 // TODO: replace the provisional palettes with the final brand colors.
@@ -41,9 +42,14 @@ html {
   padding: 0;
 }
 
-// Toasts (ToastService) float above the bottom navigation instead of covering it.
+// Toasts (ToastService) float above the bottom navigation instead of covering it; from the medium
+// window class on, the navigation is a side rail.
 .mat-mdc-snack-bar-container.cc-toast {
   margin-bottom: calc(var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-2));
+
+  @include breakpoints.medium {
+    margin-bottom: var(--cc-space-4);
+  }
 }
 
 // The system tokens use light-dark(), so setting color-scheme switches every token below it.

@@ -4,6 +4,7 @@ import { provideRouter, Router, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
+import { CategoriesService } from './core/categories/categories.service';
 import { FEATURE_FLAGS } from './core/config/feature-flags';
 import { SpaceService } from './core/spaces/space.service';
 import { UserSettingsService } from './core/user-settings/user-settings.service';
@@ -25,7 +26,15 @@ describe('app routes', () => {
         },
         {
           provide: SpaceService,
-          useValue: { hasSpace, ensureLoaded: vi.fn().mockResolvedValue({ ok: true }) },
+          useValue: {
+            hasSpace,
+            canEdit: signal(true),
+            ensureLoaded: vi.fn().mockResolvedValue({ ok: true }),
+          },
+        },
+        {
+          provide: CategoriesService,
+          useValue: { tree: () => [], loaded: signal(true), loadError: signal(null) },
         },
         { provide: UserSettingsService, useValue: { settings: signal(null) } },
         { provide: ToastService, useValue: { show: vi.fn() } },

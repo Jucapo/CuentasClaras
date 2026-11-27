@@ -1,29 +1,44 @@
-<cc-page-header [title]="title()" [backLink]="backLink" backLabel="Volver a cuentas" />
+<cc-flow-layout [title]="title()" [closeIcon]="id() ? 'back' : 'close'" (closed)="close()">
+  @if (canEdit() && !notFound() && !loading()) {
+    <cc-button
+      ccFlowAction
+      shortcut="Control+S Meta+S"
+      loadingLabel="Guardando"
+      [loading]="form().submitting()"
+      (click)="submitForm()"
+    >
+      Guardar
+    </cc-button>
+  }
 
-@if (notFound()) {
-  <cc-message
-    >No encontramos esta cuenta. Puede que se haya eliminado o que sea privada.</cc-message
-  >
-} @else {
-  <div class="content">
-    @if (archived()) {
-      <cc-message tone="info">
-        Esta cuenta está archivada: no aparece al registrar movimientos.
-      </cc-message>
-    }
+  @if (loading()) {
+    <p class="status" role="status">Cargando la cuenta…</p>
+  } @else if (notFound()) {
+    <div class="notice">
+      <cc-message
+        >No encontramos esta cuenta. Puede que se haya eliminado o que sea privada.</cc-message
+      >
+    </div>
+  } @else {
     <cc-form label="Cuenta" [form]="form">
-      <cc-account-form [fields]="form" />
-      @if (canEdit()) {
-        <cc-form-actions align="end" [error]="error()">
-          <cc-button type="submit" loadingLabel="Guardando" [loading]="form().submitting()">
-            Guardar
-          </cc-button>
-        </cc-form-actions>
-      }
+      <cc-account-editor [fields]="form" [autofocusName]="!id()" />
     </cc-form>
 
+    @if (archived() || error()) {
+      <div class="notice">
+        @if (archived()) {
+          <cc-message tone="info">
+            Esta cuenta está archivada: no aparece al registrar movimientos.
+          </cc-message>
+        }
+        @if (error(); as error) {
+          <cc-message>{{ error }}</cc-message>
+        }
+      </div>
+    }
+
     @if (existing() && canEdit()) {
-      <cc-form-actions align="start" [error]="actionError()">
+      <cc-form-actions class="item-actions" align="start" [error]="actionError()">
         <cc-button
           variant="outlined"
           [icon]="archived() ? 'unarchive' : 'archive'"
@@ -45,5 +60,5 @@
         }
       </cc-form-actions>
     }
-  </div>
-}
+  }
+</cc-flow-layout>

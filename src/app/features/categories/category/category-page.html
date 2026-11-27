@@ -1,0 +1,72 @@
+<cc-flow-layout [title]="title()" [closeIcon]="id() ? 'back' : 'close'" (closed)="close()">
+  @if (canEdit() && !notFound() && !loading()) {
+    <cc-button
+      ccFlowAction
+      shortcut="Control+S Meta+S"
+      loadingLabel="Guardando"
+      [loading]="form().submitting()"
+      (click)="submitForm()"
+    >
+      Guardar
+    </cc-button>
+  }
+
+  @if (loading()) {
+    <p class="status" role="status">Cargando la categoría…</p>
+  } @else if (notFound()) {
+    <div class="notice">
+      <cc-message>No encontramos esta categoría. Puede que se haya eliminado.</cc-message>
+    </div>
+  } @else {
+    <cc-form label="Categoría" [form]="form">
+      <cc-category-editor
+        [fields]="form"
+        [tagOptions]="tagOptions()"
+        [subcategories]="subcategories()"
+        [archivedSubcategories]="archivedSubcategories()"
+        [canEdit]="canEdit()"
+        [autofocusName]="!id()"
+        (openSubcategory)="openSubcategory($event)"
+        (addSubcategory)="addSubcategory()"
+        (reorderSubcategories)="reorderSubcategories($event)"
+      />
+    </cc-form>
+
+    @if (archived() || error()) {
+      <div class="notice">
+        @if (archived()) {
+          <cc-message tone="info">
+            Esta categoría está archivada: no aparece al registrar movimientos.
+          </cc-message>
+        }
+        @if (error(); as error) {
+          <cc-message>{{ error }}</cc-message>
+        }
+      </div>
+    }
+
+    @if (existing() && canEdit()) {
+      <cc-form-actions class="item-actions" align="start" [error]="actionError()">
+        <cc-button
+          variant="outlined"
+          [icon]="archived() ? 'unarchive' : 'archive'"
+          [disabled]="busy()"
+          (click)="toggleArchived()"
+        >
+          {{ archived() ? 'Desarchivar' : 'Archivar' }}
+        </cc-button>
+        @if (!inUse()) {
+          <cc-button
+            variant="text"
+            icon="delete"
+            [danger]="true"
+            [disabled]="busy()"
+            (click)="remove()"
+          >
+            Eliminar
+          </cc-button>
+        }
+      </cc-form-actions>
+    }
+  }
+</cc-flow-layout>

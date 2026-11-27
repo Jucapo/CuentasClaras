@@ -1,5 +1,11 @@
 @if (link(); as commands) {
-  <a class="button" [matButton]="variant()" [routerLink]="commands" [queryParams]="queryParams()">
+  <a
+    class="button"
+    [matButton]="variant()"
+    [routerLink]="commands"
+    [queryParams]="queryParams()"
+    [attr.aria-keyshortcuts]="shortcut() ?? null"
+  >
     @if (glyph(); as glyph) {
       <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
     }
@@ -12,6 +18,7 @@
     [type]="type()"
     [disabled]="disabled() || loading()"
     [attr.aria-busy]="loading() || null"
+    [attr.aria-keyshortcuts]="shortcut() ?? null"
   >
     @if (glyph(); as glyph) {
       <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>

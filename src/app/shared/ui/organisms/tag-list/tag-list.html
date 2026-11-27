@@ -4,8 +4,9 @@
       role="listitem"
       [title]="tag.name"
       [subtitle]="tag.subtitle"
-      [link]="tag.link"
       [muted]="!!tag.archived"
+      [actionable]="actionable()"
+      (activate)="opened.emit(tag.id)"
     >
       <cc-color-swatch
         ccListItemLeading

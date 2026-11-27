@@ -5,7 +5,12 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
+import {
+  provideRouter,
+  TitleStrategy,
+  withComponentInputBinding,
+  withRouterConfig,
+} from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
@@ -22,7 +27,12 @@ export const appConfig: ApplicationConfig = {
       inject(ThemeService).init();
       return inject(AuthService).init();
     }),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      // A back navigation cancelled by a guard (unsaved changes) keeps the history position.
+      withRouterConfig({ canceledNavigationResolution: 'computed' }),
+    ),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideUi(),
     provideMoneyFormat(),
