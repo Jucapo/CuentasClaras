@@ -174,6 +174,19 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-progress-bar"
+        description="primary, error (pasado), positive y grande"
+        layout="column"
+      >
+        <ng-template>
+          <cc-progress-bar label="Avance de Mercado" [value]="0.6" />
+          <cc-progress-bar label="Avance de Hogar" tone="error" [value]="1.2" />
+          <cc-progress-bar label="Avance de Salario" tone="positive" [value]="0.8" />
+          <cc-progress-bar label="Avance del presupuesto" size="lg" [value]="0.35" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-money-field"
         description="Con valor, con ayuda en USD y con error"
         layout="column"
@@ -663,6 +676,58 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-filter-chips"
+        description="Activos con lo elegido y ✕, inactivos y «Limpiar»"
+        layout="column"
+      >
+        <ng-template>
+          <cc-filter-chips label="Filtros" [filters]="filterChips()" (cleared)="clearChip($event)" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-stat-group"
+        description="Filas en un contenedor angosto, columnas en uno ancho"
+        layout="column"
+      >
+        <ng-template>
+          <cc-stat-group label="Totales" [items]="statItems" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-progress"
+        description="Total arriba, fila a medias, pasada, sin presupuesto e ingreso de más"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-progress
+            label="el presupuesto"
+            emphasis="summary"
+            currency="COP"
+            [spent]="315000000"
+            [budget]="400000000"
+            [unbudgeted]="12000000"
+          />
+          <cc-budget-progress
+            label="Mercado"
+            currency="COP"
+            [spent]="65000000"
+            [budget]="80000000"
+          />
+          <cc-budget-progress label="Hogar" currency="COP" [spent]="170000000" [budget]="150000000" />
+          <cc-budget-progress label="Regalos" currency="COP" [spent]="12000000" [budget]="null" />
+          <cc-budget-progress
+            label="Independiente"
+            kind="income"
+            currency="COP"
+            [spent]="130000000"
+            [budget]="100000000"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-period-chip" description="Mes, Siempre (sin flechas)">
         <ng-template>
           <cc-period-chip title="Diciembre" range="28 nov – 27 dic" />
@@ -849,11 +914,38 @@
 
       <app-catalog-entry
         name="cc-transaction-list"
-        description="Por día, con «Ver más»"
+        description="Por día, con «Ver más», abierto en el panel, privado (candado) y transferencia sin signo"
         layout="column"
       >
         <ng-template>
-          <cc-transaction-list label="Movimientos" [groups]="transactionGroups" [hasMore]="true" />
+          <cc-transaction-list
+            label="Movimientos"
+            selectedId="t1"
+            [groups]="transactionGroups"
+            [hasMore]="true"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-quick-entry · panel"
+        description="Registro rápido en el panel de detalle (expandida): columnas que se apilan si es angosto"
+        layout="column"
+      >
+        <ng-template>
+          @for (key of [paneEntryKey()]; track key) {
+            <cc-quick-entry layout="pane" [data]="paneEntry" (closed)="resetPaneEntry()" />
+          }
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-missing-rates-notice"
+        description="Totales sin una moneda; «Definir tasa» para quien puede"
+        layout="column"
+      >
+        <ng-template>
+          <cc-missing-rates-notice [currencies]="['USD']" [canDefine]="true" />
         </ng-template>
       </app-catalog-entry>
 
@@ -991,6 +1083,28 @@
             defaultCurrency="COP"
             [entries]="budgetEntries"
             [totals]="budgetTotals"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-list · avance"
+        description="Pantalla Presupuesto: barra, restante, excedido, sin presupuesto e ingresos esperados"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-list
+            label="Gastos"
+            emptyText="Sin presupuesto"
+            defaultCurrency="COP"
+            [entries]="budgetProgressEntries"
+          />
+          <cc-budget-list
+            label="Ingresos esperados"
+            emptyText="Sin monto"
+            defaultCurrency="COP"
+            [readonly]="true"
+            [entries]="incomeProgressEntries"
           />
         </ng-template>
       </app-catalog-entry>

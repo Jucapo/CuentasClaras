@@ -9,6 +9,11 @@
   flex-direction: column;
 }
 
+// The bar lines up with the name of the row, after its badge.
+.progress {
+  padding: 0 var(--cc-space-2) var(--cc-space-2) var(--cc-list-indent);
+}
+
 .total {
   display: flex;
   align-items: center;

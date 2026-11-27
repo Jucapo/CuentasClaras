@@ -48,7 +48,12 @@ import {
 } from '../../shared/ui/organisms/exchange-rate-sheet/exchange-rate-sheet';
 import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-panel/period-panel';
 import { QuickEntrySheet } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
-import { QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
+import { QuickEntry, QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
+import { ProgressBar } from '../../shared/ui/atoms/progress-bar/progress-bar';
+import { BudgetProgress } from '../../shared/ui/molecules/budget-progress/budget-progress';
+import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
+import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
+import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
   TransactionList,
@@ -204,6 +209,12 @@ interface WindowClassDemo {
     WizardSteps,
     BudgetList,
     CategoryChecklist,
+    ProgressBar,
+    BudgetProgress,
+    FilterChips,
+    StatGroup,
+    QuickEntry,
+    MissingRatesNotice,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -455,6 +466,27 @@ export class UiCatalogPage {
           currency: 'COP',
           editable: true,
         },
+        {
+          id: 't5',
+          title: 'Salud',
+          subtitle: 'Ahorro Ana · Cita',
+          icon: 'medical_services',
+          color: 'red',
+          amount: -8000000,
+          currency: 'COP',
+          private: true,
+          editable: true,
+        },
+        {
+          id: 't6',
+          title: 'Bancolombia → Nequi',
+          icon: 'swap_horiz',
+          color: null,
+          amount: 5000000,
+          currency: 'COP',
+          signed: false,
+          editable: true,
+        },
       ],
     },
     {
@@ -532,6 +564,76 @@ export class UiCatalogPage {
     { currency: 'COP', amount: 300000000 },
     { currency: 'USD', amount: 20000 },
   ];
+  /** Presupuesto: under, over, without a budget, and an expected income received in excess. */
+  protected readonly budgetProgressEntries: readonly BudgetListEntry[] = [
+    {
+      id: 'c4',
+      name: 'Mercado',
+      icon: 'shopping_cart',
+      color: 'green',
+      amount: { currency: 'COP', amount: 80000000 },
+      progress: { spent: 65000000, budget: 80000000, currency: 'COP', kind: 'expense' },
+    },
+    {
+      id: 'c1',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      amount: { currency: 'COP', amount: 150000000 },
+      progress: { spent: 170000000, budget: 150000000, currency: 'COP', kind: 'expense' },
+      hint: 'Solo cambia octubre: noviembre tiene monto propio',
+    },
+    {
+      id: 'c9',
+      name: 'Regalos',
+      icon: 'redeem',
+      color: 'pink',
+      amount: null,
+      progress: { spent: 12000000, budget: null, currency: 'COP', kind: 'expense' },
+    },
+  ];
+  protected readonly incomeProgressEntries: readonly BudgetListEntry[] = [
+    {
+      id: 'i1',
+      name: 'Salario',
+      icon: 'work',
+      color: 'teal',
+      amount: { currency: 'COP', amount: 600000000 },
+      progress: { spent: 400000000, budget: 600000000, currency: 'COP', kind: 'income' },
+    },
+    {
+      id: 'i2',
+      name: 'Independiente',
+      icon: 'receipt_long',
+      color: 'blue',
+      amount: { currency: 'COP', amount: 100000000 },
+      progress: { spent: 130000000, budget: 100000000, currency: 'COP', kind: 'income' },
+    },
+  ];
+  protected readonly statItems: readonly StatItem[] = [
+    { label: 'Ingresos', amount: 300000000, currency: 'COP', signed: true },
+    { label: 'Gastos', amount: -125000000, currency: 'COP' },
+    { label: 'Neto', amount: 175000000, currency: 'COP', tone: 'auto', signed: true },
+  ];
+  protected readonly filterChips = signal<readonly FilterChip[]>([
+    { key: 'account', label: 'Cuenta', summary: 'Efectivo +1' },
+    { key: 'category', label: 'Categoría', summary: null },
+    { key: 'type', label: 'Tipo', summary: 'Gasto' },
+    { key: 'tag', label: 'Etiqueta', summary: null },
+  ]);
+  /** A movement open in the detail pane, as Transacciones shows it in the expanded class. */
+  protected readonly paneEntry = this.quickEntryData('expense');
+  protected readonly paneEntryKey = signal(0);
+
+  protected clearChip(key: string): void {
+    this.filterChips.update((chips) =>
+      chips.map((chip) => (chip.key === key ? { ...chip, summary: null } : chip)),
+    );
+  }
+
+  protected resetPaneEntry(): void {
+    this.paneEntryKey.update((key) => key + 1);
+  }
   protected readonly progressStates: readonly StepProgressState[] = [
     'done',
     'done',
@@ -652,6 +754,16 @@ export class UiCatalogPage {
   }
 
   protected openQuickEntry(type: QuickEntryValue['type']): void {
+    void this.overlay.open<unknown, QuickEntryData>(QuickEntrySheet, {
+      label: 'Registro rápido',
+      size: 'entry',
+      autoFocus: 'cc-amount-display .display',
+      data: this.quickEntryData(type),
+    });
+  }
+
+  /** An expense, a transfer or an edited adjustment of the quick entry demos. */
+  private quickEntryData(type: QuickEntryValue['type']): QuickEntryData {
     const value: QuickEntryValue = {
       type,
       expression: type === 'adjustment' ? '5000' : '12000+3500',
@@ -667,12 +779,8 @@ export class UiCatalogPage {
       monthlyRatePercent: 0,
       adjustmentDirection: 'increase',
     };
-    void this.overlay.open<unknown, QuickEntryData>(QuickEntrySheet, {
-      label: 'Registro rápido',
-      size: 'entry',
-      autoFocus: 'cc-amount-display .display',
-      data: {
-        mode: type === 'adjustment' ? 'edit' : 'create',
+    return {
+      mode: type === 'adjustment' ? 'edit' : 'create',
         title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
         accounts: [
           {
@@ -724,8 +832,7 @@ export class UiCatalogPage {
         today: '2026-11-26',
         value,
         save: async () => ACTION_OK,
-      },
-    });
+    };
   }
 
   protected openPeriodPanel(): void {

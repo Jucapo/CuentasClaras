@@ -1,20 +1,33 @@
 <div class="rows" role="list" [attr.aria-label]="label()">
   @for (entry of entries(); track entry.id; let index = $index, last = $last) {
-    <cc-money-row
-      role="listitem"
-      valuePosition="end"
-      [label]="entry.name"
-      [value]="entry.amount?.amount ?? null"
-      [currency]="entry.amount?.currency ?? defaultCurrency()"
-      [currencyOptions]="currencyOptions"
-      [placeholder]="emptyText()"
-      [enterKeyHint]="last ? 'done' : 'next'"
-      (valueChange)="onValueChange(entry.id, $event)"
-      (committed)="emitChange(entry.id, $event)"
-      (enter)="focusAfter(index)"
-    >
-      <cc-icon-badge ccMoneyRowLeading [icon]="entry.icon" [color]="entry.color" />
-    </cc-money-row>
+    <div class="entry" role="listitem">
+      <cc-money-row
+        valuePosition="end"
+        [label]="entry.name"
+        [value]="entry.amount?.amount ?? null"
+        [currency]="entry.amount?.currency ?? defaultCurrency()"
+        [currencyOptions]="currencyOptions"
+        [placeholder]="emptyText()"
+        [hint]="entry.hint"
+        [disabled]="readonly()"
+        [enterKeyHint]="last ? 'done' : 'next'"
+        (valueChange)="onValueChange(entry.id, $event)"
+        (committed)="emitChange(entry.id, $event)"
+        (enter)="focusAfter(index)"
+      >
+        <cc-icon-badge ccMoneyRowLeading [icon]="entry.icon" [color]="entry.color" />
+      </cc-money-row>
+      @if (entry.progress; as progress) {
+        <cc-budget-progress
+          class="progress"
+          [spent]="progress.spent"
+          [budget]="progress.budget"
+          [currency]="progress.currency"
+          [kind]="progress.kind"
+          [label]="entry.name"
+        />
+      }
+    </div>
   }
 </div>
 

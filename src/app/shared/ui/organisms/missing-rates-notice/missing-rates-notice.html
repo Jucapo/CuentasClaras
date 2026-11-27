@@ -1,0 +1,11 @@
+@if (currencies().length > 0) {
+  <cc-section variant="highlight" [title]="text.title" [description]="description()">
+    @if (canDefine()) {
+      <cc-form-actions align="start">
+        <cc-button variant="tonal" icon="currency_exchange" (click)="defineFirst()">
+          {{ text.define }}
+        </cc-button>
+      </cc-form-actions>
+    }
+  </cc-section>
+}

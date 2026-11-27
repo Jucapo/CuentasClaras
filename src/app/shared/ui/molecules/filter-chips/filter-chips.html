@@ -1,0 +1,42 @@
+<div class="row" role="group" [attr.aria-label]="label()">
+  @for (filter of filters(); track filter.key) {
+    @if (filter.summary; as summary) {
+      <span class="chip active">
+        <button
+          type="button"
+          class="main"
+          aria-haspopup="dialog"
+          [attr.aria-label]="filter.label + ': ' + summary"
+          (click)="opened.emit(filter.key)"
+        >
+          {{ summary }}
+        </button>
+        <button
+          type="button"
+          class="remove"
+          [attr.aria-label]="text.removeFilter + ' ' + filter.label"
+          (click)="cleared.emit(filter.key)"
+        >
+          <cc-icon name="close" size="sm" />
+        </button>
+      </span>
+    } @else {
+      <span class="chip">
+        <button
+          type="button"
+          class="main"
+          aria-haspopup="dialog"
+          (click)="opened.emit(filter.key)"
+        >
+          {{ filter.label }}
+          <cc-icon name="expand_more" size="sm" />
+        </button>
+      </span>
+    }
+  }
+  @if (activeCount() > 1) {
+    <span class="chip clear">
+      <button type="button" class="main" (click)="clearedAll.emit()">{{ text.clearFilters }}</button>
+    </span>
+  }
+</div>

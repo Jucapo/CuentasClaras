@@ -1,0 +1,30 @@
+:host {
+  --cc-progress-color: var(--mat-sys-primary);
+
+  display: block;
+  overflow: hidden;
+  block-size: var(--cc-progress-height);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--mat-sys-surface-container-highest);
+}
+
+:host(.lg) {
+  block-size: var(--cc-progress-height-lg);
+}
+
+:host(.error) {
+  --cc-progress-color: var(--mat-sys-error);
+}
+
+:host(.positive) {
+  --cc-progress-color: var(--mat-sys-tertiary);
+}
+
+.fill {
+  display: block;
+  inline-size: calc(var(--cc-progress-value) * 100%);
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--cc-progress-color);
+  transition: inline-size var(--cc-transition-fast);
+}

@@ -90,6 +90,11 @@
   // Category bubbles: ring around the badge that fills as the budget is spent.
   --cc-bubble-ring-width: 3px;
 
+  // Progress bars (budget) and filter chips (Transacciones).
+  --cc-progress-height: 0.375rem;
+  --cc-progress-height-lg: 0.625rem;
+  --cc-chip-height: 2rem;
+
   // Period selector in the header; in the compact class it takes the whole center.
   --cc-period-chip-max-width: none;
 

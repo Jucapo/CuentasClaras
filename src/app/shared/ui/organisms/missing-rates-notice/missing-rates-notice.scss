@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+// Nothing to show while every rate exists, so the page spacing around it goes away too.
+:host(:empty) {
+  display: none;
+}

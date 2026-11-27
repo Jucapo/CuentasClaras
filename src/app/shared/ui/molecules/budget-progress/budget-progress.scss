@@ -1,0 +1,37 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+  min-width: 0;
+}
+
+:host(.summary) {
+  gap: var(--cc-space-2);
+}
+
+.headline,
+.detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cc-space-1);
+  margin: 0;
+}
+
+.headline {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.detail {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.over {
+  color: var(--mat-sys-error);
+}
+
+.extra {
+  color: var(--mat-sys-tertiary);
+}

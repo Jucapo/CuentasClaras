@@ -1,0 +1,20 @@
+<div class="group" role="group" [attr.aria-label]="label()">
+  <dl class="stats">
+    @for (item of items(); track item.label) {
+      <div class="stat">
+        <dt class="label">{{ item.label }}</dt>
+        <dd class="value">
+          <cc-amount
+            [tone]="item.tone ?? 'neutral'"
+            [signed]="item.signed ?? false"
+            [amount]="item.amount"
+            [currency]="item.currency"
+          />
+        </dd>
+        @if (item.note; as note) {
+          <dd class="note">{{ note }}</dd>
+        }
+      </div>
+    }
+  </dl>
+</div>

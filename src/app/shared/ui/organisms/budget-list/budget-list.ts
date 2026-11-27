@@ -3,8 +3,21 @@ import { currencyLabel, SUPPORTED_CURRENCIES } from '../../../../core/config/spa
 import { CurrencyAmount } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
+import {
+  BudgetProgress,
+  BudgetProgressKind,
+} from '../../molecules/budget-progress/budget-progress';
 import { MoneyRow, MoneyRowCommit } from '../../molecules/money-row/money-row';
 import { PanelOption } from '../../molecules/option-panel/option-panel';
+
+/** What was spent (or received) against the amount of a row, in one currency. */
+export interface BudgetListProgress {
+  readonly spent: number;
+  /** Null without a budget. */
+  readonly budget: number | null;
+  readonly currency: string;
+  readonly kind: BudgetProgressKind;
+}
 
 /** A category with its monthly amount, as the list shows it. */
 export interface BudgetListEntry {
@@ -14,6 +27,10 @@ export interface BudgetListEntry {
   readonly color: string | null;
   /** Null while it has no amount. */
   readonly amount: CurrencyAmount | null;
+  /** The bar and what remains under the row (the Presupuesto screen); the wizard has none. */
+  readonly progress?: BudgetListProgress;
+  /** A note under the amount, e.g. which later months keep their own. */
+  readonly hint?: string;
 }
 
 /** An amount typed in a row of `cc-budget-list`. */
@@ -29,11 +46,12 @@ const CURRENCY_OPTIONS: readonly PanelOption<string>[] = SUPPORTED_CURRENCIES.ma
 /**
  * Categories with their monthly amount (budget or expected income) typed in each row (spec §13.5),
  * and the totals per currency. Enter moves to the next row, so the amounts fill in one go; the
- * currency symbol of a row picks its currency.
+ * currency symbol of a row picks its currency. With `progress`, each row shows its bar and what
+ * remains; `readonly` shows the amounts without editing them.
  */
 @Component({
   selector: 'cc-budget-list',
-  imports: [MoneyRow, IconBadge, Amount],
+  imports: [MoneyRow, IconBadge, Amount, BudgetProgress],
   templateUrl: './budget-list.html',
   styleUrl: './budget-list.scss',
 })
@@ -50,6 +68,8 @@ export class BudgetList {
   readonly totalLabel = input('Total');
   /** Under the total, e.g. what it compares with. */
   readonly totalNote = input<string>();
+  /** Amounts that cannot change here, e.g. a year or a reader. */
+  readonly readonly = input(false);
   /** An amount was confirmed in a row (Enter, leaving it or a new currency). */
   readonly changed = output<BudgetAmountChange>();
   /**

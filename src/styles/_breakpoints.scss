@@ -43,6 +43,15 @@ $cq-palette-columns: 45rem;
   }
 }
 
+// Container width from which a group of figures (totals, summary) goes in columns instead of rows.
+$cq-stat-columns: 30rem;
+
+@mixin container-stat-columns {
+  @container (min-width: #{$cq-stat-columns}) {
+    @content;
+  }
+}
+
 // Container width from which the quick entry in a detail pane puts the keypad beside the fields.
 $cq-entry-columns: 38rem;
 
