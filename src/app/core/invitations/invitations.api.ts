@@ -80,12 +80,13 @@ export class InvitationsApi {
 
   /** What the invitation page shows, also before signing in; null for an unknown token. */
   async preview(token: string): Promise<DataResult<InvitationPreview | null>> {
-    const { data, error, status } = await this.client
-      .rpc('invitation_preview', { invitation_token: token })
-      .maybeSingle();
+    const { data: rows, error, status } = await this.client.rpc('invitation_preview', {
+      invitation_token: token,
+    });
     if (error) {
       return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
     }
+    const data = rows[0];
     if (!data) {
       return { ok: true, value: null };
     }

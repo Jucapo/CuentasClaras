@@ -34,6 +34,13 @@ export default defineConfig({
       name: 'desktop-dark',
       use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'dark' },
     },
+    // The invitation email opens in Safari on iPhone (spec §3.3): that flow and the login also run
+    // on WebKit. Needs `npx playwright install webkit` once (CLAUDE.md).
+    {
+      name: 'iphone-webkit',
+      testMatch: ['**/invitation.e2e.ts', '**/auth-screens.e2e.ts'],
+      use: { ...devices['iPhone 15'], colorScheme: 'light' },
+    },
   ],
   webServer: {
     command: 'npm start',

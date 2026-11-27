@@ -79,6 +79,65 @@ export interface OnboardingFixture {
 /** A space whose setup wizard is done, so the app opens straight away. */
 const COMPLETED_ONBOARDING: OnboardingFixture = { step: 7, completedAt: '2026-11-01T00:00:00Z' };
 
+/** Another member of the space (besides the signed-in user). */
+export interface MemberFixture {
+  readonly userId: string;
+  readonly name: string;
+  readonly email: string;
+  readonly role: 'owner' | 'editor' | 'viewer';
+}
+
+/** A row of `invitation_preview` or `my_invitations`, as the RPCs return it. */
+export type InvitationRowFixture = Record<string, unknown>;
+
+/** Members, invitations and other spaces for the sharing screens (F1f). */
+export interface SharingFixture {
+  /** Role of the signed-in user in the space; owner by default. */
+  readonly role?: 'owner' | 'editor' | 'viewer';
+  readonly members?: readonly MemberFixture[];
+  /** Open invitations of the space, as the owner reads them. */
+  readonly invitations?: readonly Row[];
+  /** Invitations addressed to the user (`my_invitations`). */
+  readonly received?: readonly InvitationRowFixture[];
+  /** What `/invitacion` previews for any token; none means an unknown token. */
+  readonly preview?: InvitationRowFixture;
+  /** Emails with an account: invite-member answers with a link instead of an email. */
+  readonly existingAccounts?: readonly string[];
+  /** More spaces the user belongs to, for the space selector. */
+  readonly otherSpaces?: readonly (typeof E2E_SPACE & { readonly role: string })[];
+}
+
+/** Display name of the signed-in user in the mocked profile. */
+export const E2E_USER_NAME = 'E2E';
+
+/** Fake session for whoever signs in on the invitation page (verifyOtp or password). */
+function sessionFor(email: string) {
+  return {
+    access_token: 'e2e-invitee-token',
+    refresh_token: 'e2e-invitee-refresh',
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: { ...E2E_USER, email },
+  };
+}
+
+/** Answers Auth for an invitee: the email link (verifyOtp), setting the password and signing in. */
+export async function mockInviteeAuth(page: Page, email: string): Promise<{ verified: () => boolean }> {
+  let verified = false;
+  await page.route(`${SUPABASE_URL}/auth/v1/verify`, (route) => {
+    verified = true;
+    return route.fulfill({ json: sessionFor(email) });
+  });
+  await page.route(`${SUPABASE_URL}/auth/v1/user`, (route) =>
+    route.fulfill({ json: { ...E2E_USER, email } }),
+  );
+  await page.route(`${SUPABASE_URL}/auth/v1/token?*`, (route) =>
+    route.fulfill({ json: sessionFor(email) }),
+  );
+  return { verified: () => verified };
+}
+
 const ACCOUNT_GROUPS: Readonly<Record<string, string>> = {
   cash: 'accounts',
   bank: 'accounts',
@@ -99,15 +158,22 @@ export async function mockDataApi(
     catalog,
     onboarding = COMPLETED_ONBOARDING,
     space,
+    sharing = {},
   }: {
     withSpace?: boolean;
     catalog?: CatalogFixture;
     onboarding?: OnboardingFixture;
     /** Space settings other than the defaults, e.g. budgets turned off. */
     space?: Record<string, unknown>;
+    sharing?: SharingFixture;
   } = {},
 ): Promise<DataApiMock> {
   let hasSpace = withSpace;
+  const role = sharing.role ?? 'owner';
+  let members = [...(sharing.members ?? [])];
+  let invitations = structuredClone([...(sharing.invitations ?? [])]);
+  let received = structuredClone([...(sharing.received ?? [])]);
+  const otherSpaces = sharing.otherSpaces ?? [];
   let createdSpace: Record<string, unknown> | null = null;
   let defaultAccountId: string | null = catalog?.defaultAccountId ?? null;
   const writes: RecordedWrite[] = [];
@@ -142,22 +208,71 @@ export async function mockDataApi(
     last_space_id: null as string | null,
   };
 
-  const profile = { user_id: E2E_USER.id, display_name: 'E2E', avatar_url: null };
+  const profile = { user_id: E2E_USER.id, display_name: E2E_USER_NAME, avatar_url: null };
   await page.route(`${SUPABASE_URL}/rest/v1/space_members?*`, (route) => {
-    // The members of a space (filtered by it) or the memberships of the user.
-    if (new URL(route.request().url()).searchParams.has('space_id')) {
-      return route.fulfill({
-        json: [
-          {
-            user_id: E2E_USER.id,
-            role: 'owner',
-            profile: { display_name: profile.display_name },
-          },
-        ],
-      });
+    const request = route.request();
+    const url = new URL(request.url());
+    const method = request.method();
+    // Changing a role, removing a member or leaving the space.
+    if (method === 'PATCH' || method === 'DELETE') {
+      const userId = (url.searchParams.get('user_id') ?? '').replace(/^eq\./, '');
+      const body = request.postDataJSON() as Row | null;
+      writes.push({ method, table: 'space_members', body, query: url.search });
+      if (method === 'DELETE') {
+        members = members.filter((member) => member.userId !== userId);
+        if (userId === E2E_USER.id) {
+          hasSpace = false;
+        }
+      } else {
+        members = members.map((member) =>
+          member.userId === userId ? { ...member, role: body?.['role'] as MemberFixture['role'] } : member,
+        );
+      }
+      return route.fulfill({ json: [{ user_id: userId }] });
     }
+    // The memberships of the user.
     return route.fulfill({
-      json: hasSpace ? [membershipRow(defaultAccountId, spaceSettings)] : [],
+      json: [
+        ...(hasSpace ? [membershipRow(defaultAccountId, spaceSettings, role)] : []),
+        ...otherSpaces.map((other) =>
+          membershipRow(null, { ...spaceSettings, space_id: other.id }, other.role, other),
+        ),
+      ],
+    });
+  });
+  await page.route(`${SUPABASE_URL}/rest/v1/space_invitations?*`, (route) =>
+    route.fulfill({ json: invitations }),
+  );
+  await page.route(`${SUPABASE_URL}/functions/v1/invite-member`, (route) => {
+    const body = route.request().postDataJSON() as Row;
+    rpcCalls.set('invite-member', [...(rpcCalls.get('invite-member') ?? []), body]);
+    const existing =
+      body['action'] === 'invite'
+        ? {
+            id: `invitation-${invitations.length + 1}`,
+            // Like the function: the email is trimmed and lowercased.
+            email: String(body['email']).trim().toLowerCase(),
+            role: body['role'],
+          }
+        : invitations.find((invitation) => invitation['id'] === body['invitationId']);
+    if (!existing) {
+      return route.fulfill({ status: 409, json: { error: { code: 'invitation_closed' } } });
+    }
+    const email = String(existing['email']);
+    const expiresAt = '2026-12-03T12:00:00Z';
+    invitations = [
+      ...invitations.filter((invitation) => invitation['id'] !== existing['id']),
+      { id: existing['id'], email, role: existing['role'], expires_at: expiresAt },
+    ];
+    const hasAccount = sharing.existingAccounts?.includes(email) ?? false;
+    return route.fulfill({
+      json: {
+        invitationId: existing['id'],
+        email,
+        expiresAt,
+        delivery: hasAccount ? 'link' : 'email',
+        ...(hasAccount ? { link: `http://localhost:4200/invitacion?token=${'e2'.repeat(32)}` } : {}),
+      },
     });
   });
   await page.route(`${SUPABASE_URL}/rest/v1/profiles?*`, async (route: Route) => {
@@ -195,6 +310,34 @@ export async function mockDataApi(
     rpcCalls.set(name, [...(rpcCalls.get(name) ?? []), body]);
     if (name === 'set_default_account') {
       defaultAccountId = (body['target_account_id'] as string | null) ?? null;
+    }
+    if (name === 'space_member_list') {
+      const me = { userId: E2E_USER.id, name: profile.display_name, email: E2E_USER.email, role };
+      return route.fulfill({
+        json: [me, ...members].map((member) => ({
+          user_id: member.userId,
+          display_name: member.name,
+          email: member.email,
+          role: member.role,
+          joined_at: '2026-01-01T00:00:00Z',
+        })),
+      });
+    }
+    if (name === 'revoke_invitation') {
+      invitations = invitations.filter((i) => i['id'] !== body['target_invitation_id']);
+    }
+    if (name === 'my_invitations') {
+      return route.fulfill({ json: received });
+    }
+    if (name === 'invitation_preview') {
+      return route.fulfill({ json: sharing.preview ? [sharing.preview] : [] });
+    }
+    if (name === 'accept_invitation' || name === 'decline_invitation') {
+      received = received.filter((i) => i['invitation_id'] !== body['target_invitation_id']);
+      if (name === 'accept_invitation') {
+        hasSpace = true;
+      }
+      return route.fulfill({ json: E2E_SPACE.id });
     }
     if (name === 'create_category_tree') {
       createCategoryTree(tables['categories'], body);
@@ -1034,13 +1177,21 @@ function accountsBalance(ledger: Ledger, body: Record<string, unknown>, settings
   return { balance, currency: main, missing_rate_currencies: [...missing].sort() };
 }
 
-function membershipRow(defaultAccountId: string | null, settings: Row) {
+function membershipRow(
+  defaultAccountId: string | null,
+  settings: Row,
+  role: string,
+  space: Row = E2E_SPACE,
+) {
   return {
-    role: 'owner',
+    role,
     joined_at: '2026-01-01T00:00:00Z',
     default_account_id: defaultAccountId,
     spaces: {
-      ...E2E_SPACE,
+      id: space['id'],
+      name: space['name'],
+      icon: space['icon'],
+      color: space['color'],
       space_settings: { ...settings },
     },
   };
