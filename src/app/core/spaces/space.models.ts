@@ -63,6 +63,13 @@ export interface SpaceMembership {
   readonly settings: SpaceSettings;
 }
 
+/** Someone in the active space, as filters and reports name them. */
+export interface SpaceMember {
+  readonly userId: string;
+  readonly role: MemberRole;
+  readonly displayName: string;
+}
+
 /** Data needed to create a space (wizard step 1). */
 export interface NewSpace {
   readonly name: string;

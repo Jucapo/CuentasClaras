@@ -174,6 +174,19 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-progress-bar"
+        description="primary, error (pasado), positive y grande"
+        layout="column"
+      >
+        <ng-template>
+          <cc-progress-bar label="Avance de Mercado" [value]="0.6" />
+          <cc-progress-bar label="Avance de Hogar" tone="error" [value]="1.2" />
+          <cc-progress-bar label="Avance de Salario" tone="positive" [value]="0.8" />
+          <cc-progress-bar label="Avance del presupuesto" size="lg" [value]="0.35" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-money-field"
         description="Con valor, con ayuda en USD y con error"
         layout="column"
@@ -663,6 +676,104 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-filter-chips"
+        description="Activos con lo elegido y ✕, inactivos y «Limpiar»"
+        layout="column"
+      >
+        <ng-template>
+          <cc-filter-chips
+            label="Filtros"
+            [filters]="filterChips()"
+            (cleared)="clearChip($event)"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-stat-group"
+        description="Filas en un contenedor angosto, columnas en uno ancho, y una nota opcional con ícono"
+        layout="column"
+      >
+        <ng-template>
+          <cc-stat-group label="Totales" [items]="statItems" />
+          <cc-stat-group
+            label="Totales con nota"
+            footnote="Incluye $ 45,000.00 de cuentas fuera del espacio"
+            footnoteIcon="lock"
+            [items]="statItems"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-pill"
+        description="Restante, excedido, faltante e ingreso de más"
+      >
+        <ng-template>
+          <cc-budget-pill currency="COP" [standing]="{ kind: 'left', amount: 15000000 }" />
+          <cc-budget-pill currency="COP" [standing]="{ kind: 'over', amount: 20000000 }" />
+          <cc-budget-pill
+            currency="COP"
+            kind="income"
+            [standing]="{ kind: 'left', amount: 200000000 }"
+          />
+          <cc-budget-pill
+            currency="COP"
+            kind="income"
+            [standing]="{ kind: 'over', amount: 30000000 }"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-row"
+        description="Total de la sección, a medias (abre el detalle), excedida, sin presupuesto e ingreso"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-row
+            emphasis="total"
+            name="Gastos"
+            currency="COP"
+            note="Sin presupuesto: $ 120,000.00"
+            [figures]="{ spent: 315000000, budget: 400000000 }"
+          />
+          <cc-budget-row
+            name="Mercado"
+            icon="shopping_cart"
+            color="green"
+            currency="COP"
+            [actionable]="true"
+            [figures]="{ spent: 65000000, budget: 80000000 }"
+          />
+          <cc-budget-row
+            name="Hogar"
+            icon="home"
+            color="orange"
+            currency="COP"
+            [actionable]="true"
+            [selected]="true"
+            [figures]="{ spent: 170000000, budget: 150000000 }"
+          />
+          <cc-budget-row
+            name="Regalos"
+            icon="redeem"
+            color="pink"
+            currency="COP"
+            [figures]="{ spent: 12000000, budget: null }"
+          />
+          <cc-budget-row
+            name="Salario"
+            icon="work"
+            color="teal"
+            currency="COP"
+            kind="income"
+            [figures]="{ spent: 400000000, budget: 600000000 }"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-period-chip" description="Mes, Siempre (sin flechas)">
         <ng-template>
           <cc-period-chip title="Diciembre" range="28 nov – 27 dic" />
@@ -764,6 +875,17 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-confirm-panel"
+        description="Confirmación: su propio overlay (ConfirmService) o una vista dentro de otro, con ← y guardando"
+        layout="column"
+      >
+        <ng-template>
+          <cc-confirm-panel [options]="removeQuestionDemo" />
+          <cc-confirm-panel [options]="removeQuestionDemo" [backButton]="true" [busy]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-nav-item" description="Activo (ruta actual) e inactivo">
         <ng-template>
           <cc-nav-item label="Catálogo" icon="palette" [link]="['/', paths.uiCatalog]" />
@@ -849,11 +971,38 @@
 
       <app-catalog-entry
         name="cc-transaction-list"
-        description="Por día, con «Ver más»"
+        description="Por día, con «Ver más», abierto en el panel, privado (candado) y transferencia sin signo"
         layout="column"
       >
         <ng-template>
-          <cc-transaction-list label="Movimientos" [groups]="transactionGroups" [hasMore]="true" />
+          <cc-transaction-list
+            label="Movimientos"
+            selectedId="t1"
+            [groups]="transactionGroups"
+            [hasMore]="true"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-quick-entry · panel"
+        description="Registro rápido en el panel de detalle (expandida): columnas que se apilan si es angosto"
+        layout="column"
+      >
+        <ng-template>
+          @for (key of [paneEntryKey()]; track key) {
+            <cc-quick-entry layout="pane" [data]="paneEntry" (closed)="resetPaneEntry()" />
+          }
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-missing-rates-notice"
+        description="Totales sin una moneda; «Definir tasa» para quien puede"
+        layout="column"
+      >
+        <ng-template>
+          <cc-missing-rates-notice [currencies]="['USD']" [canDefine]="true" />
         </ng-template>
       </app-catalog-entry>
 
@@ -992,6 +1141,53 @@
             [entries]="budgetEntries"
             [totals]="budgetTotals"
           />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-list · avance"
+        description="Filas de un detalle: fondo de barra, monto en la fila, pastilla, marca «Solo diciembre» y calculadora"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-list
+            label="Mercado"
+            emptyText="Sin presupuesto"
+            defaultCurrency="COP"
+            [entries]="budgetProgressEntries"
+          />
+          <cc-budget-list
+            label="Ingresos esperados"
+            emptyText="Sin monto"
+            defaultCurrency="COP"
+            [entries]="incomeProgressEntries"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-detail · cc-budget-detail-sheet"
+        description="Detalle de una categoría: panel en expandida; en compacta, un sheet con la calculadora y la confirmación como vistas (←)"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-detail [detail]="budgetDetailDemo" />
+          <cc-button variant="tonal" icon="savings" (click)="openBudgetDetail()">
+            Abrir como sheet
+          </cc-button>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-amount-calculator · cc-amount-calculator-sheet"
+        description="Calculadora como vista dentro de otro overlay (←) y como diálogo propio"
+        layout="column"
+      >
+        <ng-template>
+          <cc-amount-calculator [data]="calculatorDemo" [backButton]="true" />
+          <cc-button variant="tonal" icon="calculate" (click)="openCalculator()">
+            Calculadora en diálogo
+          </cc-button>
         </ng-template>
       </app-catalog-entry>
 

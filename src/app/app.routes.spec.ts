@@ -63,10 +63,11 @@ describe('app routes', () => {
     return { harness, url: TestBed.inject(Router).url };
   }
 
-  it('sends signed-out users from "/" to the login form', async () => {
+  it('sends signed-out users from "/" to the login form, back to "/" after it', async () => {
     const { harness, url } = await navigate('/');
 
-    expect(url).toBe('/iniciar-sesion?redirect=%2Fcategorias');
+    // "/" leads to the home screen the user chose once they sign in (spec §7).
+    expect(url).toBe('/iniciar-sesion?redirect=%2F');
     expect(harness.routeNativeElement?.querySelector('cc-auth-layout form')).not.toBeNull();
   });
 
@@ -134,7 +135,7 @@ describe('app routes', () => {
   it('does not expose the sign-up page while public sign-up is closed', async () => {
     const { url } = await navigate('/registro');
 
-    expect(url).toBe('/iniciar-sesion?redirect=%2Fcategorias');
+    expect(url).toBe('/iniciar-sesion?redirect=%2F');
   });
 
   it('sends unknown URLs to the home page', async () => {

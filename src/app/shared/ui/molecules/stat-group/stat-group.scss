@@ -1,0 +1,64 @@
+@use 'breakpoints';
+
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.stats {
+  display: grid;
+  gap: var(--cc-space-1);
+  margin: 0;
+}
+
+// Narrow: one row per figure, the label on the left and the amount on the right.
+.stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--cc-space-2);
+}
+
+.label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.value {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  text-align: end;
+}
+
+.note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.footnote {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-1);
+  margin: var(--cc-space-2) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@include breakpoints.container-stat-columns {
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: var(--cc-space-3);
+  }
+
+  .stat {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--cc-space-0-5);
+  }
+
+  .value {
+    text-align: start;
+  }
+}

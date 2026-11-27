@@ -54,6 +54,11 @@ export class OverlayPanel {
   readonly title = input.required<string>();
   /** Hides the close button, e.g. when the actions already offer a way out. */
   readonly hideClose = input(false);
+  /**
+   * A view inside an overlay (spec §13.5), e.g. the calculator within a detail: ← ("Volver")
+   * instead of ✕, emitting `back`.
+   */
+  readonly backButton = input(false);
   /** Accessible name and tooltip of the floating ✓, e.g. "Listo"; turns the confirmation layout on. */
   readonly confirmLabel = input<string | null>(null);
   /** While the confirmation saves: the ✓ shows its progress and stays disabled. */
@@ -61,10 +66,12 @@ export class OverlayPanel {
   /** Names the busy state of the ✓, e.g. "Guardando". */
   readonly confirmingLabel = input<string>();
   readonly closed = output<void>();
+  readonly back = output<void>();
   readonly confirmed = output<void>();
 
   protected readonly titleId = `cc-overlay-title-${nextPanelId++}`;
   protected readonly closeLabel = UI_TEXT.close;
+  protected readonly backLabel = UI_TEXT.back;
   protected readonly floating = computed(() => this.confirmLabel() !== null);
 
   protected confirm(): void {

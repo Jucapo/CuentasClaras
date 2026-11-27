@@ -19,6 +19,7 @@ export const UI_TEXT = {
   cancel: 'Cancelar',
   done: 'Listo',
   save: 'Guardar',
+  saving: 'Guardando',
   moreOptions: 'Más opciones',
   dragToReorder: 'Arrastra para reordenar. Con el teclado: Alt y las flechas.',
   gridEditHelp: 'Toca una categoría para editarla. Mantenla presionada y arrástrala para moverla.',
@@ -29,6 +30,9 @@ export const UI_TEXT = {
   nextPeriod: 'Periodo siguiente',
   choosePeriod: 'Elegir periodo',
   loadMore: 'Ver más',
+  privateAccount: 'Cuenta privada',
+  clearFilters: 'Limpiar',
+  removeFilter: 'Quitar filtro',
 } as const;
 
 /** Labels of the quick-entry keypad keys (spec §7). */
@@ -37,6 +41,8 @@ export const KEYPAD_TEXT = {
   backspace: 'Borrar',
   plus: 'Sumar',
   minus: 'Restar',
+  times: 'Multiplicar',
+  divide: 'Dividir',
   decimal: 'Decimales',
   thousands: 'Tres ceros',
 } as const;

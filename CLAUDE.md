@@ -33,7 +33,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 
 ## Estructura
 
-- `src/app/core`: servicios globales (supabase, auth, spaces, user-settings, onboarding, catálogos, budgets, transactions, periods, totals, exchange-rates, theme, routing, layout, config).
+- `src/app/core`: servicios globales (supabase, auth, spaces, profiles, user-settings, onboarding, catálogos, budgets, transactions, periods, totals, exchange-rates, theme, pwa, routing, layout, config).
 - `src/app/shared/ui`: sistema de diseño (`atoms`, `molecules`, `organisms`, `templates`, `services`). Fuentes únicas: `icons/icon-catalog.ts` (catálogo de íconos e íconos de la interfaz) y `colors/color-palette.ts` (paleta con variante clara y oscura).
 - `src/app/domain`: lógica pura sin Angular, con pruebas.
 - `src/app/features/<feature>`: pantallas. `ui-catalog` (ruta `/ui`) solo existe en desarrollo (`dev.routes.ts`).

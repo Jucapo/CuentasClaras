@@ -90,6 +90,16 @@
   // Category bubbles: ring around the badge that fills as the budget is spent.
   --cc-bubble-ring-width: 3px;
 
+  // Progress bars (budget) and filter chips (Transacciones).
+  --cc-progress-height: 0.375rem;
+  --cc-progress-height-lg: 0.625rem;
+  --cc-chip-height: 2rem;
+
+  // Budget rows: the bar behind the row is the category color mixed into the surface this much, so
+  // text keeps AA contrast in both themes.
+  --cc-backdrop-tint: 24%;
+  --cc-calculator-dialog-width: 28rem;
+
   // Period selector in the header; in the compact class it takes the whole center.
   --cc-period-chip-max-width: none;
 
@@ -122,6 +132,9 @@
   // Stacking.
   --cc-z-app-bar: 2;
   --cc-z-overlay-control: 1;
+
+  // Behind the content of its row, inside the row's own stacking context.
+  --cc-z-backdrop: -1;
 
   // Overlays with a confirmation (spec §13.5): room the content leaves for the floating ✕ (beside
   // the first row) and ✓ (under the last one, a 56px FAB plus its margin).

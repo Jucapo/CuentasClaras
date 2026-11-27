@@ -1,0 +1,38 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-stack-gap);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.totals {
+  padding: 0 var(--cc-space-2);
+}
+
+.clear-all {
+  display: flex;
+  justify-content: center;
+}
+
+.detail {
+  min-height: 100%;
+}
+
+.empty-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cc-space-3);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.empty-text {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+}

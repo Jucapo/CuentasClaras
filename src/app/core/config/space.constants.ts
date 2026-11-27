@@ -1,5 +1,6 @@
 import { formatMoney } from '../../domain/money/money';
 import { NumberFormat, ThemePreference, Weekday } from '../spaces/space.models';
+import { Enums } from '../supabase/database.types';
 
 /** Theme choices in display order (spec §13.2). */
 export const THEME_OPTIONS: readonly { readonly value: ThemePreference; readonly label: string }[] =
@@ -10,6 +11,33 @@ export const THEME_OPTIONS: readonly { readonly value: ThemePreference; readonly
   ];
 
 /** Longest space name; matches the `spaces.name` check in the database. */
+/** Screens the app can open on (spec §7, Configuración). */
+export const HOME_SCREEN_OPTIONS: readonly {
+  readonly value: Enums<'home_screen'>;
+  readonly label: string;
+}[] = [
+  { value: 'accounts', label: 'Cuentas' },
+  { value: 'categories', label: 'Categorías' },
+  { value: 'transactions', label: 'Transacciones' },
+  { value: 'budget', label: 'Presupuesto' },
+  { value: 'summary', label: 'Resumen' },
+];
+
+/** Periods a space can open with on devices that remember none (spec §4.5). */
+export const DEFAULT_PERIOD_OPTIONS: readonly {
+  readonly value: Enums<'period_kind'>;
+  readonly label: string;
+}[] = [
+  { value: 'day', label: 'Día' },
+  { value: 'week', label: 'Semana' },
+  { value: 'month', label: 'Mes' },
+  { value: 'year', label: 'Año' },
+  { value: 'all', label: 'Siempre' },
+];
+
+/** Longest display name of a profile (the database checks it too). */
+export const DISPLAY_NAME_MAX_LENGTH = 80;
+
 export const SPACE_NAME_MAX_LENGTH = 60;
 
 /** Allowed first days of the month; matches the `space_settings.month_start_day` check. */

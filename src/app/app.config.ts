@@ -15,6 +15,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { provideRecentIcons } from './core/catalogs/recent-icons.provider';
+import { AppUpdateService } from './core/pwa/app-update.service';
 import { AppTitleStrategy } from './core/routing/app-title-strategy';
 import { ThemeService } from './core/theme/theme.service';
 import { provideMoneyFormat } from './core/user-settings/money-format.provider';
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       // Before the first render, so a dark preference never flashes light.
       inject(ThemeService).init();
+      inject(AppUpdateService).init();
       return inject(AuthService).init();
     }),
     provideRouter(

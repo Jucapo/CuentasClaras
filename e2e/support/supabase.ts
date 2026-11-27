@@ -98,7 +98,14 @@ export async function mockDataApi(
     withSpace = false,
     catalog,
     onboarding = COMPLETED_ONBOARDING,
-  }: { withSpace?: boolean; catalog?: CatalogFixture; onboarding?: OnboardingFixture } = {},
+    space,
+  }: {
+    withSpace?: boolean;
+    catalog?: CatalogFixture;
+    onboarding?: OnboardingFixture;
+    /** Space settings other than the defaults, e.g. budgets turned off. */
+    space?: Record<string, unknown>;
+  } = {},
 ): Promise<DataApiMock> {
   let hasSpace = withSpace;
   let createdSpace: Record<string, unknown> | null = null;
@@ -124,6 +131,7 @@ export async function mockDataApi(
     onboarding_step: onboarding.step,
     onboarding_completed_at: onboarding.completedAt ?? null,
     onboarding_postponed_at: onboarding.postponedAt ?? null,
+    ...space,
   };
   const userSettings = {
     user_id: E2E_USER.id,
@@ -134,9 +142,38 @@ export async function mockDataApi(
     last_space_id: null as string | null,
   };
 
-  await page.route(`${SUPABASE_URL}/rest/v1/space_members?*`, (route) =>
-    route.fulfill({ json: hasSpace ? [membershipRow(defaultAccountId, spaceSettings)] : [] }),
-  );
+  const profile = { user_id: E2E_USER.id, display_name: 'E2E', avatar_url: null };
+  await page.route(`${SUPABASE_URL}/rest/v1/space_members?*`, (route) => {
+    // The members of a space (filtered by it) or the memberships of the user.
+    if (new URL(route.request().url()).searchParams.has('space_id')) {
+      return route.fulfill({
+        json: [
+          {
+            user_id: E2E_USER.id,
+            role: 'owner',
+            profile: { display_name: profile.display_name },
+          },
+        ],
+      });
+    }
+    return route.fulfill({
+      json: hasSpace ? [membershipRow(defaultAccountId, spaceSettings)] : [],
+    });
+  });
+  await page.route(`${SUPABASE_URL}/rest/v1/profiles?*`, async (route: Route) => {
+    const request = route.request();
+    if (request.method() === 'PATCH') {
+      Object.assign(profile, request.postDataJSON());
+      writes.push({
+        method: 'PATCH',
+        table: 'profiles',
+        body: request.postDataJSON(),
+        query: new URL(request.url()).search,
+      });
+      return route.fulfill({ json: [profile] });
+    }
+    return route.fulfill({ json: profile });
+  });
   await page.route(`${SUPABASE_URL}/rest/v1/space_settings?*`, async (route: Route) => {
     const request = route.request();
     if (request.method() === 'PATCH') {
@@ -185,6 +222,16 @@ export async function mockDataApi(
     if (name === 'accounts_total') {
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       return route.fulfill({ json: accountsTotal(ledger, body, spaceSettings) });
+    }
+    if (name === 'search_transactions' || name === 'transaction_totals') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      const found = searchTransactions(ledger, tables['categories'], body);
+      return route.fulfill({
+        json:
+          name === 'search_transactions'
+            ? withEmbeds(found)
+            : transactionTotals(ledger, found, spaceSettings, body),
+      });
     }
     return route.fulfill({ status: 204 });
   });
@@ -527,41 +574,47 @@ function categoryTotals(
       own.set(category, (own.get(category) ?? 0) + converted);
     }
   }
-  return categories.map((category) => {
-    const isTop = category['parent_id'] === null;
-    const children = categories.filter((child) => child['parent_id'] === category['id']);
-    const amount =
-      (own.get(category['id']) ?? 0) +
-      (isTop ? children.reduce((sum, child) => sum + (own.get(child['id']) ?? 0), 0) : 0);
+  // Its own budget: the "General" of a category or that of a subcategory (spec §4.7).
+  const ownBudget = (categoryId: unknown): number | null => {
     const inForce = months
       .map(
         (month) =>
           budgets
             .filter(
               (budget) =>
-                budget['category_id'] === category['id'] &&
-                String(budget['effective_from']) <= month,
+                budget['category_id'] === categoryId && String(budget['effective_from']) <= month,
             )
             .sort((a, b) =>
               String(b['effective_from']).localeCompare(String(a['effective_from'])),
             )[0],
       )
       .filter((budget): budget is Row => !!budget && Number(budget['amount']) > 0);
-    const budget =
-      isTop && inForce.length > 0
-        ? inForce.reduce(
-            (sum, row) =>
-              sum +
-              (convert(
-                ledger,
-                Number(row['amount']),
-                String(row['currency']),
-                main,
-                to ?? '9999-12-31',
-              ) ?? 0),
-            0,
-          )
-        : null;
+    return inForce.length > 0
+      ? inForce.reduce(
+          (sum, row) =>
+            sum +
+            (convert(
+              ledger,
+              Number(row['amount']),
+              String(row['currency']),
+              main,
+              to ?? '9999-12-31',
+            ) ?? 0),
+          0,
+        )
+      : null;
+  };
+  return categories.map((category) => {
+    const isTop = category['parent_id'] === null;
+    const children = categories.filter((child) => child['parent_id'] === category['id']);
+    const amount =
+      (own.get(category['id']) ?? 0) +
+      (isTop ? children.reduce((sum, child) => sum + (own.get(child['id']) ?? 0), 0) : 0);
+    // A category adds its General and the budgets of its subcategories.
+    const parts = [category, ...(isTop ? children : [])]
+      .map((row) => ownBudget(row['id']))
+      .filter((part): part is number => part !== null);
+    const budget = parts.length > 0 ? parts.reduce((sum, part) => sum + part, 0) : null;
     return {
       category_id: category['id'],
       parent_id: category['parent_id'],
@@ -637,14 +690,123 @@ function answerTransactions(route: Route, transactions: Row[], writes: RecordedW
       body: '',
     });
   }
-  return route.fulfill({
-    json: rows.map(({ tag_ids, installments, rate, ...movement }) => ({
-      ...movement,
-      transaction_tags: (tag_ids as string[]).map((tagId) => ({ tag_id: tagId })),
-      author: { display_name: 'E2E' },
-      deferral: Number(installments) > 1 ? [{ installments, rate }] : [],
-    })),
-  });
+  return route.fulfill({ json: withEmbeds(rows) });
+}
+
+/** Movements as the select of the app reads them, with tags, author and deferral embedded. */
+function withEmbeds(rows: readonly Row[]): Row[] {
+  return rows.map(({ tag_ids, installments, rate, ...movement }) => ({
+    ...movement,
+    transaction_tags: (tag_ids as string[]).map((tagId) => ({ tag_id: tagId })),
+    author: { display_name: 'E2E' },
+    deferral: Number(installments) > 1 ? [{ installments, rate }] : [],
+  }));
+}
+
+/** Lowercase without accents, as private.search_text. */
+function searchText(text: unknown): string {
+  return String(text ?? '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
+
+/** Plays the part of search_transactions: the period, the filters and the search, newest first. */
+function searchTransactions(
+  ledger: Ledger,
+  categories: readonly Row[],
+  body: Record<string, unknown>,
+): Row[] {
+  const from = body['from_date'] as string | null;
+  const to = body['to_date'] as string | null;
+  const list = (key: string) => (body[key] as unknown[] | null | undefined) ?? [];
+  const terms = list('search_terms').map(searchText);
+  const amount = body['search_amount'] as number | null | undefined;
+  const nameOf = (rows: readonly Row[], id: unknown) =>
+    rows.find((row) => row['id'] === id)?.['name'];
+  return ledger.transactions
+    .filter((movement) => {
+      const date = String(movement['date']);
+      const category = categories.find((row) => row['id'] === movement['category_id']);
+      const accounts = [movement['account_id'], movement['to_account_id']];
+      const matches = (key: string, ...values: unknown[]) =>
+        list(key).length === 0 || values.some((value) => list(key).includes(value));
+      const haystack = searchText(
+        [
+          movement['note'],
+          category?.['name'],
+          nameOf(categories, category?.['parent_id']),
+          ...accounts.map((id) => nameOf(ledger.accounts, id)),
+        ].join(' '),
+      );
+      return (
+        (from === null || date >= from) &&
+        (to === null || date <= to) &&
+        matches('filter_account_ids', ...accounts) &&
+        matches('filter_category_ids', category?.['id'], category?.['parent_id']) &&
+        matches('filter_tag_ids', ...(movement['tag_ids'] as unknown[])) &&
+        matches('filter_types', movement['type']) &&
+        matches('filter_author_ids', movement['created_by']) &&
+        matches('filter_statuses', movement['status']) &&
+        (terms.length === 0 ||
+          (amount != null && (movement['amount'] === amount || movement['to_amount'] === amount)) ||
+          terms.every((term) => haystack.includes(term)))
+      );
+    })
+    .sort(
+      (a, b) =>
+        String(b['date']).localeCompare(String(a['date'])) ||
+        String(b['created_at']).localeCompare(String(a['created_at'])),
+    );
+}
+
+/** Plays the part of transaction_totals over what search_transactions found. */
+/**
+ * Like the RPC: without a status filter only what is confirmed adds up, as in category_totals, and
+ * it says how much comes from accounts outside the space.
+ */
+function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row, args: Row) {
+  const main = String(settings['main_currency']);
+  const totals = { income: 0, expense: 0 };
+  const outside = { income: 0, expense: 0 };
+  const missing = new Set<string>();
+  const statuses = args['filter_statuses'];
+  const anyStatus = Array.isArray(statuses) && statuses.length > 0;
+  for (const movement of found) {
+    const type = movement['type'];
+    if (type !== 'income' && type !== 'expense') {
+      continue;
+    }
+    if (!anyStatus && movement['status'] !== 'confirmed') {
+      continue;
+    }
+    const converted = convert(
+      ledger,
+      Number(movement['amount']),
+      String(movement['currency']),
+      main,
+      String(movement['date']),
+    );
+    const account = ledger.accounts.find((candidate) => candidate['id'] === movement['account_id']);
+    const inSpace = movement['include_in_space'] === true || account?.['visibility'] === 'shared';
+    if (converted === null) {
+      missing.add(String(movement['currency']));
+    } else {
+      totals[type] += converted;
+      if (!inSpace) {
+        outside[type] += converted;
+      }
+    }
+  }
+  return {
+    income: totals.income,
+    expense: totals.expense,
+    net: totals.income - totals.expense,
+    outside_space_income: outside.income,
+    outside_space_expense: outside.expense,
+    currency: main,
+    missing_rate_currencies: [...missing].sort(),
+  };
 }
 
 function membershipRow(defaultAccountId: string | null, settings: Row) {

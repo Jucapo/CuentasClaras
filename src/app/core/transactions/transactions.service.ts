@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { actionFailed, ActionResult, DataResult } from '../action-result';
 import { SpaceService } from '../spaces/space.service';
 import { GENERIC_DATA_ERROR_MESSAGE } from '../supabase/data-error-messages';
-import { TransactionEntry, TransactionPage } from './transaction.models';
+import { TransactionEntry, TransactionPage, TransactionQuery } from './transaction.models';
 import { TransactionsApi } from './transactions.api';
 
 /** Movements of the active space. Balances and totals reload when `revision` changes. */
@@ -45,6 +45,19 @@ export class TransactionsService {
     limit: number,
   ): Promise<DataResult<TransactionPage>> {
     return this.api.fetchForAccount(accountId, offset, limit);
+  }
+
+  /** A page of the movements of Transacciones in the active space, newest first (spec §7). */
+  search(
+    query: TransactionQuery,
+    offset: number,
+    limit: number,
+  ): Promise<DataResult<TransactionPage>> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    if (!spaceId) {
+      return Promise.resolve(actionFailed(GENERIC_DATA_ERROR_MESSAGE));
+    }
+    return this.api.search(spaceId, query, offset, limit);
   }
 
   /** Whether an account has movements, so its kind and currency are locked (spec §4.1). */

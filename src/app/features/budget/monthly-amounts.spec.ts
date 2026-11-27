@@ -12,6 +12,7 @@ describe('MonthlyAmounts', () => {
   const budgets = {
     mainCurrency: signal('COP'),
     setMonthly: vi.fn(),
+    setAmount: vi.fn(),
   };
   const toast = { show: vi.fn() };
 
@@ -27,6 +28,7 @@ describe('MonthlyAmounts', () => {
 
   function setup(): MonthlyAmounts {
     budgets.setMonthly.mockReset().mockResolvedValue(ACTION_OK);
+    budgets.setAmount.mockReset().mockResolvedValue(ACTION_OK);
     toast.show.mockReset();
     TestBed.configureTestingModule({
       providers: [
@@ -44,6 +46,13 @@ describe('MonthlyAmounts', () => {
     await expect(amounts.save(typed)).resolves.toEqual(ACTION_OK);
     expect(budgets.setMonthly).toHaveBeenCalledWith('home', 50000, 'USD');
     expect(typed.revert).not.toHaveBeenCalled();
+  });
+
+  it('saves in the month being shown with the scope of the edit', async () => {
+    const amounts = setup();
+    await amounts.save(change(), { month: '2026-10-01', scope: 'month' });
+    expect(budgets.setAmount).toHaveBeenCalledWith('home', 150000000, 'COP', '2026-10-01', 'month');
+    expect(budgets.setMonthly).not.toHaveBeenCalled();
   });
 
   it('removes the amount with 0', async () => {

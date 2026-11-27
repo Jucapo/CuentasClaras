@@ -8,6 +8,7 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import {
   NewSpace,
+  SpaceMember,
   SpaceMembership,
   SpacePatch,
   SpaceSettings,
@@ -45,6 +46,26 @@ export class SpacesApi {
       }
     }
     return { ok: true, value: memberships };
+  }
+
+  /** Members of a space with their display name, oldest first. */
+  async fetchMembers(spaceId: string): Promise<DataResult<SpaceMember[]>> {
+    const { data, error, status } = await this.client
+      .from('space_members')
+      .select('user_id, role, profile:profiles(display_name)')
+      .eq('space_id', spaceId)
+      .order('joined_at');
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
+    }
+    return {
+      ok: true,
+      value: data.map((row) => ({
+        userId: row.user_id,
+        role: row.role,
+        displayName: row.profile?.display_name ?? '',
+      })),
+    };
   }
 
   /** Creates a space with the user as owner (RPC `create_space`); returns its id. */

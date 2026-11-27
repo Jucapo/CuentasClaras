@@ -1,0 +1,44 @@
+<cc-progress-bar variant="backdrop" [color]="color()" [value]="fill()" [label]="barLabel()" />
+@if (actionable()) {
+  <button
+    type="button"
+    class="main"
+    aria-haspopup="dialog"
+    [class.selected]="selected()"
+    [attr.aria-current]="selected() ? 'true' : null"
+    (click)="activate.emit()"
+  >
+    <ng-container [ngTemplateOutlet]="content" />
+  </button>
+} @else {
+  <div class="main">
+    <ng-container [ngTemplateOutlet]="content" />
+  </div>
+}
+
+<ng-template #content>
+  @if (icon(); as icon) {
+    <cc-icon-badge class="badge" [icon]="icon" [color]="color()" />
+  }
+  <span class="texts">
+    <span class="name">{{ name() }}</span>
+    <span class="figure">
+      {{ text.spent[kind()] }}
+      <cc-amount tone="neutral" [amount]="figures().spent" [currency]="currency()" />
+    </span>
+    @if (note(); as note) {
+      <span class="figure">{{ note }}</span>
+    }
+  </span>
+  <span class="end">
+    <cc-budget-pill [standing]="standing()" [currency]="currency()" [kind]="kind()" />
+    <span class="figure">
+      @if (figures().budget; as budget) {
+        {{ text.budgeted[kind()] }}
+        <cc-amount tone="neutral" [amount]="budget" [currency]="currency()" />
+      } @else {
+        {{ text.none }}
+      }
+    </span>
+  </span>
+</ng-template>

@@ -8,16 +8,21 @@
             [title]="item.title"
             [subtitle]="item.subtitle"
             [actionable]="item.editable"
+            [selected]="item.id === selectedId()"
             (activate)="opened.emit(item.id)"
           >
             <cc-icon-badge ccListItemLeading [icon]="item.icon" [color]="item.color" />
-            <cc-amount
-              ccListItemTrailing
-              tone="neutral"
-              [signed]="true"
-              [amount]="item.amount"
-              [currency]="item.currency"
-            />
+            <span ccListItemTrailing class="trailing">
+              @if (item.private) {
+                <cc-icon class="lock" name="lock" size="sm" [label]="text.privateAccount" />
+              }
+              <cc-amount
+                tone="neutral"
+                [signed]="item.signed ?? true"
+                [amount]="item.amount"
+                [currency]="item.currency"
+              />
+            </span>
           </cc-list-item>
         </li>
       }
@@ -31,7 +36,7 @@
   @if (hasMore()) {
     <div class="more">
       <cc-button variant="text" loadingLabel="Cargando" [loading]="loading()" (click)="more.emit()">
-        {{ loadMoreLabel }}
+        {{ text.loadMore }}
       </cc-button>
     </div>
   }

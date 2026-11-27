@@ -1,20 +1,51 @@
 <div class="rows" role="list" [attr.aria-label]="label()">
   @for (entry of entries(); track entry.id; let index = $index, last = $last) {
-    <cc-money-row
-      role="listitem"
-      valuePosition="end"
-      [label]="entry.name"
-      [value]="entry.amount?.amount ?? null"
-      [currency]="entry.amount?.currency ?? defaultCurrency()"
-      [currencyOptions]="currencyOptions"
-      [placeholder]="emptyText()"
-      [enterKeyHint]="last ? 'done' : 'next'"
-      (valueChange)="onValueChange(entry.id, $event)"
-      (committed)="emitChange(entry.id, $event)"
-      (enter)="focusAfter(index)"
-    >
-      <cc-icon-badge ccMoneyRowLeading [icon]="entry.icon" [color]="entry.color" />
-    </cc-money-row>
+    <div class="entry" role="listitem" [class.with-progress]="!!entry.progress">
+      @if (entry.progress; as progress) {
+        <cc-progress-bar
+          variant="backdrop"
+          [color]="entry.color"
+          [value]="fill(progress)"
+          [label]="text.bar(entry.name)"
+        />
+      }
+      <cc-money-row
+        valuePosition="end"
+        [label]="entry.name"
+        [value]="entry.amount?.amount ?? null"
+        [currency]="entry.amount?.currency ?? defaultCurrency()"
+        [currencyOptions]="currencyOptions"
+        [placeholder]="emptyText()"
+        [hint]="entry.hint"
+        [enterKeyHint]="last ? 'done' : 'next'"
+        (valueChange)="onValueChange(entry.id, $event)"
+        (committed)="emitChange(entry.id, $event)"
+        (enter)="focusAfter(index)"
+      >
+        <cc-icon-badge ccMoneyRowLeading [icon]="entry.icon" [color]="entry.color" />
+      </cc-money-row>
+      @if (entry.progress; as progress) {
+        <div class="figures">
+          <span class="spent">
+            {{ text.spent[progress.kind] }}
+            <cc-amount tone="neutral" [amount]="progress.spent" [currency]="progress.currency" />
+          </span>
+          @if (entry.mark; as mark) {
+            <span class="mark">{{ mark }}</span>
+          }
+          <cc-budget-pill
+            [standing]="standing(progress)"
+            [currency]="progress.currency"
+            [kind]="progress.kind"
+          />
+          <cc-icon-button
+            icon="calculate"
+            [label]="text.calculator(entry.name)"
+            (click)="calculate.emit(entry.id)"
+          />
+        </div>
+      }
+    </div>
   }
 </div>
 

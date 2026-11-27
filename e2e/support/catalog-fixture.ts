@@ -206,3 +206,40 @@ export const HOUSEHOLD_WITH_MOVEMENTS: CatalogFixture = {
     }),
   ],
 };
+
+function budget(id: string, categoryId: string, amount: number, effectiveFrom = '2026-11-01') {
+  return {
+    id,
+    space_id: SPACE_ID,
+    category_id: categoryId,
+    amount,
+    currency: 'COP',
+    effective_from: effectiveFrom,
+  };
+}
+
+/**
+ * The household with budgets per subcategory (spec §4.7): Hogar has its own amount (its
+ * "General") plus Arriendo's and Servicios públicos', which went over; the salary is expected.
+ */
+export const HOUSEHOLD_WITH_BUDGETS: CatalogFixture = {
+  ...HOUSEHOLD_WITH_MOVEMENTS,
+  budgets: [
+    budget('budget-market', 'cat-market', 120000000),
+    budget('budget-home', 'cat-home', 20000000),
+    budget('budget-rent', 'cat-rent', 180000000),
+    budget('budget-utilities', 'cat-utilities', 25000000),
+    budget('budget-salary', 'cat-salary', 600000000),
+  ],
+  transactions: [
+    ...(HOUSEHOLD_WITH_MOVEMENTS.transactions ?? []),
+    movement('tx-power', 'expense', '2026-11-10', 30000000, 'acc-bank', {
+      category_id: 'cat-utilities',
+      note: 'Energía',
+    }),
+    movement('tx-nequi', 'expense', '2026-11-12', 4500000, 'acc-nequi', {
+      category_id: 'cat-market',
+      note: 'Tienda',
+    }),
+  ],
+};

@@ -39,22 +39,12 @@
       @if (totalsError(); as error) {
         <cc-message>{{ error }}</cc-message>
       }
-      @if (missingRates().length > 0) {
-        <cc-section
-          class="notice"
-          variant="highlight"
-          title="Falta una tasa de cambio"
-          [description]="missingRatesText()"
-        >
-          @if (canEdit()) {
-            <cc-form-actions align="start">
-              <cc-button variant="tonal" icon="currency_exchange" (click)="defineRate()">
-                Definir tasa
-              </cc-button>
-            </cc-form-actions>
-          }
-        </cc-section>
-      }
+      <cc-missing-rates-notice
+        class="notice"
+        [currencies]="missingRates()"
+        [canDefine]="canEdit()"
+        (define)="defineRate($event)"
+      />
       <cc-category-grid
         [label]="gridLabel()"
         [centerLabel]="kindLabel()"

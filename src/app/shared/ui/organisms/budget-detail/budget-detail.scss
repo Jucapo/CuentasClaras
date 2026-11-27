@@ -1,0 +1,27 @@
+:host {
+  --cc-picker-panel-max-height: var(--cc-entry-sheet-max-height);
+
+  display: block;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+}
+
+.note {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.actions {
+  justify-content: space-between;
+}

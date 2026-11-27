@@ -15,6 +15,21 @@ export interface CategoryTotal {
   readonly missingRateCurrencies: readonly string[];
 }
 
+/** Incomes, expenses and net of the movements of Transacciones, in the main currency (spec §7). */
+export interface TransactionTotals {
+  readonly income: number;
+  readonly expense: number;
+  /** Incomes minus expenses. */
+  readonly net: number;
+  /**
+   * How much of `income` and `expense` comes from accounts outside the space (own private ones,
+   * not included): what makes them differ from Inicio and Presupuesto (spec §7, §8).
+   */
+  readonly outsideSpace: { readonly income: number; readonly expense: number };
+  readonly currency: string;
+  readonly missingRateCurrencies: readonly string[];
+}
+
 /** Balance of the accounts included in the total, in the main currency. */
 export interface AccountsTotal {
   readonly total: number;

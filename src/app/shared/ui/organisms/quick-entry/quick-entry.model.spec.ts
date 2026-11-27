@@ -2,6 +2,7 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { apply, form } from '@angular/forms/signals';
 import {
+  AMOUNT_EXPRESSION_MESSAGES,
   defaultTagIds,
   includeInSpaceDefault,
   QUICK_ENTRY_MESSAGES,
@@ -9,6 +10,7 @@ import {
   QuickEntryContext,
   quickEntrySchema,
   QuickEntryValue,
+  sameQuickEntry,
   toTransactionEntry,
 } from './quick-entry.model';
 
@@ -70,6 +72,11 @@ describe('quick entry rules', () => {
     expect(errors({ expression: '' })).toEqual([QUICK_ENTRY_MESSAGES.amountRequired]);
     expect(errors({ expression: '100-100' })).toEqual([QUICK_ENTRY_MESSAGES.amountRequired]);
     expect(errors({ expression: '100-50' })).toEqual([]);
+  });
+
+  it('tells a division by zero apart from a missing amount', () => {
+    expect(errors({ expression: '100/0' })).toEqual([AMOUNT_EXPRESSION_MESSAGES.division_by_zero]);
+    expect(errors({ expression: '100*3/2' })).toEqual([]);
   });
 
   it('needs another destination for a transfer, and what arrived when the currency changes', () => {
@@ -205,5 +212,16 @@ describe('defaults', () => {
     expect(includeInSpaceDefault(account({ isPrivate: true }))).toBe(false);
     expect(includeInSpaceDefault(account({ includeInSpaceByDefault: true }))).toBe(false);
     expect(includeInSpaceDefault(null)).toBe(false);
+  });
+});
+
+describe('sameQuickEntry', () => {
+  it('tells unsaved changes apart, whatever the order of the tags', () => {
+    const opened = value({ tagIds: ['fixed', 'home'] });
+    expect(sameQuickEntry(opened, value({ tagIds: ['home', 'fixed'] }))).toBe(true);
+    expect(sameQuickEntry(opened, value({ tagIds: ['fixed'] }))).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, expression: '25000+1' })).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, note: 'Almuerzo' })).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, date: '2026-11-25' })).toBe(false);
   });
 });

@@ -34,6 +34,38 @@ export function balanceDelta(movement: BalanceMovement, accountId: string): numb
   return -movement.amount;
 }
 
+/**
+ * The amount of a movement as the space sees it, in its own currency: expenses subtract, incomes
+ * add and adjustments follow their direction. A transfer only moves money between accounts, so it
+ * has no sign.
+ */
+export function spaceAmount(movement: BalanceMovement): number {
+  if (movement.type === 'expense') {
+    return -movement.amount;
+  }
+  if (movement.type === 'adjustment' && movement.adjustment_direction === 'decrease') {
+    return -movement.amount;
+  }
+  return movement.amount;
+}
+
+/** What `isPrivateMovement` needs to know of an account the user can see. */
+export interface VisibleAccount {
+  readonly visibility: 'shared' | 'private';
+}
+
+/**
+ * Whether a movement touches a private account: one of the user's (visible and private) or someone
+ * else's (not visible), as source or as the destination of a transfer (spec §3.2).
+ */
+export function isPrivateMovement(
+  movement: BalanceMovement,
+  accountOf: (id: string) => VisibleAccount | null,
+): boolean {
+  const ids = [movement.account_id, ...(movement.to_account_id ? [movement.to_account_id] : [])];
+  return ids.some((id) => accountOf(id)?.visibility !== 'shared');
+}
+
 /** The adjustment that takes an account to its real balance (both as stored); null if they match. */
 export function adjustmentFor(
   storedBalance: number,

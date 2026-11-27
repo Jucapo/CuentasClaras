@@ -9,6 +9,41 @@
   flex-direction: column;
 }
 
+// With progress, the bar fills the background of the row; the row isolates it under the text.
+.with-progress {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin-bottom: var(--cc-space-1);
+  border-radius: var(--cc-radius-md);
+}
+
+// What was spent, the mark, the pill and the calculator, lined up with the name after the badge.
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cc-space-2);
+  padding: 0 var(--cc-space-1) var(--cc-space-1) var(--cc-list-indent);
+}
+
+.spent {
+  display: inline-flex;
+  flex: 1 1 auto;
+  gap: var(--cc-space-1);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mark {
+  padding: 0 var(--cc-space-2);
+  border: var(--cc-border-width) solid var(--mat-sys-outline);
+  border-radius: var(--cc-radius-full);
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .total {
   display: flex;
   align-items: center;

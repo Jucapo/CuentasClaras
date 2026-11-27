@@ -76,6 +76,10 @@ cc-fab {
   width: min(var(--cc-entry-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
 }
 
+.cdk-overlay-pane.cc-overlay-dialog.cc-overlay-calculator {
+  width: min(var(--cc-calculator-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
+}
+
 .cc-overlay-sheet .mat-bottom-sheet-container {
   max-height: var(--cc-picker-panel-max-height);
   padding: 0;

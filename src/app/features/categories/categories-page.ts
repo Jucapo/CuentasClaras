@@ -14,7 +14,6 @@ import { APP_PATHS, CATEGORY_PATHS, CATEGORY_QUERY_PARAMS } from '../../core/rou
 import { SPACE_DEFAULTS } from '../../core/config/space.constants';
 import { SpaceService } from '../../core/spaces/space.service';
 import { TotalsService } from '../../core/totals/totals.service';
-import { currencySymbol } from '../../domain/money/currencies';
 import { Button } from '../../shared/ui/atoms/button/button';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Message } from '../../shared/ui/atoms/message/message';
@@ -27,6 +26,7 @@ import {
   CategoryGridItem,
   CategoryGridTotal,
 } from '../../shared/ui/organisms/category-grid/category-grid';
+import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
 import { QuickEntryFlow } from '../transactions/quick-entry-flow';
 import { CATEGORY_GRID_LABELS, CATEGORY_KIND_TABS, EMPTY_CATEGORIES_TITLE } from './category-texts';
@@ -38,7 +38,17 @@ import { CATEGORY_GRID_LABELS, CATEGORY_KIND_TABS, EMPTY_CATEGORIES_TITLE } from
  */
 @Component({
   selector: 'app-categories-page',
-  imports: [PageHeader, IconButton, Button, Message, Section, FormActions, Tabs, CategoryGrid],
+  imports: [
+    PageHeader,
+    IconButton,
+    Button,
+    Message,
+    Section,
+    FormActions,
+    Tabs,
+    CategoryGrid,
+    MissingRatesNotice,
+  ],
   templateUrl: './categories-page.html',
   styleUrl: './categories-page.scss',
 })
@@ -98,10 +108,6 @@ export class CategoriesPage {
   });
   /** Currencies left out of the totals for lack of a rate (spec §4.6). */
   protected readonly missingRates = this.totals.missingRateCurrencies;
-  protected readonly missingRatesText = computed(() => {
-    const symbols = this.missingRates().map(currencySymbol).join(', ');
-    return `Falta la tasa de ${symbols}: esos montos no suman en los totales.`;
-  });
   protected readonly totalsError = this.totals.categoryTotalsError;
   protected readonly isEmpty = computed(
     () => this.categories.loaded() && this.items().length === 0,
@@ -123,11 +129,8 @@ export class CategoriesPage {
     void this.quickEntry.forCategory(categoryId);
   }
 
-  protected defineRate(): void {
-    const [currency] = this.missingRates();
-    if (currency) {
-      void this.rateFlow.open(currency);
-    }
+  protected defineRate(currency: string): void {
+    void this.rateFlow.open(currency);
   }
 
   protected async edit(): Promise<void> {

@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+// One row that scrolls sideways; the vertical padding keeps the 44px touch area of each chip.
+.row {
+  display: flex;
+  gap: var(--cc-space-2);
+  overflow-x: auto;
+  padding-block: calc((var(--cc-touch-target-min) - var(--cc-chip-height)) / 2);
+  scrollbar-width: none;
+}
+
+.chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  min-block-size: var(--cc-chip-height);
+  border: var(--cc-border-width) solid var(--mat-sys-outline-variant);
+  border-radius: var(--cc-radius-sm);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+}
+
+.chip.active {
+  border-color: transparent;
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.main,
+.remove {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cc-space-1);
+  padding: 0 var(--cc-space-3);
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+
+  // Taller touch area than the chip itself (spec §13.4).
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc((var(--cc-chip-height) - var(--cc-touch-target-min)) / 2) 0;
+  }
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+.active .main {
+  padding-inline-end: var(--cc-space-1);
+}
+
+.remove {
+  padding: 0 var(--cc-space-2) 0 var(--cc-space-1);
+}
+
+.clear {
+  border-color: transparent;
+  color: var(--mat-sys-primary);
+}
+
+@media (hover: hover) {
+  .main:hover,
+  .remove:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+
+  .active .main:hover,
+  .active .remove:hover {
+    background-color: transparent;
+    text-decoration: underline;
+  }
+}

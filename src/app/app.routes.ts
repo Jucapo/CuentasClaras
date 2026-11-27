@@ -7,21 +7,28 @@ import {
   ACCOUNT_PATHS,
   APP_PATHS,
   CATEGORY_PATHS,
-  DEFAULT_HOME_PATH,
   FLOW_ROUTE_DATA as FLOW,
   LIST_DETAIL_ROUTE_DATA as LIST_DETAIL,
   NEW_ITEM_PATH,
   ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
 } from './core/routing/app-paths';
+import { homeScreenGuard } from './core/routing/home-screen.guard';
+import { pendingSavesGuard } from './core/routing/pending-saves.guard';
 import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
 import { spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
-  // children do, so without this redirect "/" would render the auth layout with an empty outlet.
-  { path: '', pathMatch: 'full', redirectTo: DEFAULT_HOME_PATH },
+  // children do, so without this route "/" would render the auth layout with an empty outlet. Its
+  // guards send to the sign-in, the wizard or the home screen the user chose (spec §7).
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [authGuard, spaceGuard, homeScreenGuard],
+    children: [],
+  },
   {
     path: '',
     loadComponent: () => import('./features/auth/auth-frame/auth-frame').then((m) => m.AuthFrame),
@@ -152,12 +159,18 @@ export const routes: Routes = [
       {
         path: APP_PATHS.transactions,
         title: 'Transacciones',
+        // In the expanded class a movement is edited beside the list (spec §7).
+        data: LIST_DETAIL,
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/transactions/transactions-page').then((m) => m.TransactionsPage),
       },
       {
         path: APP_PATHS.budget,
         title: 'Presupuesto',
+        // A category's detail goes beside the list in the expanded class; rows save on their own.
+        data: LIST_DETAIL,
+        canDeactivate: [pendingSavesGuard],
         loadComponent: () => import('./features/budget/budget-page').then((m) => m.BudgetPage),
       },
       {
@@ -188,5 +201,5 @@ export const routes: Routes = [
     ],
   },
   ...DEV_ROUTES,
-  { path: '**', redirectTo: DEFAULT_HOME_PATH },
+  { path: '**', redirectTo: '' },
 ];

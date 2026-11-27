@@ -47,11 +47,29 @@ import {
   ExchangeRateSheetData,
 } from '../../shared/ui/organisms/exchange-rate-sheet/exchange-rate-sheet';
 import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-panel/period-panel';
+import { QuickEntrySheet } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
+import { QuickEntry, QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
+import { ProgressBar } from '../../shared/ui/atoms/progress-bar/progress-bar';
+import { BudgetPill } from '../../shared/ui/molecules/budget-pill/budget-pill';
+import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
 import {
-  QuickEntrySheet,
-  QuickEntrySheetData,
-} from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
-import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry.model';
+  AmountCalculator,
+  AmountCalculatorData,
+} from '../../shared/ui/organisms/amount-calculator/amount-calculator';
+import { AmountCalculatorSheet } from '../../shared/ui/organisms/amount-calculator-sheet/amount-calculator-sheet';
+import {
+  BudgetDetail,
+  BudgetDetailData,
+} from '../../shared/ui/organisms/budget-detail/budget-detail';
+import {
+  BudgetDetailSheet,
+  BudgetDetailSheetData,
+} from '../../shared/ui/organisms/budget-detail-sheet/budget-detail-sheet';
+import { ConfirmPanel } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
+import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
+import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
+import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
+import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
   TransactionList,
   TransactionListGroup,
@@ -206,6 +224,16 @@ interface WindowClassDemo {
     WizardSteps,
     BudgetList,
     CategoryChecklist,
+    ProgressBar,
+    BudgetPill,
+    BudgetRow,
+    BudgetDetail,
+    AmountCalculator,
+    ConfirmPanel,
+    FilterChips,
+    StatGroup,
+    QuickEntry,
+    MissingRatesNotice,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -457,6 +485,27 @@ export class UiCatalogPage {
           currency: 'COP',
           editable: true,
         },
+        {
+          id: 't5',
+          title: 'Salud',
+          subtitle: 'Ahorro Ana · Cita',
+          icon: 'medical_services',
+          color: 'red',
+          amount: -8000000,
+          currency: 'COP',
+          private: true,
+          editable: true,
+        },
+        {
+          id: 't6',
+          title: 'Bancolombia → Nequi',
+          icon: 'swap_horiz',
+          color: null,
+          amount: 5000000,
+          currency: 'COP',
+          signed: false,
+          editable: true,
+        },
       ],
     },
     {
@@ -534,6 +583,143 @@ export class UiCatalogPage {
     { currency: 'COP', amount: 300000000 },
     { currency: 'USD', amount: 20000 },
   ];
+  /** Presupuesto: under, over, without a budget, and an expected income received in excess. */
+  /** The lines of a category's detail: General, a month-only amount, over, and over without one. */
+  protected readonly budgetProgressEntries: readonly BudgetListEntry[] = [
+    {
+      id: 'c4',
+      name: 'General',
+      icon: 'shopping_cart',
+      color: 'green',
+      amount: { currency: 'COP', amount: 20000000 },
+      progress: {
+        spent: 5000000,
+        budget: 20000000,
+        currency: 'COP',
+        kind: 'expense',
+        counted: true,
+      },
+    },
+    {
+      id: 'c5',
+      name: 'Supermercado',
+      icon: 'store',
+      color: 'green',
+      amount: { currency: 'COP', amount: 60000000 },
+      progress: {
+        spent: 65000000,
+        budget: 60000000,
+        currency: 'COP',
+        kind: 'expense',
+        counted: true,
+      },
+      mark: 'Solo diciembre',
+    },
+    {
+      id: 'c6',
+      name: 'Plaza',
+      icon: 'storefront',
+      color: 'green',
+      amount: null,
+      progress: { spent: 3000000, budget: null, currency: 'COP', kind: 'expense', counted: true },
+      hint: 'Desde enero conserva su monto propio.',
+    },
+  ];
+  protected readonly budgetDetailDemo: BudgetDetailData = {
+    title: 'Mercado',
+    color: 'green',
+    period: '1 dic – 31 dic',
+    kind: 'expense',
+    figures: { spent: 73000000, budget: 80000000 },
+    counted: true,
+    currency: 'COP',
+    readonly: false,
+    note: 'Solo diciembre',
+    lines: this.budgetProgressEntries,
+  };
+  protected readonly incomeProgressEntries: readonly BudgetListEntry[] = [
+    {
+      id: 'i1',
+      name: 'Salario',
+      icon: 'work',
+      color: 'teal',
+      amount: { currency: 'COP', amount: 600000000 },
+      progress: { spent: 400000000, budget: 600000000, currency: 'COP', kind: 'income' },
+    },
+    {
+      id: 'i2',
+      name: 'Independiente',
+      icon: 'receipt_long',
+      color: 'blue',
+      amount: { currency: 'COP', amount: 100000000 },
+      progress: { spent: 130000000, budget: 100000000, currency: 'COP', kind: 'income' },
+    },
+  ];
+  protected readonly statItems: readonly StatItem[] = [
+    { label: 'Ingresos', amount: 300000000, currency: 'COP', signed: true },
+    { label: 'Gastos', amount: -125000000, currency: 'COP' },
+    { label: 'Neto', amount: 175000000, currency: 'COP', tone: 'auto', signed: true },
+  ];
+  protected readonly filterChips = signal<readonly FilterChip[]>([
+    { key: 'account', label: 'Cuenta', summary: 'Efectivo +1' },
+    { key: 'category', label: 'Categoría', summary: null },
+    { key: 'type', label: 'Tipo', summary: 'Gasto' },
+    { key: 'tag', label: 'Etiqueta', summary: null },
+  ]);
+  /** A movement open in the detail pane, as Transacciones shows it in the expanded class. */
+  protected readonly paneEntry = this.quickEntryData('expense');
+  protected readonly paneEntryKey = signal(0);
+
+  protected clearChip(key: string): void {
+    this.filterChips.update((chips) =>
+      chips.map((chip) => (chip.key === key ? { ...chip, summary: null } : chip)),
+    );
+  }
+
+  protected resetPaneEntry(): void {
+    this.paneEntryKey.update((key) => key + 1);
+  }
+
+  protected readonly calculatorDemo: AmountCalculatorData = {
+    title: 'Mercado › Supermercado',
+    period: '1 dic – 31 dic',
+    figures: { spent: 65000000, budget: 60000000 },
+    figuresCurrency: 'COP',
+    kind: 'expense',
+    counted: true,
+    color: 'green',
+    label: 'Presupuesto para el mes',
+    value: 60000000,
+    currency: 'COP',
+  };
+  protected readonly removeQuestionDemo = {
+    title: '¿Quitar el presupuesto de Mercado?',
+    message: 'Se quitan el General y los de sus subcategorías (solo diciembre).',
+    confirmLabel: 'Quitar',
+    destructive: true,
+  } as const;
+
+  protected openCalculator(): void {
+    void this.overlay.open<number, AmountCalculatorData>(AmountCalculatorSheet, {
+      label: this.calculatorDemo.title,
+      size: 'calculator',
+      data: this.calculatorDemo,
+    });
+  }
+
+  /** The detail as a sheet, with the calculator and the confirmation as views inside it. */
+  protected openBudgetDetail(): void {
+    void this.overlay.open<unknown, BudgetDetailSheetData>(BudgetDetailSheet, {
+      label: this.budgetDetailDemo.title,
+      size: 'entry',
+      data: {
+        detail: signal(this.budgetDetailDemo),
+        save: async () => true,
+        removeQuestion: () => this.removeQuestionDemo,
+        remove: async () => true,
+      },
+    });
+  }
   protected readonly progressStates: readonly StepProgressState[] = [
     'done',
     'done',
@@ -654,6 +840,16 @@ export class UiCatalogPage {
   }
 
   protected openQuickEntry(type: QuickEntryValue['type']): void {
+    void this.overlay.open<unknown, QuickEntryData>(QuickEntrySheet, {
+      label: 'Registro rápido',
+      size: 'entry',
+      autoFocus: 'cc-amount-display .display',
+      data: this.quickEntryData(type),
+    });
+  }
+
+  /** An expense, a transfer or an edited adjustment of the quick entry demos. */
+  private quickEntryData(type: QuickEntryValue['type']): QuickEntryData {
     const value: QuickEntryValue = {
       type,
       expression: type === 'adjustment' ? '5000' : '12000+3500',
@@ -669,65 +865,60 @@ export class UiCatalogPage {
       monthlyRatePercent: 0,
       adjustmentDirection: 'increase',
     };
-    void this.overlay.open<unknown, QuickEntrySheetData>(QuickEntrySheet, {
-      label: 'Registro rápido',
-      size: 'entry',
-      autoFocus: 'cc-amount-display .display',
-      data: {
-        mode: type === 'adjustment' ? 'edit' : 'create',
-        title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
-        accounts: [
-          {
-            id: 'a1',
-            name: 'Bancolombia',
-            currency: 'COP',
-            isCard: false,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Cuentas',
-          },
-          {
-            id: 'a2',
-            name: 'Nequi',
-            currency: 'COP',
-            isCard: false,
-            isPrivate: true,
-            includeInSpaceByDefault: true,
-            group: 'Cuentas',
-          },
-          {
-            id: 'a3',
-            name: 'DollarApp',
-            currency: 'USD',
-            isCard: false,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Ahorros',
-          },
-          {
-            id: 'a4',
-            name: 'Tarjeta Visa',
-            currency: 'COP',
-            isCard: true,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Deudas',
-          },
-        ],
-        category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
-        subcategories:
-          type === 'expense'
-            ? [
-                { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
-                { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
-              ]
-            : [],
-        tags: this.tagOptions,
-        today: '2026-11-26',
-        value,
-        save: async () => ACTION_OK,
-      },
-    });
+    return {
+      mode: type === 'adjustment' ? 'edit' : 'create',
+      title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
+      accounts: [
+        {
+          id: 'a1',
+          name: 'Bancolombia',
+          currency: 'COP',
+          isCard: false,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Cuentas',
+        },
+        {
+          id: 'a2',
+          name: 'Nequi',
+          currency: 'COP',
+          isCard: false,
+          isPrivate: true,
+          includeInSpaceByDefault: true,
+          group: 'Cuentas',
+        },
+        {
+          id: 'a3',
+          name: 'DollarApp',
+          currency: 'USD',
+          isCard: false,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Ahorros',
+        },
+        {
+          id: 'a4',
+          name: 'Tarjeta Visa',
+          currency: 'COP',
+          isCard: true,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Deudas',
+        },
+      ],
+      category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
+      subcategories:
+        type === 'expense'
+          ? [
+              { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
+              { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
+            ]
+          : [],
+      tags: this.tagOptions,
+      today: '2026-11-26',
+      value,
+      save: async () => ACTION_OK,
+    };
   }
 
   protected openPeriodPanel(): void {
