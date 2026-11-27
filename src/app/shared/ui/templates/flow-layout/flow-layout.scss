@@ -17,9 +17,10 @@
   background-color: var(--mat-sys-surface-container);
 }
 
-// In the medium window class the shell header stays on top, so the bar sticks below it.
+// In the medium window class the shell header stays on top, so the bar sticks below it; a host
+// without that header (the setup wizard) sets --cc-flow-bar-top.
 :host(.window-medium) .top-bar {
-  top: calc(var(--cc-header-height) + var(--cc-safe-area-top));
+  top: var(--cc-flow-bar-top, calc(var(--cc-header-height) + var(--cc-safe-area-top)));
   padding-top: 0;
 }
 

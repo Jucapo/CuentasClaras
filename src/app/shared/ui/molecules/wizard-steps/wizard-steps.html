@@ -1,0 +1,50 @@
+<nav [attr.aria-label]="label()">
+  <ol class="steps">
+    @for (step of steps(); track step.id; let index = $index) {
+      <li>
+        @if (step.state === 'locked') {
+          <span
+            class="step locked"
+            role="link"
+            aria-disabled="true"
+            [attr.aria-label]="accessibleName(step)"
+          >
+            <ng-container
+              [ngTemplateOutlet]="content"
+              [ngTemplateOutletContext]="{ $implicit: step, index }"
+            />
+          </span>
+        } @else {
+          <a
+            class="step"
+            [class.current]="step.state === 'current'"
+            [attr.aria-current]="step.state === 'current' ? 'step' : null"
+            [attr.aria-label]="accessibleName(step)"
+            [routerLink]="step.link"
+          >
+            <ng-container
+              [ngTemplateOutlet]="content"
+              [ngTemplateOutletContext]="{ $implicit: step, index }"
+            />
+          </a>
+        }
+      </li>
+    }
+  </ol>
+</nav>
+
+<ng-template #content let-step let-index="index">
+  <span class="marker" [class.done]="step.state === 'done'">
+    @if (step.state === 'done') {
+      <cc-icon name="check" size="sm" />
+    } @else {
+      {{ index + 1 }}
+    }
+  </span>
+  <span class="texts">
+    <span class="title">{{ step.title }}</span>
+    @if (step.note; as note) {
+      <span class="note">{{ note }}</span>
+    }
+  </span>
+</ng-template>
