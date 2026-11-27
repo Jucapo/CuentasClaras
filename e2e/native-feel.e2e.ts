@@ -1,6 +1,5 @@
 import { expect, Locator, Page, test } from '@playwright/test';
 import { HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
-import { captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 /** Thursday 26 November 2026, inside the period of the fixture's movements. */
@@ -26,10 +25,6 @@ test.beforeEach(async ({ page }) => {
 
 function scroller(page: Page): Locator {
   return page.locator('cc-app-shell .scroller');
-}
-
-function scheme(): 'light' | 'dark' {
-  return test.info().project.use.colorScheme === 'dark' ? 'dark' : 'light';
 }
 
 /** The color every theme-color meta says. */
@@ -132,28 +127,37 @@ test('nothing overflows sideways on a 360 px phone', async ({ page, isMobile }) 
   }
 });
 
-test('the system bars follow the theme of the app and dim under the menu', async ({ page }) => {
-  await page.goto('/categorias');
-  const current = scheme();
-  await expectThemeColor(page, BAR_SURFACE[current]);
+// From a system in light and in dark, whatever the project's scheme.
+for (const current of ['light', 'dark'] as const) {
+  test.describe(current, () => {
+    test.use({ colorScheme: current });
 
-  await page.getByRole('button', { name: 'Abrir el menú' }).click();
-  const menu = page.getByRole('dialog', { name: 'Menú' });
-  await expect(menu).toBeVisible();
-  await expectThemeColor(page, BAR_UNDER_SCRIM[current]);
+    test('the system bars follow the theme of the app and dim under the menu', async ({ page }) => {
+      await page.goto('/categorias');
+      await expectThemeColor(page, BAR_SURFACE[current]);
 
-  // The theme of the app, not only the system's: the bars change with it right away.
-  const other = current === 'light' ? 'dark' : 'light';
-  await menu.getByText(other === 'dark' ? 'Oscuro' : 'Claro', { exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', other);
-  await expectThemeColor(page, BAR_UNDER_SCRIM[other]);
-  await page.keyboard.press('Escape');
-  await expect(menu).toBeHidden();
-  await expectThemeColor(page, BAR_SURFACE[other]);
-});
+      await page.getByRole('button', { name: 'Abrir el menú' }).click();
+      const menu = page.getByRole('dialog', { name: 'Menú' });
+      await expect(menu).toBeVisible();
+      await expectThemeColor(page, BAR_UNDER_SCRIM[current]);
 
-test('the manifest paints the splash and the bars like the app in light', async ({ page }) => {
-  test.skip(scheme() !== 'light', 'The manifest has no dark variant (spec §13.2).');
+      // The theme of the app, not only the system's: the bars change with it right away.
+      const other = current === 'light' ? 'dark' : 'light';
+      await menu.getByText(other === 'dark' ? 'Oscuro' : 'Claro', { exact: true }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', other);
+      await expectThemeColor(page, BAR_UNDER_SCRIM[other]);
+      await page.keyboard.press('Escape');
+      await expect(menu).toBeHidden();
+      await expectThemeColor(page, BAR_SURFACE[other]);
+    });
+  });
+}
+
+test('the manifest paints the splash and the bars like the app in light', async ({
+  page,
+  colorScheme,
+}) => {
+  test.skip(colorScheme === 'dark', 'The manifest has no dark variant (spec §13.2).');
   await page.goto('/categorias');
   const manifest = (await (await page.request.get('/manifest.webmanifest')).json()) as {
     theme_color: string;
@@ -236,7 +240,6 @@ test('the quick entry fits on a 360 × 740 phone without scrolling', async ({ pa
     sheetFits: body.closest('.mat-bottom-sheet-container')!.scrollHeight <= window.innerHeight,
   }));
   expect(fits).toEqual({ scrolls: false, sheetFits: true });
-  await captureViewport(page, 'registro-rapido-360');
 });
 
 test('the menu opens from the avatar and closes with back and Esc', async ({
@@ -251,7 +254,6 @@ test('the menu opens from the avatar and closes with back and Esc', async ({
   await expect(menu.getByRole('button', { name: /^Configuración/ })).toBeVisible();
   await expect(menu).toContainText('e2e@example.com');
   await expect(menu).toContainText('Versión 0.10.0');
-  await captureViewport(page, 'menu');
 
   // The system back button closes it without leaving the screen.
   await page.goBack();
@@ -302,7 +304,6 @@ test('dragging the handle closes a sheet, and asks first when something changed'
   await sheet.locator('[data-key="5"]').click();
   await dragDown(page, handle, 320);
   await expect(sheet.getByRole('heading', { name: '¿Descartar los cambios?' })).toBeVisible();
-  await captureViewport(page, 'registro-rapido-arrastrar');
 });
 
 test.describe('with motion', () => {

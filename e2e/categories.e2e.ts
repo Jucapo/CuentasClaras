@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
-import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
@@ -13,26 +12,34 @@ function overlay(page: Page, isMobile: boolean) {
   return page.locator(isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container');
 }
 
-test('a color of the first palette keeps showing as its equivalent of the grid', async ({
-  page,
-}, testInfo) => {
-  // Spec §13.3: "navy" is no longer a palette key; it shows as indigo-dark, never the fallback.
-  const catalog = {
-    ...HOUSEHOLD,
-    categories: HOUSEHOLD.categories.map((category) =>
-      category['id'] === 'cat-transport' ? { ...category, color: 'navy' } : category,
-    ),
-  };
-  await mockDataApi(page, { withSpace: true, catalog });
-  await page.goto('/categorias');
+/** indigo-dark in each theme (spec §13.3). */
+const INDIGO_DARK = { light: 'rgb(26, 35, 126)', dark: 'rgb(40, 53, 147)' } as const;
 
-  const badge = page
-    .locator('cc-category-bubble')
-    .filter({ hasText: 'Transporte' })
-    .locator('cc-icon-badge');
-  const dark = testInfo.project.use.colorScheme === 'dark';
-  await expect(badge).toHaveCSS('background-color', dark ? 'rgb(40, 53, 147)' : 'rgb(26, 35, 126)');
-});
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(colorScheme, () => {
+    test.use({ colorScheme });
+
+    test('a color of the first palette keeps showing as its equivalent of the grid', async ({
+      page,
+    }) => {
+      // Spec §13.3: "navy" is no longer a palette key; it shows as indigo-dark, never the fallback.
+      const catalog = {
+        ...HOUSEHOLD,
+        categories: HOUSEHOLD.categories.map((category) =>
+          category['id'] === 'cat-transport' ? { ...category, color: 'navy' } : category,
+        ),
+      };
+      await mockDataApi(page, { withSpace: true, catalog });
+      await page.goto('/categorias');
+
+      const badge = page
+        .locator('cc-category-bubble')
+        .filter({ hasText: 'Transporte' })
+        .locator('cc-icon-badge');
+      await expect(badge).toHaveCSS('background-color', INDIGO_DARK[colorScheme]);
+    });
+  });
+}
 
 test('a long total keeps its full width in the header and the period chip gives way', async ({
   page,
@@ -52,7 +59,6 @@ test('a long total keeps its full width in the header and the period chip gives 
   await expect(total).toHaveText('$ 123,456,789.00');
   expect(await total.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   await expect(page.getByRole('button', { name: /^Elegir periodo/ })).toBeVisible();
-  await captureViewport(page, 'encabezado-total-largo');
 });
 
 test('the categories tab shows the grid and the pencil opens the edit mode', async ({
@@ -64,7 +70,6 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
 
   const grid = page.getByRole('list', { name: 'Categorías de gasto' });
   await expect(grid.getByRole('listitem')).toHaveText([/Hogar/, /Mercado/, /Transporte/]);
-  await capture(page, 'categorias');
 
   // B5: the center of the donut switches the kind, as in 1Money, and says so (spec §7).
   await page.getByRole('button', { name: 'Ver ingresos' }).click();
@@ -78,7 +83,6 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   await expect(page).toHaveURL(/\/categorias\/editar\?clase=gasto$/);
   await expect(page.getByRole('heading', { name: 'Editar categorías' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nueva', exact: true })).toBeVisible();
-  await capture(page, 'categorias-editar');
 
   await page.getByRole('button', { name: 'Hogar', exact: true }).click();
   await expect(page).toHaveURL(/\/categorias\/editar\/cat-home/);
@@ -92,7 +96,6 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   await expect(page.getByRole('button', { name: /^Etiquetas por defecto/ })).toContainText(
     'Ninguna',
   );
-  await capture(page, 'categoria');
 
   await subcategories.getByRole('button', { name: /^Arriendo/ }).click();
   const sheet = overlay(page, isMobile);
@@ -100,7 +103,6 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   await expect(sheet.getByLabel('Nombre')).toHaveValue('Arriendo');
   // The icons scroll in their own area, so "Más opciones" stays in view below them.
   await expect(sheet.getByRole('button', { name: 'Más opciones' })).toBeInViewport();
-  await captureViewport(page, 'subcategoria');
   await sheet.getByRole('button', { name: 'Cerrar' }).click();
   await expect(sheet).toBeHidden();
 
@@ -109,7 +111,6 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   await expect(confirm.getByRole('heading', { name: '¿Eliminar Hogar?' })).toBeVisible();
   await expect(confirm).toContainText('También se eliminarán sus 2 subcategorías:');
   await expect(confirm.getByRole('listitem')).toHaveText(['Arriendo', 'Servicios públicos']);
-  await captureViewport(page, 'categoria-eliminar');
   await confirm.getByRole('button', { name: 'Eliminar' }).click();
 
   await expect(page).toHaveURL(/\/categorias\/editar\?clase=gasto$/);

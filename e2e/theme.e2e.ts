@@ -21,34 +21,41 @@ const TEXT_PAIRS = [
   ['error', 'surface'],
 ] as const;
 
-test('the brand theme keeps AA contrast on its text roles', async ({ page }) => {
-  await blockSupabase(page);
-  await page.goto('/iniciar-sesion');
-  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+// In light and in dark (spec §13.2), whatever the project's scheme.
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(colorScheme, () => {
+    test.use({ colorScheme });
 
-  const tokens = [...new Set(TEXT_PAIRS.flat())];
-  // Resolves each system token (a light-dark() value) to the color of the active scheme.
-  const colors = await page.evaluate((names) => {
-    const probe = document.createElement('span');
-    document.body.append(probe);
-    const resolved: Record<string, string> = {};
-    for (const name of names) {
-      probe.style.color = `var(--mat-sys-${name})`;
-      const channels = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g) ?? [];
-      resolved[name] =
-        '#' +
-        channels
-          .slice(0, 3)
-          .map((channel) => Math.round(Number(channel)).toString(16).padStart(2, '0'))
-          .join('');
-    }
-    probe.remove();
-    return resolved;
-  }, tokens);
+    test('the brand theme keeps AA contrast on its text roles', async ({ page }) => {
+      await blockSupabase(page);
+      await page.goto('/iniciar-sesion');
+      await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
 
-  const failing = TEXT_PAIRS.map(([text, surface]) => ({
-    pair: `${text} / ${surface}`,
-    ratio: contrastRatio(colors[text], colors[surface]),
-  })).filter(({ ratio }) => ratio < MIN_TEXT_CONTRAST);
-  expect(failing).toEqual([]);
-});
+      const tokens = [...new Set(TEXT_PAIRS.flat())];
+      // Resolves each system token (a light-dark() value) to the color of the active scheme.
+      const colors = await page.evaluate((names) => {
+        const probe = document.createElement('span');
+        document.body.append(probe);
+        const resolved: Record<string, string> = {};
+        for (const name of names) {
+          probe.style.color = `var(--mat-sys-${name})`;
+          const channels = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g) ?? [];
+          resolved[name] =
+            '#' +
+            channels
+              .slice(0, 3)
+              .map((channel) => Math.round(Number(channel)).toString(16).padStart(2, '0'))
+              .join('');
+        }
+        probe.remove();
+        return resolved;
+      }, tokens);
+
+      const failing = TEXT_PAIRS.map(([text, surface]) => ({
+        pair: `${text} / ${surface}`,
+        ratio: contrastRatio(colors[text], colors[surface]),
+      })).filter(({ ratio }) => ratio < MIN_TEXT_CONTRAST);
+      expect(failing).toEqual([]);
+    });
+  });
+}

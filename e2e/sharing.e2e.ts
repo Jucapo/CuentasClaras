@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { HOUSEHOLD_FOR_SUMMARY, HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
-import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, MemberFixture, mockDataApi, seedSession } from './support/supabase';
 
 // Sharing a space (F1f): Miembros, the wizard with an invitation, the space selector and what a
@@ -56,14 +55,12 @@ test('the owner sees the members and the pending invitations, and invites by ema
   await expect(page.getByRole('listitem').filter({ hasText: 'hermano@example.com' })).toContainText(
     'Venció',
   );
-  await capture(page, 'miembros');
 
   // A new account: the email goes out and the sheet closes.
   await page.getByRole('button', { name: 'Invitar', exact: true }).click();
   await page.getByRole('textbox', { name: 'Correo' }).fill('Pareja@Example.com');
   await page.getByRole('radio', { name: 'Lector' }).click();
   await expect(page.getByText('Ve lo compartido, sin cambiar nada.')).toBeVisible();
-  await captureViewport(page, 'miembros-invitar');
   await page.getByRole('dialog').getByRole('button', { name: 'Invitar', exact: true }).click();
   await expect(page.getByText('Invitación enviada a pareja@example.com.')).toBeVisible();
   expect(api.rpcCalls('invite-member').at(-1)).toMatchObject({
@@ -78,7 +75,6 @@ test('the owner sees the members and the pending invitations, and invites by ema
   await page.getByRole('dialog').getByRole('button', { name: 'Invitar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Ya tiene una cuenta' })).toBeVisible();
   await expect(page.getByTestId('invitation-link')).toContainText('/invitacion?token=');
-  await captureViewport(page, 'miembros-invitar-link');
   await page.getByRole('button', { name: 'Listo' }).click();
 
   // Resending an expired invitation sends a new email; revoking asks first.
@@ -107,7 +103,6 @@ test('the owner changes a role and removes a member', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Quitar a Laura' }).click();
   await expect(page.getByText(/Las cuentas privadas quedan ocultas/)).toBeVisible();
-  await captureViewport(page, 'miembros-quitar');
   await page.getByRole('button', { name: 'Quitar', exact: true }).click();
   await expect(page.getByText('Laura ya no está en el espacio.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Miembros (1)' })).toBeVisible();
@@ -125,7 +120,6 @@ test('a member leaves the space; the last owner cannot', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Invitar', exact: true })).toHaveCount(0);
   await expect(page.getByText('Solo el propietario invita')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Quitar a Juan' })).toHaveCount(0);
-  await capture(page, 'miembros-editor');
 
   await page.getByRole('button', { name: 'Salir de Hogar' }).click();
   await page.getByRole('button', { name: 'Salir', exact: true }).click();
@@ -164,7 +158,6 @@ test('without a space, a pending invitation is offered next to creating one', as
 
   await expect(page).toHaveURL(/\/bienvenida\/espacio/);
   await expect(page.getByText('Juan te invitó a «Hogar»')).toBeVisible();
-  await capture(page, 'bienvenida-invitacion');
   await page.getByRole('button', { name: 'Aceptar invitación' }).click();
 
   await expect(page.getByText('Ya eres parte de Hogar.')).toBeVisible();
@@ -197,7 +190,6 @@ test('with more than one space, the menu switches between them', async ({ page }
   const menu = page.getByRole('dialog', { name: 'Menú' });
   await menu.getByRole('button', { name: 'Cambiar de espacio: Hogar, Propietario' }).click();
   await expect(menu.getByRole('button', { name: /^Personal/ })).toBeVisible();
-  await captureViewport(page, 'menu-espacios');
   await menu.getByRole('button', { name: /^Personal/ }).click();
 
   await expect(menu).toBeHidden();
@@ -217,7 +209,6 @@ test('with two members, Resumen and Transacciones offer Persona', async ({ page 
   await page.goto('/resumen');
   await expect(page.getByRole('tab', { name: 'Persona' })).toBeVisible();
   await page.getByRole('tab', { name: 'Persona' }).click();
-  await capture(page, 'resumen-persona');
 
   await page.goto('/transacciones');
   await expect(page.getByRole('button', { name: 'Persona' })).toBeVisible();
@@ -233,5 +224,4 @@ test('a viewer reads without editing', async ({ page }) => {
 
   await expect(page.getByRole('region', { name: 'Movimientos' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nuevo movimiento' })).toHaveCount(0);
-  await capture(page, 'transacciones-lector');
 });

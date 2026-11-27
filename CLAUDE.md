@@ -17,11 +17,14 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - `npm run icons:build`: regenera el subset de Material Symbols (`public/fonts`) y `icon-codepoints.generated.ts` desde el catálogo de íconos. Correrlo al cambiar `icon-catalog.ts` y commitear ambos resultados; el build no lo ejecuta ni necesita red.
 - `npm run brand:build`: genera los PNG de la PWA, el `apple-touch-icon` y los favicons (`.ico` y `.svg`) desde los logos de `public/brand/`. Correrlo al cambiar un logo y commitear los resultados.
 - Tema: las paletas de `src/styles/_theme-colors.scss` salen del schematic `ng generate @angular/material:theme-color` con las semillas de marca (el comando exacto está en el archivo). Se regeneran, nunca se editan a mano.
-- `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`).
-  - Corre en 4 proyectos con el Chrome instalado, más `iphone-webkit` (invitación, login y `native-feel`), que requiere `npx playwright install webkit` una vez.
+- `npm run e2e`: la suite completa de Playwright (`e2e/*.e2e.ts`), unos 45 s.
+  - Proyectos: `mobile` (todas las pruebas, en claro, con el Chrome instalado), `desktop` (solo las `@desktop` y `@desktop-only`) e `iphone-webkit` (invitación, login y `native-feel`; requiere `npx playwright install webkit` una vez).
+  - Etiquetas: `@desktop` si en escritorio el camino es otro (panel al lado, teclado, diálogos); `@desktop-only` si solo existe en pantallas anchas; `@smoke` solo para los flujos centrales. Si el tema cambia el resultado, la prueba recorre claro y oscuro con `test.use({ colorScheme })`.
+  - Reutiliza `ng serve` si está corriendo, y Supabase siempre está simulado (`e2e/support`). Workers: un tercio de los núcleos; más se estorban.
+- `npm run e2e:smoke`: lo `@smoke` en `mobile` (login, registro rápido, editar un movimiento, presupuesto y resumen), unos 8 s.
+- `npm run e2e:screenshots`: las pantallas clave (`e2e/screenshots.shots.ts`) en móvil y escritorio, claro y oscuro, en `e2e/screenshots/<proyecto>/` (ignorada por git). Unos 50 s; una pantalla: `-- --grep <nombre>`.
+  - Los screenshots viven solo en esa spec, no en las pruebas de comportamiento: una pantalla o un estado nuevo se agrega a su tabla.
   - `capture()` deja crecer el shell para el screenshot de página completa, porque en la app solo se desplaza el contenido.
-  - Reutiliza `ng serve` si está corriendo, y Supabase siempre está simulado (`e2e/support`).
-  - Screenshots en `e2e/screenshots/` (ignorada por git).
 - `npm run e2e:local`: flujos contra el stack local real (`e2e/local/*.local.ts`, iPhone WebKit): invitar, el correo en Mailpit, reenviar y aceptar. Requiere `npm run db:start` y `npm run functions:serve`.
 - `npm run functions:serve`: sirve las Edge Functions (`supabase/functions`) con `supabase/functions/local.env`, que no tiene secretos. En producción, los secretos y el despliegue siguen `docs/runbooks/f1f-compartir.md`.
 - Base de datos local (requiere Docker Desktop):
@@ -66,7 +69,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - Las páginas componen componentes `cc-`: nada de Angular Material (ESLint lo bloquea fuera de `atoms`, `molecules` y `services`) ni estilos propios salvo layout.
   - Los campos son controles de Signal Forms (`FormValueControl`) con `label` obligatorio; átomos y moléculas son presentacionales.
   - Nada de colores, tamaños, radios, sombras ni z-index sueltos (Stylelint lo bloquea): tema en `_theme.scss`, tokens en `_tokens.scss`.
-  - Cada cambio de UI se revisa con los screenshots de `npm run e2e` (móvil y escritorio, claro y oscuro).
+  - Cada cambio de UI se revisa con `npm run e2e:screenshots` (móvil y escritorio, claro y oscuro): solo las pantallas que cambiaron (`-- --grep`), y todas cuando el cambio es global (tema, tokens, encabezado o navegación).
 - Flujos y layouts adaptativos (§13.5):
   - Las plantillas cambian según `LayoutService` (compacta, mediana, expandida); los organismos son los mismos.
   - Crear o editar es un flujo (`cc-flow-layout`, ruta con `data` flow y `unsavedChangesGuard`).
@@ -85,14 +88,15 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - Verificación:
   - Durante la fase: implementar todo con commits intermedios cuando tenga sentido, sin correr lint, pruebas ni build en cada commit. Un commit intermedio que no compile no es problema.
   - Excepción: al escribir o cambiar una migración, correr en ese momento `npm run db:reset` y `npm run db:test`, porque los tipos generados dependen de ella.
+  - Al tocar un flujo, `npm run e2e:smoke`; al cambiar la UI, los screenshots de lo que cambió (ver Sistema de diseño).
   - Una vez antes del PR, la suite completa:
     - `npm run lint`, `npm test` y `npm run build`;
-    - `npm run e2e` (los 5 proyectos) y `npm run db:test`;
+    - `npm run e2e` (los 3 proyectos) y `npm run db:test`;
     - `npm run e2e:local` si la fase toca invitaciones o Edge Functions.
   - Si algo falla, al corregir volver a correr solo lo afectado y terminar con una corrida completa.
 - Pruebas, mientras la app está en etapa de exploración:
   - Unitarias sí, enfocadas en reglas de negocio: lógica de dominio (dinero, periodos, cuentas, categorías), servicios con lógica, guards, mapeo de errores y validaciones de formularios con reglas propias.
-  - No escribir pruebas nuevas para componentes presentacionales ni detalles visuales (átomos, moléculas, layouts): lo visual se revisa con los screenshots del e2e. Las pruebas existentes se mantienen y se arreglan si se rompen.
+  - No escribir pruebas nuevas para componentes presentacionales ni detalles visuales (átomos, moléculas, layouts): lo visual se revisa con los screenshots. Las pruebas existentes se mantienen y se arreglan si se rompen.
   - pgTAP igual que siempre: es la seguridad de los datos.
-  - e2e solo para los flujos principales de cada fase, más los screenshots para la revisión visual.
+  - e2e solo para los flujos principales de cada fase; las pantallas nuevas, a la tabla de `e2e/screenshots.shots.ts`.
 - Planes: concisos. Esquema SQL completo cuando la fase toca la base de datos; el resto en bullets cortos, sin repetir lo que ya dice la spec.

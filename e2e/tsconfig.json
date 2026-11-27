@@ -6,5 +6,10 @@
     "moduleResolution": "bundler",
     "types": ["node"]
   },
-  "include": ["**/*.ts", "../playwright.config.ts", "../playwright.local.config.ts"]
+  "include": [
+    "**/*.ts",
+    "../playwright.config.ts",
+    "../playwright.local.config.ts",
+    "../playwright.screenshots.config.ts"
+  ]
 }
