@@ -29,8 +29,9 @@
   text-align: start;
   cursor: pointer;
 
+  // Inside the block, so it takes the color of its text, which reads over it (4.5:1).
   &:focus-visible {
-    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-on-surface);
+    outline: var(--cc-swatch-ring-width) solid var(--cc-endpoint-on-color);
     outline-offset: calc(-2 * var(--cc-swatch-ring-width));
   }
 }

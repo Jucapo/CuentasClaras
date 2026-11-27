@@ -224,6 +224,8 @@ function contextOf(data: Signal<QuickEntryData>): QuickEntryContext {
     // Material reads the primary color of the system: inside the entry it is the accent.
     '[style.--mat-sys-primary]': 'accent().text',
     '[style.--mat-sys-on-primary]': 'accent().onText',
+    // Primary stays the AA tone for text; the rings take the tone of the amount (3:1).
+    '[style.--cc-focus-ring-color]': 'accent().focusRing',
   },
 })
 export class QuickEntry {

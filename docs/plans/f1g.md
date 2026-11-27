@@ -53,7 +53,7 @@ Lo que no existe:
 - **Acento del registro rápido:**
   - El acento es el color de la categoría. En transferencias y ajustes, el de la cuenta de origen.
   - Dentro del organismo se redefinen `--mat-sys-primary` y `--mat-sys-on-primary` con el tono AA del acento y su contraste. Así el interruptor, el select, el borde de la nota y los botones de texto dejan el azul de marca sin tocar cada uno.
-  - El anillo de foco usa `--mat-sys-on-surface`.
+  - El anillo de foco usa el tono del monto (`paletteLargeTextColor`, 3:1 contra la superficie, WCAG 1.4.11) en `--cc-focus-ring-color`. En los bloques, el color de su texto. (Ajuste pedido en la revisión del PR; antes decía `--mat-sys-on-surface`.)
 - **Encabezado:**
   - En compacta, dos filas. En mediana y expandida, una fila (total, periodo, acción) y el avatar arriba del rail.
   - Las acciones de pantalla se registran con una directiva `ccHeaderAction` (`TemplateRef` en un servicio, que el shell pinta). Al destruirse la página, la acción se va.

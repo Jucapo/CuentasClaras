@@ -580,6 +580,7 @@ Como 1Money (F1g); reemplaza lo anterior donde difiere. Meta: un gasto típico c
 - **Teclado:** a la derecha ⌫, la tecla de calendario y el ✓ alto. El 000 y el 0 ocupan una casilla cada uno (sin decimales, el 0 ocupa dos). La calculadora del presupuesto usa el mismo teclado sin calendario.
 - **Fecha:** texto bajo el teclado con el año ("Hoy, 27 nov 2026"). Tocarlo, o la tecla de calendario, abre la vista de fecha. Al editar sin teclado queda al final, así que "Fecha" sale de las acciones (quedan Borrar y Duplicar).
 - **Colores:** el acento es el color de la categoría (en transferencias y ajustes, el de la cuenta de origen). El ✓ va con el acento y su contraste; operadores, ⌫ y calendario en gris neutro. Dentro del registro rápido `--mat-sys-primary` es el tono AA del acento, así que nada sale en azul de marca.
+- **Anillo de foco:** en el tono del monto (`paletteLargeTextColor`), no en el color tal cual, porque tiene que llegar a 3:1 contra la superficie (WCAG 1.4.11); con amarillo o lima el color tal cual no se vería. Va en `--cc-focus-ring-color`, que leen los anillos de todos los componentes (sin acento, el azul de marca). En los bloques, el anillo va por dentro, en el color de su texto (4,5:1 sobre el bloque). Una prueba unitaria lo verifica para cada color, en claro y en oscuro.
 - Sin la ayuda de "Incluir en el espacio": la explica la cuenta.
 
 ### Cuentas

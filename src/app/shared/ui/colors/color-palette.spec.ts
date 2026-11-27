@@ -148,6 +148,21 @@ describe('color palette', () => {
     });
   }
 
+  // WCAG 1.4.11: the focus ring of the quick entry, in its accent, stands out 3:1 from the surface.
+  for (const color of COLOR_PALETTE) {
+    it(`keeps the focus ring in ${color.key} visible in light and dark`, () => {
+      const { focusRing } = paletteAccent(color.key);
+      expect(focusRing).toBe(paletteLargeTextColor(color.key));
+      const [light, dark] = lightDarkSides(focusRing);
+      for (const surface of PALETTE_TEXT_SURFACES.light) {
+        expect(contrastRatio(light, surface)).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST);
+      }
+      for (const surface of PALETTE_TEXT_SURFACES.dark) {
+        expect(contrastRatio(dark, surface)).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST);
+      }
+    });
+  }
+
   it('lets large text keep more of the color than normal text', () => {
     // Green (700) reaches 3:1 as it is; orange (700) takes the dark orange, not the neutral fallback.
     expect(lightDarkSides(paletteLargeTextColor('green'))[0]).toBe('#388e3c');

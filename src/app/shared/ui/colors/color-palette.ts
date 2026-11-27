@@ -337,6 +337,8 @@ export interface PaletteAccent {
   readonly onText: string;
   /** Large text on the surface (3:1), e.g. the amount. */
   readonly largeText: string;
+  /** Focus ring on the surface: the tone of the amount, which keeps 3:1 (WCAG 1.4.11). */
+  readonly focusRing: string;
 }
 
 /** Everything a component needs to take a palette color as its accent (spec §7, quick entry). */
@@ -351,6 +353,7 @@ export function paletteAccent(key: ColorKey): PaletteAccent {
     text: `light-dark(${light}, ${dark})`,
     onText: `light-dark(${readableTextForeground(light)}, ${readableTextForeground(dark)})`,
     largeText: paletteLargeTextColor(key),
+    focusRing: paletteLargeTextColor(key),
   };
 }
 

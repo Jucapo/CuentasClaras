@@ -16,7 +16,7 @@
   transition: box-shadow var(--cc-transition-fast);
 
   &:focus-visible {
-    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+    outline: var(--cc-swatch-ring-width) solid var(--cc-focus-ring-color, var(--mat-sys-primary));
     outline-offset: var(--cc-swatch-ring-width);
   }
 
