@@ -40,6 +40,8 @@ Propias (se pasan a la spec en la parte 1):
 - **Totales de Transacciones:**
   - Ingresos y gastos del conjunto filtrado, en la moneda principal, con la tasa de la fecha de cada movimiento. Neto = ingresos − gastos.
   - Las transferencias y los ajustes no suman.
+  - Sin filtro de estado solo suma lo confirmado, como `category_totals`.
+  - Los movimientos de cuentas fuera del espacio también suman, y si hay alguno, una línea con el candado debajo de los totales dice cuánto: "Incluye {monto} de cuentas fuera del espacio".
   - Si falta una tasa, el aviso de siempre.
 - **Crear desde Transacciones (§7):**
   - "+" (atajo `N`) abre "¿Qué vas a registrar?": Transferencia y las categorías agrupadas en Gastos e Ingresos.
@@ -191,6 +193,9 @@ grant execute on function public.search_transactions(
 -- suman. Sin filtro de estado solo suma lo confirmado, como category_totals: lo pendiente se lista
 -- pero no suma. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es
 -- miembro.
+-- Los movimientos de cuentas fuera del espacio (privadas propias, sin incluir) suman, como en la
+-- lista; outside_space_income y outside_space_expense dicen cuánto de cada total son, en la misma
+-- moneda. Sin ellos, los totales son los de category_totals (Inicio y Presupuesto).
 create function public.transaction_totals(
   target_space_id uuid,
   from_date date default null,
@@ -208,6 +213,8 @@ returns table (
   income bigint,
   expense bigint,
   net bigint,
+  outside_space_income bigint,
+  outside_space_expense bigint,
   currency text,
   missing_rate_currencies text[]
 )
@@ -219,21 +226,30 @@ as $$
   with settings as (
     select s.main_currency from public.space_settings s where s.space_id = target_space_id
   ),
-  -- Una conversión por tipo, moneda y día, como en category_totals.
+  -- Una conversión por tipo, moneda, día y alcance, como en category_totals.
   grouped as (
-    select t.type, t.currency, t.date, sum(t.amount)::bigint as amount
+    select
+      t.type,
+      t.currency,
+      t.date,
+      -- Lo que category_totals deja fuera. La cuenta privada de otro no se ve (sin fila), pero
+      -- de ella solo se ve lo incluido.
+      not coalesce(t.include_in_space or a.visibility = 'shared', false) as outside,
+      sum(t.amount)::bigint as amount
     from public.search_transactions(
       target_space_id, from_date, to_date, search_terms, search_amount, filter_account_ids,
       filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
     ) t
+    left join public.accounts a on a.id = t.account_id
     where t.type in ('expense', 'income')
       and (coalesce(cardinality(filter_statuses), 0) > 0 or t.status = 'confirmed')
-    group by t.type, t.currency, t.date
+    group by t.type, t.currency, t.date, outside
   ),
   converted as (
     select
       g.type,
       g.currency,
+      g.outside,
       private.convert_minor(g.amount, g.currency, st.main_currency, target_space_id, g.date)
         as amount
     from grouped g
@@ -243,6 +259,10 @@ as $$
     select
       coalesce(sum(cv.amount) filter (where cv.type = 'income'), 0) as income,
       coalesce(sum(cv.amount) filter (where cv.type = 'expense'), 0) as expense,
+      coalesce(sum(cv.amount) filter (where cv.type = 'income' and cv.outside), 0)
+        as outside_income,
+      coalesce(sum(cv.amount) filter (where cv.type = 'expense' and cv.outside), 0)
+        as outside_expense,
       coalesce(
         array_agg(distinct cv.currency order by cv.currency) filter (where cv.amount is null),
         '{}'
@@ -253,6 +273,8 @@ as $$
     s.income::bigint,
     s.expense::bigint,
     (s.income - s.expense)::bigint,
+    s.outside_income::bigint,
+    s.outside_expense::bigint,
     st.main_currency,
     s.missing
   from sums s
@@ -395,7 +417,9 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
   - EUR sale en `missing_rate_currencies` y no suma.
   - Para Ana suma su privado no incluido; para Beto no.
   - Sin filtro de estado, lo pendiente no suma; con el filtro, sí.
-  - Para Dani (lector, sin cuentas privadas), el mes coincide con la suma de las filas principales de `category_totals`. Para Beto, la diferencia es exactamente su privado no incluido.
+  - Para Dani (lector, sin cuentas privadas), el mes coincide con la suma de las filas principales de `category_totals` y no hay nada fuera del espacio.
+  - Para Beto, `outside_space_expense` es su privado no incluido, y restándolo los totales coinciden con `category_totals`.
+  - Lo que una cuenta privada incluye en el espacio no cuenta como fuera.
 - **`privileges.test.sql`:** `function_privs_are` de `search_transactions`, `transaction_totals` y `private.search_text` para `anon` (nada) y `authenticated` (execute).
 
 ## 1.2 Transacciones
@@ -461,7 +485,7 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
   - Outputs: `opened(key)`, `cleared(key)` y `clearedAll`.
   - Una fila con scroll, en orden fijo. Los activos muestran el resumen y ✕, y con dos o más activos aparece "Limpiar".
   - Accesibilidad: cada chip lleva `aria-haspopup="dialog"` y `aria-expanded`; la ✕ se llama "Quitar filtro {filtro}". Solo tokens `--cc-*` y `--mat-sys-*`.
-- `cc-stat-group` (molécula): `items: StatItem[]` (`{ label, amount, currency, tone?, signed?, note? }`) en fila. La parte 2 lo reutiliza.
+- `cc-stat-group` (molécula): `items: StatItem[]` (`{ label, amount, currency, tone?, signed?, note? }`) en fila, con una nota opcional debajo (`footnote` y `footnoteIcon`): en Transacciones, "Incluye {monto} de cuentas fuera del espacio" con el candado. La parte 2 lo reutiliza.
 - `cc-transaction-list` (extender):
   - Input `selectedId` (va a `cc-list-item [selected]`).
   - En el ítem, `private?: boolean` (candado `lock` con nombre accesible "Cuenta privada") y `signed?: boolean`, que por defecto es true.

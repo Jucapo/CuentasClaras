@@ -530,9 +530,10 @@ Detalle (F1e):
   - "Persona" (quien registró) solo aparece si el espacio tiene más de un miembro.
   - Los filtros se recuerdan mientras la app está abierta, no en el dispositivo.
 - **Totales:** ingresos, gastos y neto de lo filtrado, en la moneda principal, con la tasa de la fecha de cada movimiento. Las transferencias y los ajustes no suman. Si falta una tasa, el aviso de siempre.
-  - Sin filtro de estado solo suma lo confirmado, la misma regla de `category_totals`: el gasto del mes coincide con el de Inicio y Presupuesto. Lo pendiente se lista, pero no suma.
+  - Sin filtro de estado solo suma lo confirmado, la misma regla de `category_totals`. Lo pendiente se lista, pero no suma.
   - Con el filtro de estado suma exactamente los estados elegidos, pendientes incluidos.
-  - La única diferencia posible con Inicio y Presupuesto son los movimientos de las cuentas privadas propias no incluidos en el espacio, que llevan el candado.
+  - Los movimientos de cuentas fuera del espacio (las privadas propias, sin incluir) también suman, para que el total siempre sume lo que muestra la lista. Son la única diferencia con Inicio y Presupuesto, y su fila lleva el candado.
+  - Si alguno suma, debajo de los totales va una línea discreta con el candado: "Incluye {monto} de cuentas fuera del espacio". Si vienen de gastos y de ingresos a la vez: "Incluye {monto} en gastos y {monto} en ingresos de cuentas fuera del espacio".
 - **Editar:**
   - Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo: en compacta como sheet, y en mediana como diálogo.
   - En expandida, lista y detalle van lado a lado (§13.5): el registro rápido se abre en línea en el panel de detalle. Si hay cambios sin guardar y se toca otro movimiento, se cierra el panel o se sale, pregunta "¿Descartar los cambios?".
@@ -699,7 +700,10 @@ recurring_templates (fase 3)
   - `save_exchange_rate(...)` reemplaza la tasa del mismo par y día.
 - RPCs de la F1e (Transacciones), con `SECURITY INVOKER`:
   - `search_transactions(space_id, from, to, search_terms, search_amount, filter_*)` devuelve las filas de `transactions` que quien llama ve, con la búsqueda y los filtros de §7. Así PostgREST embebe etiquetas, autor y diferido, y ordena y pagina.
-  - `transaction_totals(...)` toma los mismos argumentos y da ingresos, gastos y neto en la moneda principal, más las monedas sin tasa. Sin `filter_statuses` solo suma lo confirmado, como `category_totals`.
+  - `transaction_totals(...)` toma los mismos argumentos y da ingresos, gastos y neto en la moneda principal, más las monedas sin tasa.
+    - Sin `filter_statuses` solo suma lo confirmado, como `category_totals`.
+    - Suma también los movimientos de cuentas fuera del espacio: los de las cuentas privadas de quien llama sin "incluir en el espacio". Así el total es el de la lista.
+    - `outside_space_income` y `outside_space_expense` dicen cuánto de cada total viene de esas cuentas, en la moneda principal y con las mismas tasas. Restados, los totales son los de `category_totals` (Inicio y Presupuesto).
   - La búsqueda sin tildes usa la extensión `unaccent` a través de `private.search_text`.
 - Triggers de la F1d:
   - la moneda e "incluir en el espacio" del movimiento;
