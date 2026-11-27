@@ -249,6 +249,10 @@ export function regroupAmountInput(
   if (hasGroupingError(previous.text)) {
     return next;
   }
+  // Without knowing what was inserted (a replaced value, autofill), wrong separators are the user's.
+  if (kind === 'other' && hasGroupingError(next.text)) {
+    return next;
+  }
   if (kind === 'insert') {
     const inserted = next.text.slice(previous.caret, next.caret);
     if (inserted.includes(thousands) && hasGroupingError(next.text)) {

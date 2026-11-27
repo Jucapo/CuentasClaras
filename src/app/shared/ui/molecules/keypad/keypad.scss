@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--cc-space-2);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cc-keypad-key-height);
+  border: none;
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-headline-small);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--cc-transition-fast);
+  touch-action: manipulation;
+  user-select: none;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+
+  &:active {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+}
+
+.operator {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.wide {
+  grid-column: span 2;
+}
+
+.submit {
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+
+  &:disabled {
+    opacity: var(--cc-disabled-opacity);
+    cursor: default;
+  }
+}
+
+@media (hover: hover) {
+  .key:hover:not(:disabled) {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  .operator:hover {
+    background-color: var(--mat-sys-secondary-container);
+  }
+
+  .submit:hover:not(:disabled) {
+    background-color: var(--mat-sys-primary);
+  }
+}

@@ -435,6 +435,7 @@ export const ICON_CODEPOINTS = {
   thermostat: 0xf076,
   thumb_up: 0xf577,
   tire_repair: 0xebc8,
+  today: 0xe8df,
   toll: 0xe8e0,
   tour: 0xef75,
   toys: 0xe332,

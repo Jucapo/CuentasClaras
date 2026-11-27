@@ -90,6 +90,12 @@ describe('regroupAmountInput', () => {
     expect(type('1.|', '1.5|', 'insert', 'dot_comma')).toBe('1.5|');
   });
 
+  it('keeps a wrong grouping when it cannot tell who typed the separators', () => {
+    expect(type('1,500|', '1,5|', 'other')).toBe('1,5|');
+    expect(type('1,500|', '2,500.5|', 'other')).toBe('2,500.5|');
+    expect(type('1,500|', '25005|', 'other')).toBe('25,005|');
+  });
+
   it('regroups again once the grouping error is fixed', () => {
     expect(type('1,23|', '1,234|')).toBe('1,234|');
     expect(type('1,234|', '1,2345|')).toBe('12,345|');

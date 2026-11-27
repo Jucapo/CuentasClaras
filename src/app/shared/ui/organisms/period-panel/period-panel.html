@@ -1,0 +1,43 @@
+<cc-overlay-panel [title]="text.title" (closed)="close()">
+  <ul class="options">
+    @for (option of options(); track option.value) {
+      <li>
+        <button
+          type="button"
+          class="option"
+          [class.selected]="option.value === selected"
+          [attr.aria-current]="option.value === selected ? 'true' : null"
+          [attr.aria-expanded]="
+            option.value === 'day' || option.value === 'custom'
+              ? expanded() === option.value
+              : null
+          "
+          (click)="choose(option.value)"
+        >
+          <cc-icon class="option-icon" [name]="option.icon" />
+          <span class="option-label">{{ option.label }}</span>
+          @if (option.detail) {
+            <span class="option-detail">{{ option.detail }}</span>
+          }
+        </button>
+
+        @if (option.value === 'day' && expanded() === 'day') {
+          <div class="dates">
+            <cc-date-field [label]="text.day" [(value)]="day" />
+            <cc-button (click)="applyDay()">{{ text.apply }}</cc-button>
+          </div>
+        }
+        @if (option.value === 'custom' && expanded() === 'custom') {
+          <div class="dates">
+            <cc-date-field [label]="text.from" [(value)]="start" />
+            <cc-date-field [label]="text.to" [minDate]="start()" [(value)]="end" />
+            <cc-button (click)="applyRange()">{{ text.apply }}</cc-button>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+  @if (error(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  }
+</cc-overlay-panel>

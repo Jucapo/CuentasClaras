@@ -1,0 +1,176 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  @if (compact) {
+    <ng-container [ngTemplateOutlet]="fields" />
+  } @else {
+    <div class="columns">
+      <div class="pad"><ng-container [ngTemplateOutlet]="amounts" /></div>
+      <div class="fields"><ng-container [ngTemplateOutlet]="fields" /></div>
+    </div>
+  }
+  <!-- One element per named slot: content inside @if is not projected into it. -->
+  <div ccOverlayActions [class]="compact ? 'pad' : 'footer'">
+    @if (compact) {
+      <ng-container [ngTemplateOutlet]="amounts" />
+    } @else {
+      <cc-button variant="text" (click)="close()">{{ ui.cancel }}</cc-button>
+      <cc-button
+        loadingLabel="Guardando"
+        shortcut="Control+S"
+        [loading]="form().submitting()"
+        (click)="submitEntry()"
+      >
+        {{ ui.save }}
+      </cc-button>
+    }
+  </div>
+</cc-overlay-panel>
+
+<ng-template #amounts>
+  @if (twoAmounts()) {
+    <div class="two-amounts">
+      <cc-amount-display
+        [label]="text.sent + ' · ' + (source()?.name ?? '')"
+        [expression]="sourceAmount().expression"
+        [result]="sourceAmount().result"
+        [interactive]="true"
+        [active]="target() === 'source'"
+        [error]="amountError()"
+        (activate)="target.set('source')"
+      />
+      <cc-amount-display
+        [label]="text.received + ' · ' + (destination()?.name ?? '')"
+        [expression]="destinationAmount().expression"
+        [result]="destinationAmount().result"
+        [interactive]="true"
+        [active]="target() === 'destination'"
+        [error]="toAmountError()"
+        (activate)="target.set('destination')"
+      />
+    </div>
+  } @else {
+    <cc-amount-display
+      [label]="text.amount"
+      [expression]="sourceAmount().expression"
+      [result]="sourceAmount().result"
+      [error]="amountError()"
+    />
+  }
+  @if (hint(); as hint) {
+    <p class="hint" role="status">{{ hint }}</p>
+  }
+  <cc-keypad
+    [decimalSeparator]="decimalSeparator()"
+    [showDecimal]="showDecimal()"
+    [submitLabel]="ui.save"
+    [submitDisabled]="form().submitting()"
+    (pressed)="press($event)"
+    (submitted)="submitEntry()"
+  />
+</ng-template>
+
+<ng-template #fields>
+  <div class="form">
+    @if (isCategorized() && categoryOptions.length > 1) {
+      <cc-chip-choice
+        [label]="text.subcategory"
+        [hideLabel]="true"
+        [options]="categoryOptions"
+        [formField]="form.categoryId"
+      />
+    }
+
+    @if (isTransfer()) {
+      <div class="row">
+        <cc-select [label]="text.from" [options]="accountOptions()" [formField]="form.accountId" />
+        <cc-select
+          [label]="text.to"
+          [options]="toAccountOptions()"
+          [formField]="form.toAccountId"
+        />
+      </div>
+      @if (toAccountError(); as error) {
+        <cc-message>{{ error }}</cc-message>
+      }
+    } @else {
+      <cc-select [label]="text.account" [options]="accountOptions()" [formField]="form.accountId" />
+    }
+
+    @if (isAdjustment()) {
+      <cc-segmented-control
+        [label]="text.direction"
+        [options]="directionOptions"
+        [fullWidth]="true"
+        [formField]="form.adjustmentDirection"
+      />
+    }
+
+    <div class="date">
+      <cc-segmented-control
+        [label]="text.date"
+        [options]="dateOptions"
+        [value]="dateChoice()"
+        (valueChange)="chooseDate($event)"
+      />
+      @if (dateChoice() === 'other') {
+        <cc-date-field class="date-field" [label]="text.otherDate" [formField]="form.date" />
+      }
+    </div>
+
+    @if (showInstallments()) {
+      <div class="row">
+        <cc-select
+          [label]="text.installments"
+          [options]="installmentOptions"
+          [formField]="form.installments"
+        />
+        @if (showRate()) {
+          <cc-decimal-field
+            [label]="text.monthlyRate"
+            suffix="%"
+            [decimals]="limits.ratePercentDecimals"
+            [hint]="text.rateHint"
+            [formField]="form.monthlyRatePercent"
+          />
+        }
+      </div>
+    }
+
+    @if (showInclude()) {
+      <cc-switch
+        [label]="text.includeInSpace"
+        [hint]="text.includeHint"
+        [row]="true"
+        [formField]="form.includeInSpace"
+      />
+    }
+
+    <cc-disclosure [label]="detailsLabel()">
+      <div class="details">
+        @if (isCategorized()) {
+          <cc-chip-select
+            [label]="text.tags"
+            [options]="data.tags"
+            [emptyText]="text.noTags"
+            [formField]="form.tagIds"
+          />
+        }
+        <cc-text-field
+          [label]="text.note"
+          [formField]="form.note"
+        />
+      </div>
+    </cc-disclosure>
+
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+
+    @if (data.mode === 'edit') {
+      <div class="danger-zone">
+        <cc-button variant="text" icon="delete" [danger]="true" (click)="act('delete')">
+          {{ text.delete }}
+        </cc-button>
+      </div>
+    }
+  </div>
+</ng-template>

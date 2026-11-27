@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+.reason {
+  margin: 0 0 var(--cc-space-3);
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

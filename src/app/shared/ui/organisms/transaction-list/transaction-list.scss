@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.day {
+  margin: var(--cc-space-4) 0 var(--cc-space-1);
+  padding: 0 var(--cc-space-2);
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  margin: var(--cc-space-4) 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  padding: var(--cc-space-3) 0;
+}

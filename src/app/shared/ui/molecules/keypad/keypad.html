@@ -1,0 +1,34 @@
+<div class="keys" role="group" [attr.aria-label]="label">
+  @for (row of rows(); track $index; let last = $last) {
+    @for (button of row; track button.key) {
+      <button
+        type="button"
+        class="key"
+        tabindex="-1"
+        [class.operator]="button.kind === 'operator'"
+        [class.wide]="button.wide"
+        [attr.aria-label]="button.label ?? null"
+        [attr.data-key]="button.key"
+        (click)="pressed.emit(button.key)"
+      >
+        @if (button.icon; as icon) {
+          <cc-icon [name]="icon" />
+        } @else {
+          {{ button.text }}
+        }
+      </button>
+    }
+    @if (last) {
+      <button
+        type="button"
+        class="key submit"
+        data-key="submit"
+        [attr.aria-label]="submitLabel()"
+        [disabled]="submitDisabled()"
+        (click)="submitted.emit()"
+      >
+        <cc-icon name="check" />
+      </button>
+    }
+  }
+</div>

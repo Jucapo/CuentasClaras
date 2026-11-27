@@ -59,6 +59,7 @@ export const MONEY_PARSE_MESSAGES = {
   too_many_decimals: (decimals: number) =>
     decimals === 0 ? 'Esta moneda no usa decimales.' : `Usa máximo ${decimals} decimales.`,
   negative: 'El monto no puede ser negativo.',
+  negativeNumber: 'El número no puede ser negativo.',
   too_large: 'El monto es demasiado grande.',
 } as const;
 

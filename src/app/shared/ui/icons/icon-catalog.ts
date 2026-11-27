@@ -591,6 +591,7 @@ export const UI_ICONS: readonly string[] = [
   'settings',
   'star',
   'swap_horiz',
+  'today',
   'tune',
   'unarchive',
   'undo',

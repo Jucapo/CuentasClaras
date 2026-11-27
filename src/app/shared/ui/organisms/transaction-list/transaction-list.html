@@ -1,0 +1,43 @@
+<section class="list" [attr.aria-label]="label()">
+  @for (group of groups(); track group.title) {
+    <h3 class="day">{{ group.title }}</h3>
+    <ul class="items">
+      @for (item of group.items; track item.id) {
+        <li>
+          <cc-list-item
+            [title]="item.title"
+            [subtitle]="item.subtitle"
+            [actionable]="item.editable"
+            (activate)="opened.emit(item.id)"
+          >
+            <cc-icon-badge ccListItemLeading [icon]="item.icon" [color]="item.color" />
+            <cc-amount
+              ccListItemTrailing
+              tone="neutral"
+              [signed]="true"
+              [amount]="item.amount"
+              [currency]="item.currency"
+            />
+          </cc-list-item>
+        </li>
+      }
+    </ul>
+  } @empty {
+    @if (!loading() && emptyText()) {
+      <p class="empty">{{ emptyText() }}</p>
+    }
+  }
+
+  @if (hasMore()) {
+    <div class="more">
+      <cc-button
+        variant="text"
+        loadingLabel="Cargando"
+        [loading]="loading()"
+        (click)="more.emit()"
+      >
+        {{ loadMoreLabel }}
+      </cc-button>
+    </div>
+  }
+</section>

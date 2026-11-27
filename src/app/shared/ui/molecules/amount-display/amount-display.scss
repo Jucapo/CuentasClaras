@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+  min-height: var(--cc-amount-display-min-height);
+  padding: var(--cc-space-2) var(--cc-space-3);
+  border: var(--cc-border-width) solid transparent;
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+  text-align: end;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+button.display {
+  cursor: pointer;
+}
+
+:host(.active) .display {
+  border-color: var(--mat-sys-primary);
+}
+
+:host(.invalid) .display {
+  border-color: var(--mat-sys-error);
+}
+
+.label {
+  align-self: flex-start;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.expression {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--mat-sys-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--mat-sys-headline-medium);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  margin: var(--cc-space-1) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
+}

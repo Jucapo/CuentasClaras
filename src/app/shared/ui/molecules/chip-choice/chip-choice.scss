@@ -1,0 +1,28 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.chip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cc-space-2);
+  white-space: nowrap;
+}
+
+.support {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
