@@ -48,9 +48,7 @@ const rateSchema = schema<ExchangeRateFormValue>((path) => {
   required(path.rate, { message: MESSAGES.rateRequired });
   validate(path.rate, ({ value }) => {
     const rate = value();
-    return rate !== null && rate <= 0
-      ? { kind: 'min', message: MESSAGES.ratePositive }
-      : undefined;
+    return rate !== null && rate <= 0 ? { kind: 'min', message: MESSAGES.ratePositive } : undefined;
   });
   validate(path.date, ({ value }) =>
     isIsoDate(value()) ? undefined : { kind: 'required', message: MESSAGES.dateRequired },

@@ -4,12 +4,14 @@ import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
 import { onboardingGuard, onboardingStepGuard } from './core/onboarding/onboarding.guards';
 import {
+  ACCOUNT_PATHS,
   APP_PATHS,
   CATEGORY_PATHS,
   DEFAULT_HOME_PATH,
   FLOW_ROUTE_DATA as FLOW,
   LIST_DETAIL_ROUTE_DATA as LIST_DETAIL,
   NEW_ITEM_PATH,
+  ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
 } from './core/routing/app-paths';
 import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
@@ -91,14 +93,28 @@ export const routes: Routes = [
               ),
           },
           {
+            // Componentless: both children inherit :id, and the edit screen's ".." is the detail.
             path: ':id',
-            title: 'Cuenta',
-            data: FLOW,
-            canDeactivate: [unsavedChangesGuard],
-            loadComponent: () =>
-              import('./features/accounts/account-edit/account-edit-page').then(
-                (m) => m.AccountEditPage,
-              ),
+            children: [
+              {
+                path: '',
+                title: 'Cuenta',
+                loadComponent: () =>
+                  import('./features/accounts/account-detail/account-detail-page').then(
+                    (m) => m.AccountDetailPage,
+                  ),
+              },
+              {
+                path: ACCOUNT_PATHS.edit,
+                title: 'Editar cuenta',
+                data: { ...FLOW, [ROUTE_DATA_KEYS.afterDelete]: ['../..'] },
+                canDeactivate: [unsavedChangesGuard],
+                loadComponent: () =>
+                  import('./features/accounts/account-edit/account-edit-page').then(
+                    (m) => m.AccountEditPage,
+                  ),
+              },
+            ],
           },
         ],
       },
@@ -154,6 +170,14 @@ export const routes: Routes = [
         title: 'Configuración',
         loadComponent: () =>
           import('./features/settings/settings-page').then((m) => m.SettingsPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.currencies}`,
+        title: 'Monedas',
+        loadComponent: () =>
+          import('./features/settings/currencies/currencies-settings-page').then(
+            (m) => m.CurrenciesSettingsPage,
+          ),
       },
       {
         path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}`,

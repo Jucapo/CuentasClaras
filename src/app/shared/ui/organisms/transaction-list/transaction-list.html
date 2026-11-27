@@ -30,12 +30,7 @@
 
   @if (hasMore()) {
     <div class="more">
-      <cc-button
-        variant="text"
-        loadingLabel="Cargando"
-        [loading]="loading()"
-        (click)="more.emit()"
-      >
+      <cc-button variant="text" loadingLabel="Cargando" [loading]="loading()" (click)="more.emit()">
         {{ loadMoreLabel }}
       </cc-button>
     </div>

@@ -8,9 +8,7 @@
           [class.selected]="option.value === selected"
           [attr.aria-current]="option.value === selected ? 'true' : null"
           [attr.aria-expanded]="
-            option.value === 'day' || option.value === 'custom'
-              ? expanded() === option.value
-              : null
+            option.value === 'day' || option.value === 'custom' ? expanded() === option.value : null
           "
           (click)="choose(option.value)"
         >

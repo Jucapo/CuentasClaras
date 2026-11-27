@@ -19,6 +19,12 @@ export const APP_PATHS = {
 /** Child paths of Configuración. */
 export const SETTINGS_PATHS = {
   tags: 'etiquetas',
+  currencies: 'monedas',
+} as const;
+
+/** Child path of an account: its screen to edit it, under its detail. */
+export const ACCOUNT_PATHS = {
+  edit: 'editar',
 } as const;
 
 /** Child paths of Categorías: the edit mode, with each category's screen below it. */
@@ -45,6 +51,8 @@ export const ROUTE_DATA_KEYS = {
   onboardingStep: 'onboardingStep',
   /** Category kind a wizard step works with. */
   categoryKind: 'categoryKind',
+  /** Where a flow goes after deleting what it edits, relative to it; `['..']` when absent. */
+  afterDelete: 'afterDelete',
 } as const;
 
 /** Route data of a create or edit flow: full screen in the compact window class (spec §13.5). */

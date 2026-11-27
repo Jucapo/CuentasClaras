@@ -36,7 +36,33 @@
         }
       </cc-section>
     } @else {
-      <cc-category-grid [label]="gridLabel()" [centerLabel]="kindLabel()" [items]="items()" />
+      @if (totalsError(); as error) {
+        <cc-message>{{ error }}</cc-message>
+      }
+      @if (missingRates().length > 0) {
+        <cc-section
+          class="notice"
+          variant="highlight"
+          title="Falta una tasa de cambio"
+          [description]="missingRatesText()"
+        >
+          @if (canEdit()) {
+            <cc-form-actions align="start">
+              <cc-button variant="tonal" icon="currency_exchange" (click)="defineRate()">
+                Definir tasa
+              </cc-button>
+            </cc-form-actions>
+          }
+        </cc-section>
+      }
+      <cc-category-grid
+        [label]="gridLabel()"
+        [centerLabel]="kindLabel()"
+        [items]="items()"
+        [currency]="mainCurrency()"
+        [totals]="gridTotals()"
+        (opened)="record($event)"
+      />
     }
   </div>
 </cc-tabs>

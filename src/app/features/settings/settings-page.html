@@ -41,7 +41,10 @@
     </cc-section>
   }
 
-  <cc-section title="Catálogos" description="Las cuentas, categorías y etiquetas del espacio.">
+  <cc-section
+    title="Catálogos"
+    description="Las cuentas, categorías, etiquetas y tasas de cambio del espacio."
+  >
     <div role="list">
       <cc-list-item
         role="listitem"
@@ -66,6 +69,14 @@
         [link]="catalogLinks.tags"
       >
         <cc-icon ccListItemLeading name="label" />
+      </cc-list-item>
+      <cc-list-item
+        role="listitem"
+        title="Monedas"
+        subtitle="Tasas de cambio para los totales en la moneda principal"
+        [link]="catalogLinks.currencies"
+      >
+        <cc-icon ccListItemLeading name="currency_exchange" />
       </cc-list-item>
     </div>
   </cc-section>

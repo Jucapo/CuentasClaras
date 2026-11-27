@@ -24,8 +24,13 @@
       <cc-account-editor [fields]="form" [autofocusName]="!id()" />
     </cc-form>
 
-    @if (archived() || error()) {
+    @if (archived() || error() || (locked() && canEdit())) {
       <div class="notice">
+        @if (locked() && canEdit()) {
+          <cc-message tone="info">
+            Esta cuenta tiene movimientos, así que su tipo y su moneda ya no cambian.
+          </cc-message>
+        }
         @if (archived()) {
           <cc-message tone="info">
             Esta cuenta está archivada: no aparece al registrar movimientos.
