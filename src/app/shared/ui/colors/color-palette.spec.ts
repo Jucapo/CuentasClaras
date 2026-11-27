@@ -1,4 +1,8 @@
-import { contrastRatio, MIN_GRAPHIC_CONTRAST } from '../../../domain/color/contrast';
+import {
+  contrastRatio,
+  MIN_GRAPHIC_CONTRAST,
+  MIN_TEXT_CONTRAST,
+} from '../../../domain/color/contrast';
 import {
   COLOR_INTENSITIES,
   COLOR_PALETTE,
@@ -9,8 +13,10 @@ import {
   isColorKey,
   LEGACY_COLOR_ALIASES,
   PALETTE_DARK_FOREGROUND,
+  PALETTE_TEXT_SURFACES,
   paletteColor,
   paletteForeground,
+  paletteTextColor,
   PALETTE_TONES,
   readableForeground,
   resolveColorKey,
@@ -90,6 +96,27 @@ describe('color palette', () => {
       }
     });
   }
+
+  // Spec §7: an amount in the color of its category keeps AA on the surfaces of both themes.
+  for (const color of COLOR_PALETTE) {
+    it(`keeps text in ${color.key} readable in light and dark`, () => {
+      const [, light, dark] = /^light-dark\((#[0-9a-f]{6}), (#[0-9a-f]{6})\)$/.exec(
+        paletteTextColor(color.key),
+      ) ?? ['', '', ''];
+      for (const surface of PALETTE_TEXT_SURFACES.light) {
+        expect(contrastRatio(light, surface)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      }
+      for (const surface of PALETTE_TEXT_SURFACES.dark) {
+        expect(contrastRatio(dark, surface)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      }
+    });
+  }
+
+  it('keeps the color of the text when it already reads, and deepens it when it does not', () => {
+    // Blue dark (900) reads in light; yellow (700) needs the dark yellow, or the fallback.
+    expect(paletteTextColor('blue-dark').startsWith('light-dark(#0d47a1,')).toBe(true);
+    expect(paletteTextColor('yellow')).not.toContain('#fbc02d,');
+  });
 
   it('picks a dark icon only where white falls short', () => {
     expect(readableForeground('#1a237e')).toBe(WHITE);

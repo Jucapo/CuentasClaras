@@ -15,20 +15,42 @@ import { AdjustmentDirection, TransactionType } from '../../../../domain/transac
 export interface QuickEntryAccount {
   readonly id: string;
   readonly name: string;
+  readonly icon: string;
+  readonly color: string | null;
   readonly currency: string;
   /** Credit cards ask for installments (spec §5.1 c). */
   readonly isCard: boolean;
   readonly isPrivate: boolean;
   readonly includeInSpaceByDefault: boolean;
-  /** Group label for the selector, e.g. Cuentas or Deudas. */
-  readonly group: string;
 }
 
 /** A category or subcategory with the tags it applies by default (spec §4.3). */
 export interface QuickEntryCategory {
   readonly id: string;
   readonly name: string;
+  readonly icon: string;
+  /** Palette key; a subcategory without its own takes its category's. */
+  readonly color: string | null;
   readonly defaultTagIds: readonly string[];
+}
+
+/** A top-level category with its active subcategories, in their order. */
+export interface QuickEntryCategoryTree extends QuickEntryCategory {
+  readonly subcategories: readonly QuickEntryCategory[];
+}
+
+/** The top-level category a category or subcategory belongs to, among `categories`. */
+export function categoryTreeOf(
+  categories: readonly QuickEntryCategoryTree[],
+  categoryId: string | null,
+): QuickEntryCategoryTree | null {
+  return (
+    categories.find(
+      (category) =>
+        category.id === categoryId ||
+        category.subcategories.some((subcategory) => subcategory.id === categoryId),
+    ) ?? null
+  );
 }
 
 /** Values edited by `cc-quick-entry`. */

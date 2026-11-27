@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.10 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.11 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -29,7 +29,7 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 |---|---|---|
 | Frontend | Angular (última estable), standalone + signals, TypeScript strict | Angular Material + CDK: bottom sheet, chips, date range picker, dialogs |
 | PWA | `@angular/pwa` (service worker de Angular) | Instalable en Android, iOS (Agregar a inicio) y escritorio |
-| Gráficas | Donut principal en SVG propio; barras con ECharts (`ngx-echarts`, import modular) | El donut replica el anillo segmentado de 1Money |
+| Gráficas | Donut de Categorías en SVG propio; barras del Resumen con ECharts 6 (`ngx-echarts` 22, import modular, en un chunk diferido) | El donut replica el anillo segmentado de 1Money; el Resumen no lo usa |
 | Íconos | Material Symbols Rounded, self-hosted (subset) | Catálogo curado para categorías y cuentas (§13.3) |
 | Tipografía | Roboto self-hosted (`@fontsource/roboto`) | La app no hace ninguna petición a Google Fonts |
 | UI | Atomic design con prefijo `cc-` | Material solo dentro de átomos y moléculas (§13.1) |
@@ -382,14 +382,30 @@ Todos aceptan un **alcance**:
 
 Reportes:
 
-- **Resumen del periodo:** ingresos, gastos (con el prorrateo de §5.2) y balance.
+- **Resumen del periodo:** ingresos, gastos (con el prorrateo de §5.2), balance y tasa de ahorro (balance / ingresos), con la comparación contra el periodo anterior.
 - **Flujo real:** entradas y salidas de dinero de las cuentas líquidas, incluidos los pagos a deudas, y deuda adquirida vs. capital pagado vs. intereses en el periodo.
 - **Patrimonio** (pestaña "Mis finanzas"): cuentas + ahorros + por cobrar + bienes − deudas, por moneda y consolidado.
   - Si se cuentan las deudas del lote sin contar el lote, el patrimonio sale engañosamente negativo; por eso existen los bienes.
-- **Por categoría:** donut + lista con %, con detalle por subcategoría.
+  - Los bienes entran con su valor manual desde la F2; hasta entonces el patrimonio no los cuenta.
+- **Por categoría:** barras con % y lista, con detalle por subcategoría.
 - **Por etiqueta**, por cuenta y por persona que registró.
 - **Barras diarias del periodo,** apiladas por categoría.
 - **Promedios:** por día, por semana y del mes.
+
+Detalle (F1e2):
+
+- **Alcance:** los reportes del Resumen usan el alcance Espacio, igual que Categorías y Presupuesto (§4.7). El alcance Personal llega en la F2.
+- **Conversión:** cada movimiento se convierte a la moneda principal por separado, con la tasa de su fecha. Así cualquier reparto (por día, categoría, cuenta, persona o etiqueta) suma exactamente el mismo total. Lo que no tiene tasa no suma y se avisa.
+- **Comparación con el periodo anterior:**
+  - **Periodo en curso:** contra el anterior hasta el mismo punto, es decir, los mismos días transcurridos (sin pasar del fin del anterior).
+  - **Periodo terminado:** contra el anterior completo.
+  - Siempre y los periodos futuros no tienen comparación. El rango personalizado compara contra el bloque anterior de su mismo largo.
+  - La nota dice el cambio en % y contra qué rango compara, con el formato de periodos de la app: "▼ 9 % vs. 28 sep – 26 oct". Que suban los gastos va en tono de error y que suban los ingresos, en tono positivo. Si el anterior es 0, no hay nota.
+- **Barras:** se apilan las 3 categorías mayores del periodo, cada una con su color, y el resto en gris. En Año, en Siempre y en rangos largos, las barras van por mes del periodo.
+- **Promedios:** se cuentan los días desde el inicio del periodo (en Siempre, desde el primer movimiento) hasta el fin, o hasta hoy si está en curso.
+  - Por día = total / días; por semana = por día × 7.
+  - Mes: en el periodo Mes es el total del periodo; en los demás, por día × 365,2425 / 12 ("Mes (prom.)").
+  - Se redondean a unidades menores, alejándose de cero.
 
 ---
 
@@ -451,20 +467,42 @@ Detalle (F1d):
     - El resultado se redondea a la unidad menor, alejándose de cero.
     - Dividir entre cero es un error claro ("No se puede dividir entre cero"), no un monto 0.
     - El mismo teclado sirve a la calculadora del presupuesto (§4.7).
-  - ✓ y Guardar quedan deshabilitados mientras se guarda.
-- **Campos:**
-  - Subcategoría en chips de selección única.
-  - Cuenta en un selector.
-  - Fecha: Hoy, Ayer u otra (calendario nativo en línea).
-  - "Etiquetas y nota", plegado.
+  - ✓ queda deshabilitado mientras se guarda.
+- **Campos** (desde la F1e2, ver abajo):
+  - Subcategoría en chips de selección única, con ícono.
+  - Cuenta y categoría en los bloques de arriba.
+  - Fecha en una línea que abre Hoy, Ayer o Elegir día.
+  - La nota, visible; las etiquetas, plegadas.
   - Con TC, "Cuotas" y, si son más de 1, la tasa mensual.
 - **Etiquetas:** mientras el usuario no las toque, siguen a la categoría elegida (las de la categoría más las de la subcategoría).
 - **En escritorio:**
   - El foco empieza en el monto. Dígitos, `+`, `-`, el separador decimal y Backspace editan la expresión desde cualquier parte del diálogo, salvo en los campos de texto.
-  - Tab recorre los campos; Enter o Ctrl/⌘+S guardan; Esc cierra.
+  - Tab recorre los campos; Enter o Ctrl/⌘+S guardan; Esc vuelve de una vista o cierra (preguntando si hay cambios sin guardar).
 - **Transferencia:** origen y destino, sin categoría ni etiquetas. Si cambia la moneda, se ven dos montos ("Sale" y "Llega") y se toca uno para escribirlo.
 - **Ajuste:** "Sube" o "Baja" el saldo, monto, fecha y nota.
-- **Después de guardar:** un aviso ("Gasto guardado"), que al crear trae "Deshacer". Editar trae "Eliminar", que devuelve la intención y la pantalla confirma.
+- **Después de guardar:** un aviso ("Gasto guardado"), que al crear trae "Deshacer".
+
+Rediseño (F1e2), como en 1Money; aplica al crear y al editar, desde cualquier pantalla:
+
+- **Bloques:** arriba van dos bloques, cada uno con su color y su ícono:
+  - gastos: "De cuenta → A categoría";
+  - ingresos: "De categoría → A cuenta";
+  - transferencias: "De cuenta → A cuenta";
+  - ajustes: un solo bloque con la cuenta.
+- **Selector:** tocar un bloque abre el selector como vista dentro del mismo overlay, con ←: las cuentas por grupo con su saldo, o las categorías del mismo tipo. Al cambiar la categoría, la subcategoría vuelve a la categoría y, al crear, las etiquetas la siguen.
+- **Subcategorías:** chips con ícono en una fila desplazable. La elegida va rellena con el color de la categoría.
+- **Monto:** grande, en el color de la categoría, con contraste AA: si el color no llega a 4,5:1 sobre la superficie, se usa un tono más oscuro de la misma paleta.
+- **Nota:** visible, sin abrir nada. Las etiquetas, las cuotas e "incluir en el espacio" siguen donde estaban.
+- **Fecha:** una línea ("Hoy, 27 nov"). Tocarla abre una vista con Hoy, Ayer y Elegir día. Periodicidad y recordatorio llegan con los recurrentes (F3).
+- **Al crear:** el teclado siempre visible.
+- **Al editar:**
+  - En el sheet, el teclado aparece al tocar el monto. En el diálogo y el panel hay espacio y se ve siempre.
+  - Abajo van las acciones Borrar, Fecha y Duplicar.
+  - Borrar confirma en una vista del mismo overlay; al confirmar, borra y cierra.
+  - Duplicar abre un movimiento nuevo con los datos guardados del original y la fecha de hoy. Si hay cambios sin guardar, primero pregunta "¿Descartar los cambios?".
+- **✕ y ✓ flotantes (§13.5):** la ✕ arriba a la derecha. El ✓ es la tecla del teclado mientras el teclado se ve; sin teclado, es el ✓ flotante. Nunca hay dos.
+- **Descartar:** con cambios sin guardar, cerrar (✕, fondo, Esc o el atrás del sistema) muestra la vista "¿Descartar los cambios?" en vez de cerrar.
+- **Diálogo y panel:** los bloques arriba, a todo el ancho; debajo, el monto y el teclado a la izquierda y lo demás a la derecha.
 
 ### Cuentas
 
@@ -516,7 +554,9 @@ Los organismos de estas pantallas y sheets son los que el asistente reutiliza ta
 Detalle (F1e):
 
 - **Qué muestra:** los movimientos del periodo global que el usuario ve, incluidas sus cuentas privadas, igual que el detalle de cuenta. Van agrupados por día, los más recientes primero, de a 50 con "Ver más".
-  - La fila lleva la categoría ("Padre › Hija"), la cuenta, las etiquetas y la nota. Las transferencias dicen "Efectivo → Nequi" (o "Cuenta privada de X").
+  - La fila lleva la categoría ("Categoría (Subcategoría)", desde la F1e2), la cuenta con su ícono, las etiquetas y la nota, en una línea aparte. Las transferencias dicen "Efectivo → Nequi" (o "Cuenta privada de X").
+  - El monto va con el color del tipo: gastos e ingresos con su signo y su tono; transferencias y ajustes, neutros.
+  - **Encabezado de cada día (F1e2):** el día y, a la derecha, su neto (ingresos − gastos) con signo y el color de su signo, con las reglas de los totales. No depende de cuánto de la lista se haya cargado.
   - Un candado pequeño marca los movimientos de cuentas privadas, porque explica por qué los totales pueden diferir de Categorías, que usa el alcance Espacio.
 - **Búsqueda:**
   - Busca en la nota, la categoría (y su padre) y la cuenta de origen o destino, sin distinguir mayúsculas ni tildes.
@@ -534,10 +574,18 @@ Detalle (F1e):
   - Con el filtro de estado suma exactamente los estados elegidos, pendientes incluidos.
   - Los movimientos de cuentas fuera del espacio (las privadas propias, sin incluir) también suman, para que el total siempre sume lo que muestra la lista. Son la única diferencia con Inicio y Presupuesto, y su fila lleva el candado.
   - Si alguno suma, debajo de los totales va una línea discreta con el candado: "Incluye {monto} de cuentas fuera del espacio". Si vienen de gastos y de ingresos a la vez: "Incluye {monto} en gastos y {monto} en ingresos de cuentas fuera del espacio".
+- **Saldo inicial y saldo final (F1e2):** arriba de los totales, en dos casillas.
+  - Cuentas: las del total del encabezado (incluidas en el total) o, si hay filtro de cuenta, esas cuentas.
+  - El inicial es el saldo al cierre del día anterior al periodo; el final, al cierre del periodo, o de hoy si está en curso. En Siempre solo hay saldo final.
+  - En la moneda principal, con la tasa de esa fecha.
+  - Con búsqueda o con filtros de otro tipo (categoría, etiqueta, tipo, persona o estado) no se muestran, porque un saldo no aplica.
 - **Editar:**
   - Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo: en compacta como sheet, y en mediana como diálogo.
   - En expandida, lista y detalle van lado a lado (§13.5): el registro rápido se abre en línea en el panel de detalle. Si hay cambios sin guardar y se toca otro movimiento, se cierra el panel o se sale, pregunta "¿Descartar los cambios?".
-- **Crear:** "+" (atajo `N`) abre "¿Qué vas a registrar?": Transferencia y las categorías agrupadas en Gastos e Ingresos. Luego abre el registro rápido, en el panel en expandida.
+- **Crear:** "+" (atajo `N`) abre "¿Qué vas a registrar?". Luego abre el registro rápido, en el panel en expandida.
+  - Desde la F1e2 tiene tres pestañas, Ingreso, Gasto y Transferencia, y abre siempre en Gasto.
+  - Gasto e Ingreso: la cuadrícula de categorías de ese tipo, con lo registrado en el periodo debajo de cada ícono, en su color (AA).
+  - Transferencia: las cuentas por grupo (Cuentas, Ahorros, Deudas, Me deben), con el total del grupo y el saldo de cada una. Tocar una abre el registro rápido de transferencia desde esa cuenta.
 
 ### Presupuesto
 
@@ -545,7 +593,21 @@ Barras de gastado vs. presupuestado por categoría y total. Edición de montos. 
 
 ### Resumen
 
-Reportes de §6 para el periodo seleccionado.
+Reportes de §6 para el periodo seleccionado, como el Resumen de 1Money. De arriba abajo (F1e2):
+
+1. **Balance** del periodo (ingresos − gastos) y, al lado, un anillo con la tasa de ahorro (balance / ingresos, en %). Sin ingresos, el anillo no aparece; con el balance negativo, va en tono de error.
+2. **Gastos e Ingresos:** dos tarjetas que son a la vez el selector de la clase. La elegida va rellena con su color, y cada una lleva su nota de comparación (§6).
+3. **Barras apiladas por día** (§6). Eje de montos a la derecha y eje de fechas con marcas por semana desde el inicio del periodo, más la fecha final. Tocar o pasar el mouse por una barra muestra el día, su total y el desglose.
+4. **Promedios:** por día, por semana y por mes, en tres casillas (§6).
+5. **"Por categoría":** filas con ícono, nombre, monto y barra con el %.
+   - Primero las 3 categorías mayores, en el mismo orden y color del gráfico. Si hay más, una fila gris "Más…" despliega el resto. Las categorías sin movimientos no aparecen.
+   - Tocar una categoría despliega sus subcategorías (y "General", lo registrado directo en ella). Tocar una subcategoría abre Transacciones filtrado por ella, en el periodo global.
+6. **"Presupuesto":** solo con presupuestos activos (encendidos, en Mes o Año y con monto). Una fila de Gastos (gastado frente a presupuestado) y una de Ingresos (recibido frente a presupuestado), con el estilo de fila de Presupuesto y su pastilla. Tocarla abre Presupuesto. La fila de Ahorros llega con las metas de la F2.
+7. **Pestañas Etiqueta, Cuenta y Persona,** con la clase elegida. Persona solo aparece con más de un miembro, y un aviso dice que con varias etiquetas el % no suma 100.
+
+- En expandida van dos columnas: a la izquierda el balance, las tarjetas, el gráfico y los promedios; a la derecha la lista, el presupuesto y las pestañas. En compacta y mediana, una columna.
+- El gráfico lleva `role="img"` con un resumen (periodo, total y categoría mayor). El tooltip no es la única forma de leer los datos: la lista los tiene todos.
+- Si falta una tasa, el aviso de siempre.
 
 ### Autenticación
 
@@ -705,6 +767,13 @@ recurring_templates (fase 3)
     - Suma también los movimientos de cuentas fuera del espacio: los de las cuentas privadas de quien llama sin "incluir en el espacio". Así el total es el de la lista.
     - `outside_space_income` y `outside_space_expense` dicen cuánto de cada total viene de esas cuentas, en la moneda principal y con las mismas tasas. Restados, los totales son los de `category_totals` (Inicio y Presupuesto).
   - La búsqueda sin tildes usa la extensión `unaccent` a través de `private.search_text`.
+- RPCs de la F1e2 (Resumen, Mis finanzas y Transacciones), con `SECURITY INVOKER`:
+  - `daily_category_totals(space_id, from, to)`: por día y categoría principal (suma sus subcategorías), alcance Espacio, en la moneda principal.
+  - `breakdown_totals(space_id, from, to, dimension)`: por etiqueta, cuenta o persona que registró, alcance Espacio. Un movimiento con varias etiquetas cuenta en cada una; sin etiqueta, o de una cuenta privada de otro, va con key null.
+  - `net_worth(space_id, on_date)`: saldo por grupo y moneda de las cuentas activas que quien llama ve (sin bienes), convertido con la tasa de `on_date`.
+  - `transaction_day_totals(...)`: los argumentos de `search_transactions`; ingresos, gastos y neto por día de lo filtrado, con las reglas de `transaction_totals`.
+  - `accounts_balance(space_id, on_date, account_ids)`: el saldo al cierre de `on_date` de las cuentas del total del encabezado o de las elegidas, en la moneda principal con la tasa de esa fecha. Antes de la fecha del saldo inicial, descuenta lo que ese saldo ya traía.
+  - **Conversión por movimiento:** `category_totals`, `transaction_totals` y las RPCs de la F1e2 convierten cada movimiento por separado (mismas columnas de antes). Así cualquier reparto suma lo mismo. Las piezas compartidas son `private.space_movements` (alcance Espacio) y `private.filtered_amounts` (lo que suma en Transacciones).
 - Triggers de la F1d:
   - la moneda e "incluir en el espacio" del movimiento;
   - la clase de la categoría y el monto destino;
@@ -801,6 +870,15 @@ recurring_templates (fase 3)
     - El Año es de solo lectura.
   - **Configuración y app:** Configuración suma perfil, pantalla de inicio, periodo por defecto y el interruptor de presupuestos, y hay un aviso de nueva versión.
   - Detalle en §4.7, §7 y §8. Plan en `docs/plans/f1e.md`.
+- [x] F1e2 (Resumen, Mis finanzas, registro rápido y Transacciones):
+  - **Resumen** como el de 1Money: balance con tasa de ahorro, tarjetas de Gastos e Ingresos que son el selector, barras con las 3 categorías mayores y el resto en gris, promedios y lista por categoría sin donut, con "Más…" y subcategorías desplegables.
+  - **Comparación:** un periodo en curso se compara contra el anterior hasta el mismo punto; uno terminado, contra el anterior completo. La nota dice el rango.
+  - **Cifras coherentes:** cada movimiento se convierte por separado, así los totales por día, categoría, cuenta y persona suman lo mismo; `category_totals` y `transaction_totals` cambiaron a esa regla sin cambiar columnas.
+  - **"Mis finanzas"** es una pestaña de Cuentas.
+  - **Registro rápido** con bloques de origen y destino, selectores como vistas dentro del mismo overlay, nota visible, fecha en una línea, Borrar y Duplicar al editar, y la pregunta antes de descartar. "¿Qué vas a registrar?" va en pestañas.
+  - **Transacciones** con el neto de cada día y los saldos inicial y final del periodo.
+  - **Sheets:** en compacta salen con el alto de su contenido.
+  - Detalle en §6, §7, §8 y §13.5. Plan en `docs/plans/f1e.md` (Parte 2).
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
@@ -814,9 +892,9 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar`, `cc-progress-ring`, `cc-bar-chart` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row`, `cc-total-toggle`, `cc-entry-endpoints`, `cc-date-choice` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-entry-chooser` (y su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-breakdown-list`, `cc-net-worth`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
@@ -936,10 +1014,13 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 
 **Sheets y diálogos**
 
+- **Alto (F1e2):** en compacta, los overlays salen desde abajo con el alto de su contenido y la pantalla de fondo visible. Solo pasan a pantalla completa (su alto máximo, con scroll interno) cuando el contenido es largo.
 - Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
 - **Vistas dentro de un overlay (F1e):** cuando el paso siguiente es parte del mismo contexto (la calculadora o la confirmación dentro del detalle de Presupuesto), se muestra como una vista del mismo sheet, no como otro.
   - La vista lleva ← ("Volver") en lugar de ✕. Esc y el atrás del sistema vuelven a la vista anterior sin cerrar el sheet.
   - Al volver, la vista anterior conserva su scroll y el foco vuelve al control que abrió la vista.
+  - Desde la F1e2, el registro rápido también usa vistas: los selectores de cuenta y categoría, la fecha, la confirmación de borrar y la de descartar. Las mismas vistas funcionan en el panel de Transacciones (expandida), sin entrada de historial.
+- **Descartar en un overlay (F1e2):** un overlay con cambios sin guardar (hoy, el registro rápido) no se cierra con la ✕, el fondo, Esc ni el atrás: muestra la vista "¿Descartar los cambios?".
 - El atrás del sistema (Android o el navegador) cierra solo el overlay abierto, sin navegar.
 - **Overlays con confirmación (F1d2):** los sheets y diálogos que se confirman (ícono y color, subcategoría, etiqueta, opciones de selección múltiple, tasa de cambio y monto) siguen un mismo patrón, igual en sheet y en diálogo:
   - Sin barra superior ni título visible: el contenido sube hasta el borde superior (en el selector, la vista previa del ícono).
@@ -947,7 +1028,8 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
   - La acción principal es un botón flotante circular con ✓ en la esquina inferior derecha, siempre visible. El contenido con scroll deja espacio abajo para que el ✓ no tape la última fila.
   - Mientras guarda, el ✓ muestra la carga y queda deshabilitado; un error se muestra dentro del overlay.
   - Accesibilidad: el overlay conserva su nombre accesible (el título de antes); la ✕ y el ✓ tienen nombre y tooltip ("Cerrar", "Listo"). Enter y Ctrl/⌘+S confirman (Enter conserva su efecto sobre botones, casillas y listas).
-  - Los overlays sin confirmación (una opción, "¿Qué vas a crear?", periodo, confirmaciones) y las pantallas de flujo mantienen su barra.
+  - Desde la F1e2 el registro rápido sigue este patrón, con una diferencia: mientras su teclado se ve, el ✓ es la tecla del teclado, para que no haya dos.
+  - Los overlays sin confirmación (una opción, "¿Qué vas a crear?", "¿Qué vas a registrar?", periodo, confirmaciones) y las pantallas de flujo mantienen su barra.
 
 **Teclado y puntero** (mediana y expandida)
 

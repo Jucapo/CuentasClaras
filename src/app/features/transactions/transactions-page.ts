@@ -28,10 +28,12 @@ import {
 } from '../../core/routing/unsaved-changes.guard';
 import { SpaceMembersService } from '../../core/spaces/space-members.service';
 import { SpaceService } from '../../core/spaces/space.service';
+import { AccountsTotal } from '../../core/totals/totals.models';
 import { TotalsService } from '../../core/totals/totals.service';
 import { TransactionPage, TransactionQuery } from '../../core/transactions/transaction.models';
 import { TransactionsService } from '../../core/transactions/transactions.service';
 import { formatMoney } from '../../domain/money/money';
+import { balanceDates, showsBalances } from '../../domain/transactions/balance-window';
 import {
   activeFilterCount,
   filterChipText,
@@ -66,7 +68,7 @@ import { LayoutService } from '../../shared/ui/services/layout.service';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { QuickEntryFlow, QuickEntrySession } from './quick-entry-flow';
-import { injectTransactionLookups, toTransactionGroups } from './transaction-items';
+import { DayTotals, injectTransactionLookups, toTransactionGroups } from './transaction-items';
 import { TransactionFiltersStore } from './transaction-filters.store';
 import {
   outsideSpaceNote,
@@ -173,6 +175,57 @@ export class TransactionsPage implements HasUnsavedChanges {
     },
   });
 
+  /** The net of each day, for its header; it does not depend on how much of the list loaded. */
+  private readonly dayTotalsStore = resource({
+    params: () => ({
+      spaceId: this.spaces.activeSpace()?.id,
+      query: this.transactionQuery(),
+      revision: this.transactions.revision(),
+      rates: this.rates.revision(),
+    }),
+    loader: async ({ params }) => {
+      const result = await this.totalsService.forTransactionDays(params.query);
+      if (!result.ok) {
+        throw new Error(result.message);
+      }
+      return result.value;
+    },
+  });
+
+  /**
+   * The opening and closing balances (spec §7): of the accounts of the header total, or of the
+   * accounts filtered; none with a search or another filter.
+   */
+  private readonly balancesStore = resource({
+    params: () => {
+      const query = this.transactionQuery();
+      return showsBalances(query.filters, query.search)
+        ? {
+            spaceId: this.spaces.activeSpace()?.id,
+            dates: balanceDates(query.range, this.periods.today()),
+            accountIds: query.filters.accountIds,
+            revision: this.transactions.revision(),
+            rates: this.rates.revision(),
+          }
+        : undefined;
+    },
+    loader: async ({ params }) => {
+      const [opening, closing] = await Promise.all([
+        params.dates.opening
+          ? this.totalsService.balanceOn(params.dates.opening, params.accountIds)
+          : Promise.resolve(null),
+        this.totalsService.balanceOn(params.dates.closing, params.accountIds),
+      ]);
+      for (const result of [opening, closing]) {
+        if (result && !result.ok) {
+          throw new Error(result.message);
+        }
+      }
+      const value = (result: typeof closing | null) => (result?.ok ? result.value : null);
+      return { opening: value(opening), closing: value(closing) };
+    },
+  });
+
   // Keeps what was listed while the next page or search loads, instead of emptying the list.
   private readonly page = linkedSignal<TransactionPage | undefined, TransactionPage | null>({
     source: () => (this.listStore.hasValue() ? this.listStore.value() : undefined),
@@ -183,9 +236,40 @@ export class TransactionsPage implements HasUnsavedChanges {
   protected readonly loading = computed(() => this.listStore.isLoading());
   protected readonly hasMore = computed(() => this.page()?.hasMore ?? false);
   protected readonly listError = computed(() => this.listStore.error()?.message ?? null);
-  protected readonly groups = computed<TransactionListGroup[]>(() =>
-    toTransactionGroups(this.movements(), this.lookups(), 'space', this.periods.today()),
+  private readonly dayTotals = computed<DayTotals | null>(() =>
+    this.dayTotalsStore.hasValue()
+      ? {
+          byDate: new Map(this.dayTotalsStore.value().map((day) => [day.date, day.net])),
+          currency: this.mainCurrency(),
+        }
+      : null,
   );
+  protected readonly groups = computed<TransactionListGroup[]>(() =>
+    toTransactionGroups(
+      this.movements(),
+      this.lookups(),
+      'space',
+      this.periods.today(),
+      this.dayTotals(),
+    ),
+  );
+  /** "Saldo inicial" and "Saldo final"; empty when they do not apply. */
+  protected readonly balanceItems = computed<StatItem[]>(() => {
+    const balances = this.balancesStore.hasValue() ? this.balancesStore.value() : null;
+    if (!balances?.closing) {
+      return [];
+    }
+    const item = (label: string, total: AccountsTotal): StatItem => ({
+      label,
+      amount: total.total,
+      currency: total.currency,
+      tone: 'auto',
+    });
+    return [
+      ...(balances.opening ? [item(TRANSACTIONS_TEXT.openingBalance, balances.opening)] : []),
+      item(TRANSACTIONS_TEXT.closingBalance, balances.closing),
+    ];
+  });
   protected readonly filtering = computed(
     () =>
       this.transactionQuery().search.terms.length > 0 ||
@@ -234,7 +318,18 @@ export class TransactionsPage implements HasUnsavedChanges {
       amount > 0 ? formatMoney(amount, totals.currency, format) : null;
     return outsideSpaceNote(text(totals.outsideSpace.expense), text(totals.outsideSpace.income));
   });
-  protected readonly missingRates = computed(() => this.totals()?.missingRateCurrencies ?? []);
+  protected readonly missingRates = computed(() => {
+    const balances = this.balancesStore.hasValue() ? this.balancesStore.value() : null;
+    const days = this.dayTotalsStore.hasValue() ? this.dayTotalsStore.value() : [];
+    return [
+      ...new Set([
+        ...(this.totals()?.missingRateCurrencies ?? []),
+        ...(balances?.opening?.missingRateCurrencies ?? []),
+        ...(balances?.closing?.missingRateCurrencies ?? []),
+        ...days.flatMap((day) => day.missingRateCurrencies),
+      ]),
+    ].sort();
+  });
 
   /** What each filter can pick, in the order its panel lists them. */
   private readonly filterOptions = computed<
@@ -331,13 +426,18 @@ export class TransactionsPage implements HasUnsavedChanges {
     if (!session) {
       return;
     }
+    // The entry already asked before losing changes or deleting (spec §13.5).
     if (result === 'cancel') {
-      if (await this.confirmDiscard()) {
-        this.closePane();
-      }
+      this.closePane();
       return;
     }
-    // Deleting asks first; keeping the movement leaves it open.
+    if (result === 'duplicate') {
+      const copy = session.duplicate();
+      this.session.set(copy);
+      this.selectedId.set(null);
+      return;
+    }
+    // A failed delete leaves the movement open.
     if (await session.finish(result)) {
       this.closePane();
     }

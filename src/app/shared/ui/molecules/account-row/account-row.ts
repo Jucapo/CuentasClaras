@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { Amount } from '../../atoms/amount/amount';
 import { LinkCommands } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
@@ -21,7 +21,10 @@ export class AccountRow {
   /** Short notes under the name, e.g. "Privada · Predeterminada". */
   readonly notes = input<string>();
   readonly link = input<LinkCommands>();
+  /** Without a link, a button that emits `activate`, e.g. to pick the account. */
+  readonly actionable = input(false);
   readonly archived = input(false);
+  readonly activate = output<void>();
   /** Its detail is open next to the list. */
   readonly selected = input(false);
 }

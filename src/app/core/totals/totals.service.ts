@@ -7,7 +7,13 @@ import { SpaceService } from '../spaces/space.service';
 import { DataResult } from '../action-result';
 import { TransactionQuery } from '../transactions/transaction.models';
 import { TransactionsService } from '../transactions/transactions.service';
-import { AccountsTotal, CategoryTotal, TransactionTotals } from './totals.models';
+import { IsoDate } from '../../domain/dates/local-date';
+import {
+  AccountsTotal,
+  CategoryTotal,
+  TransactionDayTotal,
+  TransactionTotals,
+} from './totals.models';
 import { TotalsApi } from './totals.api';
 
 /**
@@ -113,5 +119,25 @@ export class TotalsService {
   async forTransactions(query: TransactionQuery): Promise<DataResult<TransactionTotals | null>> {
     const spaceId = this.spaces.activeSpace()?.id;
     return spaceId ? this.api.transactionTotals(spaceId, query) : { ok: true, value: null };
+  }
+
+  /** The same per day, for the header of each day (spec §7); none without a space. */
+  async forTransactionDays(query: TransactionQuery): Promise<DataResult<TransactionDayTotal[]>> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    return spaceId ? this.api.transactionDayTotals(spaceId, query) : { ok: true, value: [] };
+  }
+
+  /**
+   * Balance at the close of a day of the accounts of the header total, or of `accountIds`
+   * (spec §7); null without a space.
+   */
+  async balanceOn(
+    date: IsoDate,
+    accountIds: readonly string[],
+  ): Promise<DataResult<AccountsTotal | null>> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    return spaceId
+      ? this.api.accountsBalance(spaceId, date, accountIds)
+      : { ok: true, value: null };
   }
 }

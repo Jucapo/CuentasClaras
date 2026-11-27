@@ -68,6 +68,35 @@ button.display {
   }
 }
 
+// Large, centered on the surface, in the color of its category (the quick entry, spec §7).
+:host(.lg) {
+  .display {
+    align-items: center;
+    min-height: 0;
+    padding: var(--cc-space-1) var(--cc-space-3);
+    background-color: transparent;
+    color: var(--cc-amount-color, var(--mat-sys-on-surface));
+    text-align: center;
+  }
+
+  .label {
+    align-self: center;
+    color: inherit;
+  }
+
+  .result {
+    font: var(--mat-sys-display-small);
+  }
+}
+
+:host(.lg.active) .display {
+  border-color: transparent;
+}
+
+:host(.lg.invalid) .display {
+  border-color: var(--mat-sys-error);
+}
+
 .error {
   margin: var(--cc-space-1) 0 0;
   font: var(--mat-sys-body-small);

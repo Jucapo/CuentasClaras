@@ -40,6 +40,8 @@ export class BudgetRow {
   /** A line under what was spent, e.g. what went to categories without a budget. */
   readonly note = input<string>();
   readonly actionable = input(false);
+  /** Whether activating it opens a sheet or dialog (the detail), rather than another screen. */
+  readonly opensDialog = input(true);
   /** Open beside the list. */
   readonly selected = input(false);
   readonly emphasis = input<'item' | 'total'>('item');

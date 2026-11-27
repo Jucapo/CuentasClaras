@@ -1,6 +1,10 @@
 // Single source of the color palette (spec §13.3): the pickers and every colored element read it.
 // The database stores the key; each color has a variant per theme, applied with light-dark().
-import { contrastRatio, MIN_GRAPHIC_CONTRAST } from '../../../domain/color/contrast';
+import {
+  contrastRatio,
+  MIN_GRAPHIC_CONTRAST,
+  MIN_TEXT_CONTRAST,
+} from '../../../domain/color/contrast';
 
 /** A tone of the palette with its Material Design tonal scale, steps 200 to 900. */
 interface ToneDefinition {
@@ -240,6 +244,43 @@ export function paletteColor(key: ColorKey): string {
 export function paletteForeground(key: ColorKey): string {
   const color = paletteEntry(key);
   return color ? `light-dark(${color.onLight}, ${color.onDark})` : '';
+}
+
+/**
+ * Surfaces text in a palette color sits on, per theme: the lightest and the darkest one of each
+ * (neutral 98 and 94 in light; 6 and 17 in dark), from src/styles/_theme-colors.scss.
+ */
+export const PALETTE_TEXT_SURFACES = {
+  light: ['#f9f9ff', '#ededf3'],
+  dark: ['#111317', '#282a2e'],
+} as const;
+
+/** Text when no intensity of the tone reads: the theme's on-surface (neutral 10 and 90). */
+const TEXT_FALLBACK = { light: '#1a1c20', dark: '#e2e2e8' } as const;
+
+function readableText(color: PaletteColor, theme: 'light' | 'dark'): string {
+  const colors = PALETTE_TONES.find((tone) => tone.key === color.tone)?.colors ?? [];
+  const index = colors.findIndex((candidate) => candidate.key === color.key);
+  // Lightest first: darker intensities read on light surfaces, lighter ones on dark surfaces.
+  const candidates = theme === 'light' ? colors.slice(index) : colors.slice(0, index + 1).reverse();
+  const surfaces = PALETTE_TEXT_SURFACES[theme];
+  return (
+    candidates
+      .map((candidate) => candidate[theme])
+      .find((hex) =>
+        surfaces.every((surface) => contrastRatio(hex, surface) >= MIN_TEXT_CONTRAST),
+      ) ?? TEXT_FALLBACK[theme]
+  );
+}
+
+/**
+ * CSS value of text in a palette color, e.g. an amount in the color of its category (spec §7): the
+ * color itself where it reaches AA on the surfaces, else the nearest intensity of its tone that
+ * does (deeper in light, paler in dark).
+ */
+export function paletteTextColor(key: ColorKey): string {
+  const color = paletteEntry(key);
+  return color ? `light-dark(${readableText(color, 'light')}, ${readableText(color, 'dark')})` : '';
 }
 
 /** Spanish name of a palette color. */

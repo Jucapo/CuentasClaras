@@ -29,6 +29,11 @@
   transition: inline-size var(--cc-transition-fast);
 }
 
+// A bar in the color of what it measures, e.g. a category in the Resumen.
+:host(.bar.colored) .fill {
+  background-color: var(--cc-progress-tint);
+}
+
 // Behind the content of its row: a soft tone of the category over the surface, so text on top
 // keeps its contrast in both themes.
 :host(.backdrop) {

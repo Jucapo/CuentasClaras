@@ -6,7 +6,12 @@ import { dataErrorMessage, LOAD_ERROR_MESSAGE } from '../supabase/data-error-mes
 import { SupabaseService } from '../supabase/supabase.service';
 import { TransactionQuery } from '../transactions/transaction.models';
 import { transactionQueryArgs } from '../transactions/transactions.api';
-import { AccountsTotal, CategoryTotal, TransactionTotals } from './totals.models';
+import {
+  AccountsTotal,
+  CategoryTotal,
+  TransactionDayTotal,
+  TransactionTotals,
+} from './totals.models';
 
 /** Supabase RPCs that add up movements (security invoker: they follow RLS). */
 @Injectable({ providedIn: 'root' })
@@ -70,6 +75,59 @@ export class TotalsApi {
             missingRateCurrencies: data.missing_rate_currencies ?? [],
           }
         : null,
+    };
+  }
+
+  /** Incomes, expenses and net per day of the movements Transacciones lists for `query`. */
+  async transactionDayTotals(
+    spaceId: string,
+    query: TransactionQuery,
+  ): Promise<DataResult<TransactionDayTotal[]>> {
+    const { data, error, status } = await this.client.rpc(
+      'transaction_day_totals',
+      transactionQueryArgs(spaceId, query),
+    );
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
+    }
+    return {
+      ok: true,
+      value: (data ?? []).map((row) => ({
+        date: row.date,
+        income: row.income,
+        expense: row.expense,
+        net: row.net,
+        missingRateCurrencies: row.missing_rate_currencies ?? [],
+      })),
+    };
+  }
+
+  /**
+   * Balance at the close of `onDate` of the accounts of the header total, or of `accountIds`, in
+   * the main currency with the rate of that day (spec §7).
+   */
+  async accountsBalance(
+    spaceId: string,
+    onDate: IsoDate,
+    accountIds: readonly string[],
+  ): Promise<DataResult<AccountsTotal>> {
+    const { data, error, status } = await this.client
+      .rpc('accounts_balance', {
+        target_space_id: spaceId,
+        on_date: onDate,
+        account_ids: [...accountIds],
+      })
+      .single();
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
+    }
+    return {
+      ok: true,
+      value: {
+        total: data.balance,
+        currency: data.currency,
+        missingRateCurrencies: data.missing_rate_currencies ?? [],
+      },
     };
   }
 

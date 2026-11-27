@@ -15,23 +15,28 @@ export interface StatItem {
   readonly signed?: boolean;
   /** A short line under the figure, e.g. a comparison with the previous period. */
   readonly note?: string;
+  /** Paints the figure in the tone of expenses or incomes, e.g. the averages of the Resumen. */
+  readonly accent?: 'expense' | 'income';
 }
 
 /**
- * A few labeled figures, e.g. incomes, expenses and net of a list. They go in rows while the
- * container is narrow and in columns when it is wide. An optional footnote under all of them,
- * e.g. what part of the totals comes from accounts outside the space.
+ * A few labeled figures, e.g. incomes, expenses and net of a list. As a `list` they go in rows
+ * while the container is narrow and in columns when it is wide; as `tiles`, side by side in boxes,
+ * label on top (the averages of the Resumen, the balances of Transacciones). An optional footnote
+ * under all of them, e.g. what part of the totals comes from accounts outside the space.
  */
 @Component({
   selector: 'cc-stat-group',
   imports: [Amount, Icon],
   templateUrl: './stat-group.html',
   styleUrl: './stat-group.scss',
+  host: { '[class]': 'variant()' },
 })
 export class StatGroup {
   readonly items = input.required<readonly StatItem[]>();
   /** Accessible name of the group, e.g. "Totales de lo filtrado". */
   readonly label = input.required<string>();
+  readonly variant = input<'list' | 'tiles'>('list');
   /** A discreet line under the figures; none when null. */
   readonly footnote = input<string | null>(null);
   /** Decorative icon before the footnote, e.g. `lock`. */

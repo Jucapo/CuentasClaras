@@ -243,3 +243,36 @@ export const HOUSEHOLD_WITH_BUDGETS: CatalogFixture = {
     }),
   ],
 };
+
+/**
+ * The household for the Resumen: two more expense categories, so the list folds the smallest
+ * ones under "Más…", and October movements to compare with (spec §6). On 26 nov the comparison is
+ * with 1 oct – 26 oct, which leaves out what came after.
+ */
+export const HOUSEHOLD_FOR_SUMMARY: CatalogFixture = {
+  ...HOUSEHOLD_WITH_BUDGETS,
+  categories: [
+    ...(HOUSEHOLD_WITH_BUDGETS.categories ?? []),
+    category('cat-health', 'Salud', 'medical_services', 'red', 3),
+    category('cat-fun', 'Ocio', 'sports_esports', 'violet', 4),
+  ],
+  transactions: [
+    ...(HOUSEHOLD_WITH_BUDGETS.transactions ?? []),
+    movement('tx-doctor', 'expense', '2026-11-18', 8000000, 'acc-bank', {
+      category_id: 'cat-health',
+    }),
+    movement('tx-cinema', 'expense', '2026-11-21', 5000000, 'acc-cash', { category_id: 'cat-fun' }),
+    movement('tx-october-rent', 'expense', '2026-10-05', 200000000, 'acc-bank', {
+      category_id: 'cat-rent',
+    }),
+    movement('tx-october-market', 'expense', '2026-10-20', 30000000, 'acc-bank', {
+      category_id: 'cat-market',
+    }),
+    movement('tx-october-late', 'expense', '2026-10-29', 10000000, 'acc-bank', {
+      category_id: 'cat-market',
+    }),
+    movement('tx-october-salary', 'income', '2026-10-25', 600000000, 'acc-bank', {
+      category_id: 'cat-salary',
+    }),
+  ],
+};

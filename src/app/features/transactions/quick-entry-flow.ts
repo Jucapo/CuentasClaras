@@ -4,28 +4,29 @@ import { AccountsService } from '../../core/accounts/accounts.service';
 import { ActionResult } from '../../core/action-result';
 import { AuthService } from '../../core/auth/auth.service';
 import { CategoriesService } from '../../core/categories/categories.service';
-import { Category } from '../../core/categories/category.models';
+import { Category, CategoryKind } from '../../core/categories/category.models';
 import { TagsService } from '../../core/categories/tags.service';
-import { ACCOUNT_GROUP_LABELS, CATEGORY_KIND_LABELS } from '../../core/config/catalog.constants';
+import { SPACE_DEFAULTS } from '../../core/config/space.constants';
 import {
-  DELETE_TRANSACTION_CONFIRM,
   NEW_TRANSACTION_CHOICE,
   TRANSACTION_SAVED_TEXT,
   TRANSACTION_TYPE_LABELS,
-  UNCATEGORIZED_LOOK,
 } from '../../core/config/transaction.constants';
 import { PeriodService } from '../../core/periods/period.service';
 import { SpaceService } from '../../core/spaces/space.service';
 import { NOT_ALLOWED_MESSAGE } from '../../core/supabase/data-error-messages';
+import { TotalsService } from '../../core/totals/totals.service';
 import { Transaction } from '../../core/transactions/transaction.models';
 import { TransactionsService } from '../../core/transactions/transactions.service';
 import { expressionFromMinor } from '../../domain/money/amount-expression';
 import { currencyMinorUnits } from '../../domain/money/currencies';
+import { AccountListGroup } from '../../shared/ui/organisms/account-list/account-list';
+import { CategoryGridItem } from '../../shared/ui/organisms/category-grid/category-grid';
 import {
-  OptionPanel,
-  OptionPanelData,
-  PanelOption,
-} from '../../shared/ui/molecules/option-panel/option-panel';
+  EntryChoice,
+  EntryChooserData,
+} from '../../shared/ui/organisms/entry-chooser/entry-chooser';
+import { EntryChooserSheet } from '../../shared/ui/organisms/entry-chooser-sheet/entry-chooser-sheet';
 import {
   QuickEntryData,
   QuickEntryResult,
@@ -35,6 +36,7 @@ import {
   includeInSpaceDefault,
   QuickEntryAccount,
   QuickEntryCategory,
+  QuickEntryCategoryTree,
   QuickEntryValue,
   toTransactionEntry,
 } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
@@ -42,15 +44,12 @@ import {
   QuickEntrySheet,
   QuickEntrySheetResult,
 } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
-import { ConfirmService } from '../../shared/ui/services/confirm.service';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { ToastService } from '../../shared/ui/services/toast.service';
+import { toAccountListGroups } from '../accounts/account-list-groups';
 
 /** Shown when there is no account to record a movement in. */
 const NO_ACCOUNTS_MESSAGE = 'Crea una cuenta para registrar movimientos.';
-
-/** Value of the "Transferencia" choice of "¿Qué vas a registrar?". */
-const TRANSFER_CHOICE = 'transfer';
 
 /**
  * A quick entry ready to show, in an overlay or in a detail pane: what it edits and what happens
@@ -61,20 +60,31 @@ export interface QuickEntrySession {
   readonly key: string;
   readonly data: QuickEntryData;
   /**
-   * Announces what was saved (with "Deshacer" for a new movement) or, for `delete`, confirms and
-   * deletes. Resolves false when the user kept the movement, so a pane stays open.
+   * Announces what was saved (with "Deshacer" for a new movement) or, for `delete` (already
+   * confirmed in the entry), deletes. Resolves false when deleting failed, so a pane stays open.
    */
   finish(result: QuickEntryResult): Promise<boolean>;
+  /**
+   * "Duplicar" (spec §7): a new movement with the data of the original as saved and today's date;
+   * null for a new movement.
+   */
+  duplicate(): QuickEntrySession | null;
 }
 
-function toEntryCategory(category: Category): QuickEntryCategory {
-  return { id: category.id, name: category.name, defaultTagIds: category.default_tag_ids };
+function toEntryCategory(category: Category, parent: Category | null = null): QuickEntryCategory {
+  return {
+    id: category.id,
+    name: category.name,
+    icon: category.icon,
+    color: category.color ?? parent?.color ?? null,
+    defaultTagIds: category.default_tag_ids,
+  };
 }
 
 /**
  * The quick entry (spec §7) for a category, a transfer or an existing movement: builds its session,
  * shows it in an overlay or lets a page show it in a pane, saves what it returns and offers
- * "Deshacer" after creating one. Deleting asks first.
+ * "Deshacer" after creating one. "¿Qué vas a registrar?" picks what to record.
  */
 @Injectable({ providedIn: 'root' })
 export class QuickEntryFlow {
@@ -84,9 +94,9 @@ export class QuickEntryFlow {
   private readonly tags = inject(TagsService);
   private readonly spaces = inject(SpaceService);
   private readonly periods = inject(PeriodService);
+  private readonly totals = inject(TotalsService);
   private readonly transactions = inject(TransactionsService);
   private readonly overlay = inject(OverlayService);
-  private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
   /** A new expense or income in a category (from its bubble). */
@@ -99,12 +109,15 @@ export class QuickEntryFlow {
     await this.present(this.transferSession(accountId));
   }
 
-  /** An existing movement, to edit or delete it. */
+  /** An existing movement, to edit, delete or duplicate it. */
   async edit(transaction: Transaction): Promise<void> {
     await this.present(this.editSession(transaction));
   }
 
-  /** Shows a session in an overlay: a sheet in compact, a dialog elsewhere. */
+  /**
+   * Shows a session in an overlay: a sheet in compact, a dialog elsewhere. "Duplicar" goes on with
+   * the copy in a new overlay.
+   */
   async present(session: QuickEntrySession | null): Promise<void> {
     if (!session) {
       return;
@@ -116,45 +129,36 @@ export class QuickEntryFlow {
       data: session.data,
     });
     await session.finish(result ?? 'cancel');
+    if (result === 'duplicate') {
+      await this.present(session.duplicate());
+    }
   }
 
   /**
-   * "¿Qué vas a registrar?" (spec §7): a transfer or a category, grouped in expenses and incomes.
-   * Resolves with the session of the choice, or null when dismissed or nothing can be recorded.
+   * "¿Qué vas a registrar?" (spec §7): Ingreso, Gasto and Transferencia as tabs. Resolves with the
+   * session of the choice, or null when dismissed or nothing can be recorded.
    */
   async chooseNew(): Promise<QuickEntrySession | null> {
-    if (!this.canRecord(this.writableAccounts())) {
+    const accounts = this.writableAccounts();
+    if (!this.canRecord(accounts)) {
       return null;
     }
-    const categories = this.categories
-      .categories()
-      .filter((category) => !category.parent_id && !category.archived_at)
-      .sort((a, b) =>
-        a.kind === b.kind ? a.sort_order - b.sort_order : a.kind === 'expense' ? -1 : 1,
-      );
-    const options: PanelOption<string>[] = [
-      {
-        value: TRANSFER_CHOICE,
-        label: TRANSACTION_TYPE_LABELS.transfer,
-        description: NEW_TRANSACTION_CHOICE.transferHint,
-        ...UNCATEGORIZED_LOOK.transfer,
-      },
-      ...categories.map((category) => ({
-        value: category.id,
-        label: category.name,
-        icon: category.icon,
-        color: category.color,
-        group: CATEGORY_KIND_LABELS[category.kind],
-      })),
-    ];
-    const choice = await this.overlay.open<string, OptionPanelData<string>>(OptionPanel, {
+    const choice = await this.overlay.open<EntryChoice, EntryChooserData>(EntryChooserSheet, {
       label: NEW_TRANSACTION_CHOICE.title,
-      data: { title: NEW_TRANSACTION_CHOICE.title, mode: 'action', options },
+      data: {
+        title: NEW_TRANSACTION_CHOICE.title,
+        expenses: this.gridItems('expense'),
+        incomes: this.gridItems('income'),
+        accountGroups: this.accountGroups(accounts),
+        currency: this.mainCurrency(),
+      },
     });
     if (!choice) {
       return null;
     }
-    return choice === TRANSFER_CHOICE ? this.transferSession(null) : this.categorySession(choice);
+    return choice.kind === 'transfer'
+      ? this.transferSession(choice.accountId)
+      : this.categorySession(choice.categoryId);
   }
 
   /** A new expense or income in a category; null (with a toast) when nothing can be recorded. */
@@ -164,18 +168,19 @@ export class QuickEntryFlow {
     if (!category || !this.canRecord(accounts)) {
       return null;
     }
-    const subcategories = this.subcategoriesOf(category.id);
+    const trees = this.categoryTrees(category.kind);
+    const tree = trees.find((item) => item.id === category.id) ?? null;
     const account = this.defaultAccount(accounts);
     return this.session(
       {
         mode: 'create',
+        followDefaults: true,
         title: category.name,
-        category: toEntryCategory(category),
-        subcategories,
+        categories: trees,
         value: {
           ...this.blank(category.kind, account),
           categoryId: category.id,
-          tagIds: defaultTagIds(category.id, toEntryCategory(category), subcategories),
+          tagIds: defaultTagIds(category.id, tree, tree?.subcategories ?? []),
         },
       },
       accounts,
@@ -194,9 +199,9 @@ export class QuickEntryFlow {
     return this.session(
       {
         mode: 'create',
+        followDefaults: true,
         title: TRANSACTION_TYPE_LABELS.transfer,
-        category: null,
-        subcategories: [],
+        categories: [],
         value: {
           ...this.blank('transfer', source),
           toAccountId: accounts.find((account) => account.id !== source?.id)?.id ?? '',
@@ -222,9 +227,9 @@ export class QuickEntryFlow {
     return this.session(
       {
         mode: 'edit',
+        followDefaults: false,
         title: top?.name ?? TRANSACTION_TYPE_LABELS[transaction.type],
-        category: top ? toEntryCategory(top) : null,
-        subcategories: top ? this.subcategoriesOf(top.id) : [],
+        categories: top ? this.categoryTrees(top.kind) : [],
         value: {
           type: transaction.type,
           expression: expressionFromMinor(transaction.amount, exponent),
@@ -253,7 +258,7 @@ export class QuickEntryFlow {
   }
 
   private session(
-    entry: Pick<QuickEntryData, 'mode' | 'title' | 'category' | 'subcategories' | 'value'>,
+    entry: Pick<QuickEntryData, 'mode' | 'followDefaults' | 'title' | 'categories' | 'value'>,
     accounts: readonly QuickEntryAccount[],
     id: string,
   ): QuickEntrySession {
@@ -264,6 +269,7 @@ export class QuickEntryFlow {
       data: {
         ...entry,
         accounts,
+        accountGroups: this.accountGroups(accounts),
         tags: this.tags
           .activeTags()
           .map((tag) => ({ value: tag.id, label: tag.name, color: tag.color })),
@@ -286,6 +292,18 @@ export class QuickEntryFlow {
         }
         return true;
       },
+      duplicate: () =>
+        entry.mode === 'edit'
+          ? this.session(
+              {
+                ...entry,
+                mode: 'create',
+                value: { ...entry.value, date: this.periods.today() },
+              },
+              this.writableAccounts(),
+              crypto.randomUUID(),
+            )
+          : null,
     };
   }
 
@@ -309,15 +327,8 @@ export class QuickEntryFlow {
     }
   }
 
-  /** Whether the movement is gone: false when the user kept it or deleting failed. */
+  /** Deletes a movement the user already confirmed in the entry; false when it failed. */
   private async remove(id: string): Promise<boolean> {
-    const confirmed = await this.confirm.confirm({
-      ...DELETE_TRANSACTION_CONFIRM,
-      destructive: true,
-    });
-    if (!confirmed) {
-      return false;
-    }
     const removed = await this.transactions.remove(id);
     void this.toast.show(removed.ok ? TRANSACTION_SAVED_TEXT.deleted : removed.message);
     return removed.ok;
@@ -335,8 +346,12 @@ export class QuickEntryFlow {
     return true;
   }
 
+  private mainCurrency(): string {
+    return this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency;
+  }
+
   /** Active accounts the user can write: shared ones for editors, plus their own private ones. */
-  private writableAccounts(): QuickEntryAccount[] {
+  private writableSource(): Account[] {
     if (!this.spaces.canEdit()) {
       return [];
     }
@@ -346,30 +361,54 @@ export class QuickEntryFlow {
       .filter(
         (account) =>
           !account.archived_at && (account.visibility === 'shared' || account.owner_id === userId),
-      )
-      .map((account: Account) => ({
-        id: account.id,
-        name: account.name,
-        currency: account.currency,
-        isCard: account.kind === 'credit_card',
-        isPrivate: account.visibility === 'private',
-        includeInSpaceByDefault: account.include_in_space_by_default,
-        group: ACCOUNT_GROUP_LABELS[account.account_group],
-      }));
+      );
+  }
+
+  private writableAccounts(): QuickEntryAccount[] {
+    return this.writableSource().map((account) => ({
+      id: account.id,
+      name: account.name,
+      icon: account.icon,
+      color: account.color,
+      currency: account.currency,
+      isCard: account.kind === 'credit_card',
+      isPrivate: account.visibility === 'private',
+      includeInSpaceByDefault: account.include_in_space_by_default,
+    }));
+  }
+
+  /** The writable accounts by group with their balances, to pick one (spec §7). */
+  private accountGroups(accounts: readonly QuickEntryAccount[]): AccountListGroup[] {
+    const ids = new Set(accounts.map((account) => account.id));
+    return toAccountListGroups(
+      this.writableSource().filter((account) => ids.has(account.id)),
+      { mainCurrency: this.mainCurrency(), defaultAccountId: this.spaces.defaultAccountId() },
+    );
+  }
+
+  /** Top-level categories of a kind with what each got in the period, for the chooser. */
+  private gridItems(kind: CategoryKind): CategoryGridItem[] {
+    return this.categories.tree(kind).map(({ category }) => ({
+      id: category.id,
+      name: category.name,
+      icon: category.icon,
+      color: category.color,
+      amount: this.totals.find(category.id)?.amount ?? 0,
+    }));
+  }
+
+  /** Active top-level categories of a kind with their active subcategories, in their order. */
+  private categoryTrees(kind: CategoryKind): QuickEntryCategoryTree[] {
+    return this.categories.tree(kind).map(({ category, children }) => ({
+      ...toEntryCategory(category),
+      subcategories: children.map((child) => toEntryCategory(child, category)),
+    }));
   }
 
   /** The member's default account, else the first one (spec §3.1). */
   private defaultAccount(accounts: readonly QuickEntryAccount[]): QuickEntryAccount | null {
     const defaultId = this.spaces.defaultAccountId();
     return accounts.find((account) => account.id === defaultId) ?? accounts[0] ?? null;
-  }
-
-  private subcategoriesOf(categoryId: string): QuickEntryCategory[] {
-    return this.categories
-      .categories()
-      .filter((category) => category.parent_id === categoryId && !category.archived_at)
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map(toEntryCategory);
   }
 
   private blank(type: QuickEntryValue['type'], account: QuickEntryAccount | null): QuickEntryValue {

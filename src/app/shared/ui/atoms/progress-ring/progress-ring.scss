@@ -1,0 +1,42 @@
+:host {
+  --cc-ring-color: var(--cc-tone-income);
+
+  position: relative;
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--cc-progress-ring-size);
+  height: var(--cc-progress-ring-size);
+  font: var(--mat-sys-label-large);
+  color: var(--cc-tone-income);
+}
+
+:host(.error) {
+  --cc-ring-color: var(--mat-sys-error);
+
+  color: var(--mat-sys-error);
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.track {
+  fill: none;
+  stroke: var(--mat-sys-surface-container-highest);
+}
+
+.fill {
+  fill: none;
+  stroke: var(--cc-ring-color);
+  stroke-linecap: round;
+  transition: stroke-dasharray var(--cc-transition-fast);
+}
+
+.center {
+  position: relative;
+  font-variant-numeric: tabular-nums;
+}

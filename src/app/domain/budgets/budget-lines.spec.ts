@@ -1,4 +1,23 @@
-import { budgetFill, budgetStanding, generalFigures } from './budget-lines';
+import { budgetFill, budgetStanding, generalFigures, kindBudgetFigures } from './budget-lines';
+
+describe('kindBudgetFigures', () => {
+  it('puts everything spent against the sum of the budgets of the categories', () => {
+    expect(
+      kindBudgetFigures(1_200, [
+        { spent: 700, budget: 800 },
+        { spent: 400, budget: null },
+        { spent: 100, budget: 300 },
+      ]),
+    ).toEqual({ spent: 1_200, budget: 1_100 });
+  });
+
+  it('has no budget when no category has one', () => {
+    expect(kindBudgetFigures(500, [{ spent: 500, budget: null }])).toEqual({
+      spent: 500,
+      budget: null,
+    });
+  });
+});
 
 describe('budgetStanding', () => {
   it('says what is left of a budget or how much went over it', () => {

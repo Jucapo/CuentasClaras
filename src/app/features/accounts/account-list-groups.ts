@@ -12,8 +12,11 @@ export interface AccountListOptions {
   readonly mainCurrency: string;
   readonly defaultAccountId: string | null;
   readonly selectedId?: string | null;
-  /** Where each row leads, e.g. its screen under `/cuentas` or under the wizard. */
-  readonly linkFor: (accountId: string) => LinkCommands;
+  /**
+   * Where each row leads, e.g. its screen under `/cuentas` or under the wizard; none when the
+   * rows are picked instead (`cc-account-list` with `actionable`).
+   */
+  readonly linkFor?: (accountId: string) => LinkCommands;
 }
 
 /** Accounts grouped as in spec §4.1 with their totals, as `cc-account-list` shows them. */
@@ -46,7 +49,7 @@ function toAccountListItem(account: Account, options: AccountListOptions): Accou
     balance: account.balance,
     currency: account.currency,
     notes: notes.join(' · ') || undefined,
-    link: options.linkFor(account.id),
+    link: options.linkFor?.(account.id),
     archived: !!account.archived_at,
     selected: account.id === options.selectedId,
   };

@@ -74,11 +74,29 @@ button.main {
 }
 
 .subtitle {
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-1);
+  min-width: 0;
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.subtitle-icon {
+  flex-shrink: 0;
+}
+
+.subtitle-text,
+.note {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.note {
+  font: var(--mat-sys-body-small);
+  font-style: italic;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .trailing {

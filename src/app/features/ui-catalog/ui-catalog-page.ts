@@ -68,6 +68,31 @@ import {
 import { ConfirmPanel } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
 import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
+import { TotalOption, TotalToggle } from '../../shared/ui/molecules/total-toggle/total-toggle';
+import {
+  EntryEndpoint,
+  EntryEndpoints,
+} from '../../shared/ui/molecules/entry-endpoints/entry-endpoints';
+import { DateChoice } from '../../shared/ui/molecules/date-choice/date-choice';
+import {
+  EntryChooser,
+  EntryChooserData,
+} from '../../shared/ui/organisms/entry-chooser/entry-chooser';
+import {
+  BarChart,
+  BarChartBucket,
+  BarChartSeries,
+} from '../../shared/ui/atoms/bar-chart/bar-chart';
+import { ProgressRing } from '../../shared/ui/atoms/progress-ring/progress-ring';
+import {
+  BreakdownItem,
+  BreakdownList,
+} from '../../shared/ui/organisms/breakdown-list/breakdown-list';
+import {
+  NetWorthCurrency,
+  NetWorthGroupView,
+  NetWorthPanel,
+} from '../../shared/ui/organisms/net-worth/net-worth';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
@@ -234,6 +259,14 @@ interface WindowClassDemo {
     StatGroup,
     QuickEntry,
     MissingRatesNotice,
+    TotalToggle,
+    BarChart,
+    ProgressRing,
+    BreakdownList,
+    NetWorthPanel,
+    EntryEndpoints,
+    DateChoice,
+    EntryChooser,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -462,18 +495,35 @@ export class UiCatalogPage {
     { value: 'c12', label: 'Mantenimiento' },
     { value: 'c13', label: 'Aseo' },
   ];
+  protected readonly iconChips: readonly ChipOption[] = [
+    { value: 'c1', label: 'Hogar', icon: 'home' },
+    { value: 'c2', label: 'Arriendo', icon: 'key' },
+    { value: 'c3', label: 'Servicios públicos', icon: 'bolt' },
+  ];
+  protected readonly expenseEndpoints: readonly EntryEndpoint[] = [
+    { role: 'De cuenta', name: 'Efectivo', icon: 'payments', color: 'teal' },
+    { role: 'A categoría', name: 'Mercado', icon: 'shopping_cart', color: 'lime' },
+  ];
+  protected readonly transferEndpoints: readonly EntryEndpoint[] = [
+    { role: 'De cuenta', name: 'Bancolombia', icon: 'account_balance', color: 'amber' },
+    { role: 'A cuenta', name: 'Elige la cuenta', icon: 'account_balance_wallet', color: null },
+  ];
   protected readonly transactionGroups: readonly TransactionListGroup[] = [
     {
       title: 'Hoy',
+      total: { amount: -40050000, currency: 'COP' },
       items: [
         {
           id: 't1',
-          title: 'Mercado',
-          subtitle: 'Mercado de la semana',
+          title: 'Mercado (Supermercado)',
+          subtitle: 'Bancolombia · Fijos',
+          subtitleIcon: 'account_balance',
+          note: 'Mercado de la semana',
           icon: 'shopping_cart',
           color: 'green',
           amount: -32050000,
           currency: 'COP',
+          tone: 'expense',
           editable: true,
         },
         {
@@ -510,19 +560,23 @@ export class UiCatalogPage {
     },
     {
       title: 'Ayer',
+      total: { amount: 470000000, currency: 'COP' },
       items: [
         {
           id: 't3',
           title: 'Salario',
+          subtitle: 'Bancolombia',
+          subtitleIcon: 'account_balance',
           icon: 'work',
           color: 'teal',
           amount: 650000000,
           currency: 'COP',
+          tone: 'income',
           editable: true,
         },
         {
           id: 't4',
-          title: 'Hogar › Arriendo',
+          title: 'Hogar (Arriendo)',
           subtitle: 'Fijos · 3 cuotas',
           icon: 'key',
           color: 'orange',
@@ -660,6 +714,157 @@ export class UiCatalogPage {
     { label: 'Gastos', amount: -125000000, currency: 'COP' },
     { label: 'Neto', amount: 175000000, currency: 'COP', tone: 'auto', signed: true },
   ];
+  protected readonly averageItems: readonly StatItem[] = [
+    { label: 'Día (prom.)', amount: 9905769, currency: 'COP', accent: 'expense' },
+    { label: 'Semana (prom.)', amount: 69340385, currency: 'COP', accent: 'expense' },
+    { label: 'Mes', amount: 257550000, currency: 'COP', accent: 'expense' },
+  ];
+  protected readonly totalKind = signal<'expense' | 'income'>('expense');
+  protected readonly totalOptions: readonly TotalOption<'expense' | 'income'>[] = [
+    {
+      value: 'expense',
+      label: 'Gastos',
+      amount: 257550000,
+      currency: 'COP',
+      tone: 'expense',
+      note: '▲ 12 % vs. 1 oct – 26 oct',
+      noteTone: 'bad',
+    },
+    {
+      value: 'income',
+      label: 'Ingresos',
+      amount: 650000000,
+      currency: 'COP',
+      tone: 'income',
+      note: '▲ 8 % vs. 1 oct – 26 oct',
+      noteTone: 'good',
+    },
+  ];
+  protected readonly chartSeries: readonly BarChartSeries[] = [
+    { label: 'Hogar', color: 'orange' },
+    { label: 'Mercado', color: 'green' },
+    { label: 'Salud', color: 'red' },
+    { label: 'Otras', color: 'gray' },
+  ];
+  protected readonly chartBuckets: readonly BarChartBucket[] = Array.from(
+    { length: 30 },
+    (_, index) => ({
+      label: `${index + 1} nov`,
+      title: `${index + 1} nov`,
+      values: [
+        index === 4 ? 180000000 : index === 9 ? 30000000 : 0,
+        index % 6 === 1 ? 8000000 : 0,
+        index === 17 ? 8000000 : 0,
+        index % 5 === 3 ? 2500000 : 0,
+      ],
+    }),
+  );
+  protected readonly chartTicks: readonly number[] = [0, 7, 14, 21, 29];
+  protected readonly netWorthFigures = { assets: 866190050, debts: 185000000, net: 681190050 };
+  protected readonly netWorthGroups: readonly NetWorthGroupView[] = [
+    {
+      id: 'accounts',
+      label: 'Cuentas',
+      icon: 'account_balance_wallet',
+      color: 'blue',
+      totals: [{ currency: 'COP', amount: 294190050 }],
+      converted: 294190050,
+      debt: false,
+    },
+    {
+      id: 'savings',
+      label: 'Ahorros',
+      icon: 'savings',
+      color: 'teal',
+      totals: [
+        { currency: 'COP', amount: 50000000 },
+        { currency: 'USD', amount: 120000 },
+      ],
+      converted: 542000000,
+      debt: false,
+    },
+    {
+      id: 'debts',
+      label: 'Deudas',
+      icon: 'credit_card',
+      color: 'red',
+      totals: [{ currency: 'COP', amount: 185000000 }],
+      converted: 185000000,
+      debt: true,
+    },
+  ];
+  protected readonly netWorthCurrencies: readonly NetWorthCurrency[] = [
+    { currency: 'COP', assets: 344190050, debts: 185000000, net: 159190050 },
+    { currency: 'USD', assets: 120000, debts: 0, net: 120000 },
+  ];
+  protected readonly breakdownItems: readonly BreakdownItem[] = [
+    {
+      id: 'b-home',
+      name: 'Hogar',
+      icon: 'home',
+      color: 'orange',
+      amount: 210000000,
+      share: 0.82,
+      children: [
+        {
+          id: 'b-rent',
+          name: 'Arriendo',
+          icon: 'key',
+          color: 'orange',
+          amount: 180000000,
+          share: 0.7,
+          actionable: true,
+        },
+        {
+          id: 'b-power',
+          name: 'Servicios públicos',
+          icon: 'bolt',
+          color: 'amber',
+          amount: 30000000,
+          share: 0.12,
+          actionable: true,
+        },
+      ],
+    },
+    {
+      id: 'b-market',
+      name: 'Mercado',
+      icon: 'shopping_cart',
+      color: 'green',
+      amount: 32050000,
+      share: 0.12,
+      actionable: true,
+    },
+    {
+      id: 'b-health',
+      name: 'Salud',
+      icon: 'medical_services',
+      color: 'red',
+      amount: 8000000,
+      share: 0.03,
+      actionable: true,
+    },
+  ];
+  protected readonly breakdownRest: readonly BreakdownItem[] = [
+    {
+      id: 'b-fun',
+      name: 'Ocio',
+      icon: 'sports_esports',
+      color: 'violet',
+      amount: 5000000,
+      share: 0.02,
+      actionable: true,
+    },
+    {
+      id: 'b-taxi',
+      name: 'Transporte',
+      icon: 'directions_car',
+      color: 'blue',
+      amount: 2500000,
+      share: 0.01,
+      actionable: true,
+    },
+  ];
   protected readonly filterChips = signal<readonly FilterChip[]>([
     { key: 'account', label: 'Cuenta', summary: 'Efectivo +1' },
     { key: 'category', label: 'Categoría', summary: null },
@@ -668,6 +873,19 @@ export class UiCatalogPage {
   ]);
   /** A movement open in the detail pane, as Transacciones shows it in the expanded class. */
   protected readonly paneEntry = this.quickEntryData('expense');
+  /** "¿Qué vas a registrar?" with the accounts of the quick entry demo. */
+  protected readonly chooserData: EntryChooserData = {
+    title: '¿Qué vas a registrar?',
+    expenses: [
+      { id: 'c1', name: 'Hogar', icon: 'home', color: 'orange', amount: 210000000 },
+      { id: 'c4', name: 'Mercado', icon: 'shopping_cart', color: 'green', amount: 32050000 },
+      { id: 'c5', name: 'Transporte', icon: 'directions_car', color: 'blue', amount: 2500000 },
+      { id: 'c6', name: 'Ocio', icon: 'sports_esports', color: 'yellow', amount: 0 },
+    ],
+    incomes: [{ id: 'c7', name: 'Salario', icon: 'work', color: 'teal', amount: 650000000 }],
+    accountGroups: this.paneEntry.accountGroups,
+    currency: 'COP',
+  };
   protected readonly paneEntryKey = signal(0);
 
   protected clearChip(key: string): void {
@@ -865,53 +1083,110 @@ export class UiCatalogPage {
       monthlyRatePercent: 0,
       adjustmentDirection: 'increase',
     };
+    const accounts = [
+      {
+        id: 'a1',
+        name: 'Bancolombia',
+        icon: 'account_balance',
+        color: 'amber',
+        currency: 'COP',
+        isCard: false,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+      {
+        id: 'a2',
+        name: 'Nequi',
+        icon: 'account_balance_wallet',
+        color: 'purple',
+        currency: 'COP',
+        isCard: false,
+        isPrivate: true,
+        includeInSpaceByDefault: true,
+      },
+      {
+        id: 'a3',
+        name: 'DollarApp',
+        icon: 'currency_exchange',
+        color: 'sky',
+        currency: 'USD',
+        isCard: false,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+      {
+        id: 'a4',
+        name: 'Tarjeta Visa',
+        icon: 'credit_card',
+        color: 'red',
+        currency: 'COP',
+        isCard: true,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+    ];
+    const home = { icon: 'home', color: 'orange' };
     return {
       mode: type === 'adjustment' ? 'edit' : 'create',
+      followDefaults: type !== 'adjustment',
       title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
-      accounts: [
+      accounts,
+      accountGroups: [
         {
-          id: 'a1',
-          name: 'Bancolombia',
-          currency: 'COP',
-          isCard: false,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Cuentas',
+          id: 'accounts',
+          label: 'Cuentas',
+          totals: [{ currency: 'COP', amount: 297190050 }],
+          accounts: [
+            { ...accounts[0], color: 'amber', balance: 254300000 },
+            { ...accounts[1], color: 'purple', balance: 42890050, notes: 'Privada' },
+          ],
         },
         {
-          id: 'a2',
-          name: 'Nequi',
-          currency: 'COP',
-          isCard: false,
-          isPrivate: true,
-          includeInSpaceByDefault: true,
-          group: 'Cuentas',
+          id: 'savings',
+          label: 'Ahorros',
+          totals: [{ currency: 'USD', amount: 120000 }],
+          accounts: [{ ...accounts[2], color: 'sky', balance: 120000 }],
         },
         {
-          id: 'a3',
-          name: 'DollarApp',
-          currency: 'USD',
-          isCard: false,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Ahorros',
-        },
-        {
-          id: 'a4',
-          name: 'Tarjeta Visa',
-          currency: 'COP',
-          isCard: true,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Deudas',
+          id: 'debts',
+          label: 'Deudas',
+          totals: [{ currency: 'COP', amount: -185000000 }],
+          accounts: [{ ...accounts[3], color: 'red', balance: -185000000 }],
         },
       ],
-      category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
-      subcategories:
+      categories:
         type === 'expense'
           ? [
-              { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
-              { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
+              {
+                id: 'c1',
+                name: 'Hogar',
+                ...home,
+                defaultTagIds: [],
+                subcategories: [
+                  {
+                    id: 'c2',
+                    name: 'Arriendo',
+                    icon: 'key',
+                    color: 'orange',
+                    defaultTagIds: ['t1'],
+                  },
+                  {
+                    id: 'c3',
+                    name: 'Servicios públicos',
+                    icon: 'bolt',
+                    color: 'amber',
+                    defaultTagIds: [],
+                  },
+                ],
+              },
+              {
+                id: 'c4',
+                name: 'Mercado',
+                icon: 'shopping_cart',
+                color: 'green',
+                defaultTagIds: [],
+                subcategories: [],
+              },
             ]
           : [],
       tags: this.tagOptions,

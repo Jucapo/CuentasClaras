@@ -747,23 +747,38 @@ La calculadora es un diálogo. Mediana: un panel a la vez (el detalle como sheet
 
 # Parte 2 · Resumen, reportes y Mis finanzas
 
-Rama `feat/f1e2-summary` desde `main`, cuando el PR de la parte 1 esté mergeado; si no, desde `feat/f1e1-transactions-budget`. Reutiliza `cc-stat-group`, `cc-progress-bar`, `cc-missing-rates-notice`, `cc-donut`, `cc-tabs` y `cc-segmented-control`.
+Rama `feat/f1e2-summary` desde `main` (la parte 1 ya está mergeada, #8). Revisado contra main y las capturas de 1Money (resumen, transacciones, categorías y presupuesto), que son referencia de comportamiento, no de estilo.
 
-Incluye "Mis finanzas" (el patrimonio, §6), descrito en 2.3.
+Reutiliza:
+
+- `cc-stat-group`, `cc-progress-bar`, `cc-missing-rates-notice` y `cc-tabs`.
+- De la parte 1: `cc-budget-row` (con `emphasis="total"`), `cc-budget-pill`, `TransactionFiltersStore` y el patrón de `BudgetPage.viewTransactions` (`reset`, `set('categoryIds', …)` y navegar).
+- `TotalsApi.categoryTotals(space, range, months)`, que ya acepta cualquier rango, y `TotalsService`, que ya trae las cifras del periodo con su presupuesto (`budgetMonths`).
+- `rangeText` y `periodTitle` (`domain/periods/period-labels.ts`), y `shiftPeriod` y `periodRange` (`domain/periods/periods.ts`).
+- El patrón de vistas de `cc-budget-detail-sheet` (`OverlayHandle.enterView`).
+
+El Resumen ya no usa `cc-donut` ni `cc-segmented-control`.
+
+Además de "Mis finanzas" (2.3), la parte 2 trae el nuevo "¿Qué vas a registrar?" y el registro rápido rediseñado (2.4), ajustes a Transacciones (2.5) y la regla de altura de los sheets (2.6).
 
 ## 2.1 Base de datos
 
-Migración `report_totals`. El alcance es Espacio, igual que `category_totals`, que no se toca.
+Migración `report_totals`. El alcance es Espacio, igual que `category_totals`. No borra ni renombra nada y no transforma datos.
+
+**Decisión: se convierte cada movimiento por separado.** `convert_minor` redondea; si cada reporte convierte agrupando distinto (por subcategoría y día, por cuenta, por persona), los totales en otra moneda pueden diferir en unidades menores. Convirtiendo por movimiento, cualquier reparto suma exactamente lo mismo. Por eso `category_totals` y `transaction_totals` se reemplazan con las mismas columnas y los mismos grants (`create or replace` los conserva). En lo que está en la moneda principal no cambia nada: `exchange_rate` devuelve 1 cuando las monedas coinciden.
 
 ```sql
--- F1e · Resumen: totales por día y por categoría, y desgloses por etiqueta, cuenta y persona,
--- alcance Espacio (§6).
+-- F1e · Resumen y Transacciones: totales por día y por categoría, desgloses por etiqueta, cuenta y
+-- persona (alcance Espacio, §6), totales por día de lo filtrado y saldo a una fecha (§7). Cada
+-- movimiento se convierte por separado, para que cualquier reparto sume lo mismo.
 
 create type public.report_dimension as enum ('tag', 'account', 'member');
 
 -- Movimientos que cuentan en el alcance Espacio: confirmados, de gasto o ingreso, de cuentas
--- compartidas o incluidos en el espacio, entre dos fechas (null = sin límite). Security invoker: las
--- cuentas privadas de otros no se ven, así que solo entran sus movimientos incluidos.
+-- compartidas o incluidos en el espacio, entre dos fechas (null = sin límite), con su monto en la
+-- moneda principal y la tasa de su fecha (null sin tasa). Security invoker: las cuentas privadas de
+-- otros no se ven, así que solo entran sus movimientos incluidos; quien no es miembro no ve
+-- space_settings y no recibe filas.
 create function private.space_movements(target_space_id uuid, from_date date, to_date date)
 returns table (
   id uuid,
@@ -771,6 +786,7 @@ returns table (
   date date,
   amount bigint,
   currency text,
+  converted bigint,
   category_id uuid,
   top_category_id uuid,
   account_id uuid,
@@ -783,9 +799,11 @@ security invoker
 set search_path = ''
 as $$
   select
-    t.id, c.kind, t.date, t.amount, t.currency, t.category_id,
-    coalesce(c.parent_id, c.id), t.account_id, a.id is not null, t.created_by
+    t.id, c.kind, t.date, t.amount, t.currency,
+    private.convert_minor(t.amount, t.currency, s.main_currency, target_space_id, t.date),
+    t.category_id, coalesce(c.parent_id, c.id), t.account_id, a.id is not null, t.created_by
   from public.transactions t
+  join public.space_settings s on s.space_id = t.space_id
   join public.categories c on c.id = t.category_id
   left join public.accounts a on a.id = t.account_id
   where t.space_id = target_space_id
@@ -814,34 +832,18 @@ stable
 security invoker
 set search_path = ''
 as $$
-  with settings as (
-    select s.main_currency from public.space_settings s where s.space_id = target_space_id
-  ),
-  grouped as (
-    select m.date, m.top_category_id, m.kind, m.currency, sum(m.amount)::bigint as amount
-    from private.space_movements(target_space_id, from_date, to_date) m
-    group by m.date, m.top_category_id, m.kind, m.currency
-  ),
-  converted as (
-    select
-      g.date, g.top_category_id, g.kind, g.currency,
-      private.convert_minor(g.amount, g.currency, st.main_currency, target_space_id, g.date)
-        as amount
-    from grouped g
-    cross join settings st
-  )
   select
-    cv.date,
-    cv.top_category_id,
-    cv.kind,
-    coalesce(sum(cv.amount), 0)::bigint,
+    m.date,
+    m.top_category_id,
+    m.kind,
+    coalesce(sum(m.converted), 0)::bigint,
     coalesce(
-      array_agg(distinct cv.currency order by cv.currency) filter (where cv.amount is null),
+      array_agg(distinct m.currency order by m.currency) filter (where m.converted is null),
       '{}'
     )
-  from converted cv
-  group by cv.date, cv.top_category_id, cv.kind
-  order by cv.date, cv.top_category_id;
+  from private.space_movements(target_space_id, from_date, to_date) m
+  group by m.date, m.top_category_id, m.kind
+  order by m.date, m.top_category_id;
 $$;
 revoke all on function public.daily_category_totals(uuid, date, date) from public, anon;
 grant execute on function public.daily_category_totals(uuid, date, date) to authenticated;
@@ -868,44 +870,28 @@ stable
 security invoker
 set search_path = ''
 as $$
-  with settings as (
-    select s.main_currency from public.space_settings s where s.space_id = target_space_id
-  ),
-  keyed as (
+  with keyed as (
     select
       case dimension
         when 'account' then case when m.account_visible then m.account_id end
         when 'member' then m.created_by
         else tt.tag_id
       end as key,
-      m.kind, m.date, m.currency, m.amount
+      m.kind, m.currency, m.converted
     from private.space_movements(target_space_id, from_date, to_date) m
     left join public.transaction_tags tt on dimension = 'tag' and tt.transaction_id = m.id
-  ),
-  grouped as (
-    select k.key, k.kind, k.currency, k.date, sum(k.amount)::bigint as amount, count(*) as movements
-    from keyed k
-    group by k.key, k.kind, k.currency, k.date
-  ),
-  converted as (
-    select
-      g.key, g.kind, g.currency, g.movements,
-      private.convert_minor(g.amount, g.currency, st.main_currency, target_space_id, g.date)
-        as amount
-    from grouped g
-    cross join settings st
   )
   select
-    cv.key,
-    cv.kind,
-    coalesce(sum(cv.amount), 0)::bigint,
-    sum(cv.movements)::integer,
+    k.key,
+    k.kind,
+    coalesce(sum(k.converted), 0)::bigint,
+    count(*)::integer,
     coalesce(
-      array_agg(distinct cv.currency order by cv.currency) filter (where cv.amount is null),
+      array_agg(distinct k.currency order by k.currency) filter (where k.converted is null),
       '{}'
     )
-  from converted cv
-  group by cv.key, cv.kind;
+  from keyed k
+  group by k.key, k.kind;
 $$;
 revoke all on function public.breakdown_totals(uuid, date, date, public.report_dimension)
   from public, anon;
@@ -913,8 +899,233 @@ grant execute on function public.breakdown_totals(uuid, date, date, public.repor
   to authenticated;
 ```
 
+**Conversión por movimiento en `category_totals` y `transaction_totals`** (misma migración; mismas columnas y grants):
+
+```sql
+-- Igual que en la parte 1, salvo que cada movimiento se convierte por separado (space_movements):
+-- así su total por categoría es la suma de daily_category_totals y de breakdown_totals.
+create or replace function public.category_totals(
+  target_space_id uuid,
+  from_date date,
+  to_date date,
+  budget_months date[] default '{}'
+)
+returns table (...)                -- igual
+...
+as $$
+  with settings as (...),          -- igual
+  -- scoped y movements de antes se reemplazan por:
+  movements as (
+    select m.category_id, m.top_category_id as top_id, m.currency, m.converted
+    from private.space_movements(target_space_id, from_date, to_date) m
+  ),
+  own as (...),                    -- igual
+  rolled as (...),                 -- igual
+  budgets_in_force as (...),       -- igual
+  budget_rows as (...),            -- igual
+  budget_own as (...),             -- igual
+  budget_rolled as (...)           -- igual
+  select ...                       -- igual
+$$;
+
+-- Lo que suma en Transacciones: lo que devuelve search_transactions con los mismos argumentos, de
+-- gasto o ingreso (sin filtro de estado, solo lo confirmado), con su monto convertido por
+-- movimiento y si viene de una cuenta fuera del espacio.
+create function private.filtered_amounts(
+  target_space_id uuid,
+  from_date date default null,
+  to_date date default null,
+  search_terms text[] default null,
+  search_amount bigint default null,
+  filter_account_ids uuid[] default null,
+  filter_category_ids uuid[] default null,
+  filter_tag_ids uuid[] default null,
+  filter_types public.transaction_type[] default null,
+  filter_author_ids uuid[] default null,
+  filter_statuses public.transaction_status[] default null
+)
+returns table (
+  date date,
+  type public.transaction_type,
+  outside boolean,
+  currency text,
+  converted bigint
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select
+    t.date,
+    t.type,
+    not coalesce(t.include_in_space or a.visibility = 'shared', false),
+    t.currency,
+    private.convert_minor(t.amount, t.currency, s.main_currency, target_space_id, t.date)
+  from public.search_transactions(
+    target_space_id, from_date, to_date, search_terms, search_amount, filter_account_ids,
+    filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
+  ) t
+  join public.space_settings s on s.space_id = target_space_id
+  left join public.accounts a on a.id = t.account_id
+  where t.type in ('expense', 'income')
+    and (coalesce(cardinality(filter_statuses), 0) > 0 or t.status = 'confirmed');
+$$;
+
+-- Mismas columnas que en la parte 1; ahora suma private.filtered_amounts.
+create or replace function public.transaction_totals(<los mismos 11 argumentos>)
+returns table (...)                -- igual
+...
+as $$
+  with settings as (
+    select s.main_currency from public.space_settings s where s.space_id = target_space_id
+  ),
+  sums as (
+    select
+      coalesce(sum(f.converted) filter (where f.type = 'income'), 0) as income,
+      coalesce(sum(f.converted) filter (where f.type = 'expense'), 0) as expense,
+      coalesce(sum(f.converted) filter (where f.type = 'income' and f.outside), 0)
+        as outside_income,
+      coalesce(sum(f.converted) filter (where f.type = 'expense' and f.outside), 0)
+        as outside_expense,
+      coalesce(
+        array_agg(distinct f.currency order by f.currency) filter (where f.converted is null),
+        '{}'
+      ) as missing
+    from private.filtered_amounts(
+      target_space_id, from_date, to_date, search_terms, search_amount, filter_account_ids,
+      filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
+    ) f
+  )
+  select
+    s.income::bigint, s.expense::bigint, (s.income - s.expense)::bigint,
+    s.outside_income::bigint, s.outside_expense::bigint, st.main_currency, s.missing
+  from sums s
+  cross join settings st;
+$$;
+
+-- ── RPC: totales por día de lo filtrado ───────────────────────────────────────
+-- Para el encabezado de cada día en Transacciones (§7), con las reglas de transaction_totals. No
+-- depende de cuánto de la lista se haya cargado.
+create function public.transaction_day_totals(<los mismos 11 argumentos, con sus defaults>)
+returns table (
+  date date,
+  income bigint,
+  expense bigint,
+  net bigint,
+  missing_rate_currencies text[]
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select
+    f.date,
+    coalesce(sum(f.converted) filter (where f.type = 'income'), 0)::bigint,
+    coalesce(sum(f.converted) filter (where f.type = 'expense'), 0)::bigint,
+    (
+      coalesce(sum(f.converted) filter (where f.type = 'income'), 0)
+      - coalesce(sum(f.converted) filter (where f.type = 'expense'), 0)
+    )::bigint,
+    coalesce(
+      array_agg(distinct f.currency order by f.currency) filter (where f.converted is null),
+      '{}'
+    )
+  from private.filtered_amounts(
+    target_space_id, from_date, to_date, search_terms, search_amount, filter_account_ids,
+    filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
+  ) f
+  group by f.date
+  order by f.date desc;
+$$;
+
+-- ── RPC: saldo a una fecha ────────────────────────────────────────────────────
+-- Saldo al cierre de on_date de las cuentas del total del encabezado (account_ids vacío: incluidas
+-- en el total y activas) o de las elegidas, en la moneda principal con la tasa de on_date (§4.6).
+-- Desde la fecha del saldo inicial suma lo confirmado hasta on_date; antes de esa fecha descuenta
+-- lo que el saldo inicial ya traía (§4.1). Una fila, como accounts_total (currency null para quien
+-- no es miembro). Security invoker: solo entran las cuentas que quien llama ve.
+create function public.accounts_balance(
+  target_space_id uuid,
+  on_date date,
+  account_ids uuid[] default null
+)
+returns table (balance bigint, currency text, missing_rate_currencies text[])
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with settings as (
+    select s.main_currency from public.space_settings s where s.space_id = target_space_id
+  ),
+  chosen as (
+    select a.id, a.currency, a.initial_balance, a.initial_balance_date
+    from public.accounts a
+    where a.space_id = target_space_id
+      and case
+        when coalesce(cardinality(account_ids), 0) = 0
+          then a.include_in_total and a.archived_at is null
+        else a.id = any (account_ids)
+      end
+  ),
+  -- Igual que la vista account_balances.
+  movements as (
+    select
+      t.account_id,
+      t.date,
+      case
+        when t.type = 'income' or t.adjustment_direction = 'increase' then t.amount
+        else -t.amount
+      end as delta
+    from public.transactions t
+    where t.space_id = target_space_id and t.status = 'confirmed'
+    union all
+    select t.to_account_id, t.date, coalesce(t.to_amount, t.amount)
+    from public.transactions t
+    where t.space_id = target_space_id and t.type = 'transfer' and t.status = 'confirmed'
+  ),
+  balances as (
+    select
+      ch.currency,
+      (
+        ch.initial_balance
+        + coalesce(
+          sum(m.delta) filter (where m.date >= ch.initial_balance_date and m.date <= on_date), 0
+        )
+        - coalesce(
+          sum(m.delta) filter (where m.date > on_date and m.date < ch.initial_balance_date), 0
+        )
+      )::bigint as balance
+    from chosen ch
+    left join movements m on m.account_id = ch.id
+    group by ch.id, ch.currency, ch.initial_balance, ch.initial_balance_date
+  ),
+  converted as (
+    select
+      b.currency,
+      private.convert_minor(b.balance, b.currency, st.main_currency, target_space_id, on_date)
+        as converted
+    from balances b
+    cross join settings st
+  )
+  select
+    coalesce(sum(cv.converted), 0)::bigint,
+    (select st.main_currency from settings st),
+    coalesce(
+      array_agg(distinct cv.currency order by cv.currency) filter (where cv.converted is null),
+      '{}'
+    )
+  from converted cv;
+$$;
+
+-- Grants de las nuevas: revoke all ... from public, anon; grant execute ... to authenticated.
+```
+
 - **Sin RPC nueva:**
-  - Ingresos, gastos y balance (actual y anterior), el ranking por categoría y el desglose por subcategoría salen de `category_totals`. Se llama dos veces: con el rango del periodo y con el del anterior.
+  - Ingresos, gastos y balance, el ranking por categoría y el desglose por subcategoría salen de `category_totals`, que ya trae `TotalsService` para el periodo global.
+  - La comparación es otra llamada a `category_totals` con el rango de `comparisonRange` (2.2 B).
   - Los promedios se calculan en el cliente.
 - **pgTAP** (`supabase/tests/database/report_totals.test.sql`, con datos como los de `transaction_totals.test.sql`):
   - **Visibilidad:** lo privado no incluido de otro no cuenta, lo incluido sí, y quien no es miembro no recibe filas.
@@ -924,49 +1135,118 @@ grant execute on function public.breakdown_totals(uuid, date, date, public.repor
   - **Por cuenta:** la privada incluida de otro va con key null.
   - **Por persona:** key es quien lo registró.
   - **Pendientes:** no cuentan.
-  - **`privileges.test.sql`:** las tres funciones.
+  - **Cifras coherentes:**
+    - Los datos incluyen dos movimientos en USD del mismo día y la misma subcategoría, desde cuentas y autores distintos, con una tasa con decimales (p. ej. 4123,456789). Es el caso que se descuadraría al convertir por grupos.
+    - Para el mismo periodo, la suma de `daily_category_totals` por categoría es igual a `category_totals`.
+    - `breakdown_totals` por cuenta y por persona suma el total de cada clase.
+    - La suma de `transaction_day_totals` es igual a `transaction_totals`.
+  - **`accounts_balance`:**
+    - Sin filtro, el saldo de hoy es igual a `accounts_total(hoy)` (sin movimientos con fecha futura).
+    - Un movimiento anterior a la fecha del saldo inicial: el saldo antes y después de él.
+    - Una transferencia entre una cuenta incluida en el total y una que no.
+    - Con `account_ids`, solo esas cuentas; la privada de otro no entra.
+    - Quien no es miembro recibe `currency` null.
+  - **Pruebas existentes:** `subcategory_budgets`, `transaction_totals` y `transaction_search` se vuelven a correr; solo se ajustan si dependían del redondeo por grupos.
+  - **`privileges.test.sql`:** las funciones públicas nuevas (`daily_category_totals`, `breakdown_totals`, `net_worth`, `transaction_day_totals` y `accounts_balance`) y las privadas (`space_movements` y `filtered_amounts`). El `plan(…)` sube.
 
-## 2.2 Frontend
+## 2.2 Resumen
 
-- **Dominio:** `domain/reports/` con pruebas.
-  - `previousPeriod(period, settings)`: usa `shiftPeriod(period, -1)`; Siempre no tiene periodo anterior.
-  - `compareTotals(current, previous)`: la diferencia y el % (null si el anterior es 0). El tono sale de la clase: que suban los gastos es malo y que suban los ingresos es bueno.
-  - `periodAverages(total, range, today, firstDate)`:
-    - Cuenta los días desde el inicio (o el primer movimiento, en Siempre) hasta el fin, o hasta hoy si el periodo está en curso.
-    - Por día = total / días. Por semana = × 7. Por mes = × `AVERAGE_MONTH_DAYS` (365,2425 / 12).
-    - Se redondea a unidades menores, alejándose de cero.
-  - `shareOf(items)`: el % de cada elemento.
-  - `chartBuckets(rows, range, settings)`:
-    - Rellena con 0 los días sin movimientos.
-    - En Año y Siempre agrupa por mes del periodo (`periodMonth`).
-    - Más de `CHART_DAILY_MAX_BUCKETS` días también va por mes.
-- **Datos:**
-  - `ReportsApi` (`core/reports`) con `dailyCategoryTotals` y `breakdownTotals`.
-  - `ReportsService`: recursos por periodo y `revision`, más el `category_totals` del periodo anterior.
-  - El rango del periodo anterior se agrega en `PeriodService`.
-- **`summary-page`:**
-  - `cc-stat-group`: ingresos, gastos y balance, con la nota "▲ 12 % vs. Noviembre". En Siempre no hay comparación.
-  - `cc-segmented-control` para elegir Gastos o Ingresos.
-  - Las barras apiladas.
-  - Los promedios en `cc-stat-group`.
-  - "Por categoría": `cc-donut` + `cc-breakdown-list` con %. Tocar una categoría la despliega en sus subcategorías.
-  - `cc-tabs`: Etiqueta, Cuenta y Persona, cada una con `cc-breakdown-list`. Persona solo aparece con más de un miembro. Un aviso dice que con varias etiquetas el % no suma 100.
-  - `cc-missing-rates-notice`.
-- **UI nueva** (al catálogo `/ui`):
-  - `cc-breakdown-list` (organismo): filas con `cc-icon-badge`, nombre, %, `cc-amount` y `cc-progress-bar`.
-  - `cc-bar-chart` (átomo): las barras apiladas.
+**De arriba abajo** (como la referencia de 1Money):
+
+1. **Balance y tasa de ahorro:** el balance del periodo (ingresos − gastos) y, al lado, un anillo con la tasa de ahorro (balance / ingresos, en %).
+   - Sin ingresos, el anillo no aparece. Con el balance negativo, va en tono de error.
+   - `role="img"` con aria-label ("Tasa de ahorro: 62 %").
+2. **Gastos e Ingresos:** dos tarjetas que son a la vez el selector (`cc-total-toggle`, en lugar de `cc-segmented-control`).
+   - La elegida va rellena con el tono de su clase, y cada una lleva su nota de comparación (B).
+3. **Barras apiladas por día** (C).
+4. **Promedios:** tres casillas, "Día (prom.)", "Semana (prom.)" y "Mes".
+5. **"Por categoría":** filas con ícono, nombre, monto y barra con el %, sin donut (las barras y la lista ya muestran lo mismo).
+   - Primero las 3 categorías mayores, en el orden del gráfico. Si hay 4 o más, una fila gris "Más…" despliega el resto. Las categorías en 0 no aparecen.
+   - Tocar una categoría despliega sus subcategorías, más "General" si hay algo registrado directo en ella.
+   - Tocar una subcategoría (o "General", o una categoría sin subcategorías) abre Transacciones filtrado por ella, con el patrón de `viewTransactions`. El periodo sigue siendo el global.
+6. **"Presupuesto":** solo con presupuestos activos (`budgets_enabled`, en Mes o Año, y la clase con presupuesto).
+   - Una fila de Gastos (gastado frente a presupuestado) y una de Ingresos (recibido frente a presupuestado): `cc-budget-row emphasis="total"` con su pastilla.
+   - Tocarla abre Presupuesto. La fila de Ahorros llega con las metas de la F2.
+7. **Pestañas Etiqueta, Cuenta y Persona** (`cc-tabs` + `cc-breakdown-list`), con la clase elegida en las tarjetas.
+   - Persona solo aparece con más de un miembro.
+   - Un aviso dice que con varias etiquetas el % no suma 100.
+
+Arriba de todo, `cc-missing-rates-notice` cuando falta una tasa.
+
+**Layout:**
+
+- **Expandida:** dos columnas con grid en la página (no es list-detail). A la izquierda, el balance con el anillo, las tarjetas, el gráfico y los promedios. A la derecha, la lista, el presupuesto y las pestañas.
+- **Compacta y mediana:** una columna.
+
+**A. Dominio** (`domain/reports/`, con pruebas):
+
+- `savingsRate(income, expense)`: balance / ingresos, o null sin ingresos.
+- `periodAverages(total, range, today, firstDate, kind)`:
+  - Cuenta los días desde el inicio (o el primer movimiento, en Siempre) hasta el fin, o hasta hoy si el periodo está en curso.
+  - Por día = total / días. Por semana = × 7.
+  - Por mes: en el periodo Mes, el total del periodo (como la referencia); en los demás, por día × `AVERAGE_MONTH_DAYS` (365,2425 / 12), y la casilla dice "Mes (prom.)".
+  - Se redondea a unidades menores, alejándose de cero.
+- `shareOf(items)`: el % de cada elemento.
+- `kindBudgetFigures(totals, kind)` (`domain/budgets`): lo gastado y la suma de los presupuestos de las categorías principales de la clase (null si es 0). Reemplaza `sumBudgets` de `budget-page.ts`, así Presupuesto y Resumen calculan igual.
+
+**B. Comparación con el periodo anterior** (`domain/reports/comparison.ts`, con pruebas):
+
+- `comparisonRange(period, settings, today)` devuelve `{ range, truncated } | null`:
+  - **Siempre:** null (sin comparación).
+  - **Los demás:** el rango de `shiftPeriod(period, -1)`. El rango personalizado se mueve en un bloque de su mismo largo.
+  - **Periodo en curso:** el anterior se recorta a los mismos días transcurridos: termina en `min(inicio anterior + transcurridos − 1, fin anterior)`, con `truncated: true`.
+  - **Periodo terminado:** el anterior completo.
+  - **Periodo futuro:** null.
+- `compareTotals(current, previous, kind)`: el cambio en % y el tono. Que suban los gastos es malo y que suban los ingresos es bueno. Si el anterior es 0, no hay nota.
+- **Nota:** "▼ 9 % vs. 28 sep – 26 oct", siempre con `rangeText`, así dice contra qué compara.
+- **Datos:** `ReportsService` llama a `TotalsApi.categoryTotals(space, comparison.range, [])`. No hay RPC nueva.
+- **Pruebas:** periodo en curso y terminado, inicio de mes en día 27 y 28, meses de distinta longitud (el día 31 contra un mes de 30 días), Semana y Año.
+
+**C. Gráfico** (`domain/reports/chart.ts`, con pruebas):
+
+- `rankCategories(totals, kind)`: las categorías principales con monto, de mayor a menor, como `{ top, rest }` con las 3 mayores. Lo usan el gráfico y la lista, así el orden es el mismo.
+- `chartBuckets(rows, range, top, settings)`:
+  - Una serie por cada categoría del top, con su color, y una gris (`gray`) para el resto.
+  - Rellena con 0 los días sin movimientos.
+  - En Año y Siempre agrupa por mes del periodo (`periodMonth`), y también con más de `CHART_DAILY_MAX_BUCKETS` días.
+- `chartTicks(range, buckets)`: por día, una marca cada 7 días desde el inicio del periodo, más la fecha final; por mes, una por mes.
+- **`cc-bar-chart`:**
+  - Eje de montos a la derecha, con líneas guía punteadas.
+  - Tocar o pasar el mouse por una barra muestra el día, su total y el desglose (tooltip `axis`). El formato de los montos llega por input, desde el servicio de moneda.
+  - `role="img"` con un aria-label que resume el periodo, el total y la categoría mayor ("Gastos de Diciembre: $ X; la mayor es Mercado, $ Y"). El tooltip no es la única forma de leer los datos: la lista los tiene todos.
 - **ECharts** en un chunk diferido:
-  - `npm i echarts`. `cc-bar-chart` importa solo dentro de un `import()` dinámico: `echarts/core`, `BarChart`, `GridComponent`, `TooltipComponent` y `CanvasRenderer`.
-  - La página lo envuelve en `@defer (on viewport)` con un placeholder del mismo alto.
-  - `ngx-echarts` solo si tiene versión para Angular 22; si no, se queda el wrapper propio. Se actualiza §2 de la spec con lo elegido.
+  - `npm i echarts ngx-echarts` (`ngx-echarts@22`, peer `@angular/core >=22`; `echarts@6`, import modular).
+  - `provideEchartsCore({ echarts: () => import('./echarts-setup') })` va en los `providers` de `cc-bar-chart`, así el átomo carga ECharts por su cuenta (también en `/ui`). El setup registra solo `BarChart`, `GridComponent`, `TooltipComponent` y `CanvasRenderer`.
+  - `getComputedStyle` devuelve `light-dark(a, b)` sin resolver, y el canvas no lo entiende: el átomo elige el lado según el `color-scheme` de la sonda (o el del sistema).
+  - La página envuelve el gráfico en `@defer (on viewport)` con un placeholder del mismo alto.
   - **Tema:** los colores salen de la paleta (`paletteColor`, que es `light-dark()`) y de `--mat-sys-*`. Se resuelven con un elemento sonda: `getComputedStyle(probe).color`.
   - Se redibuja al cambiar el tema o el esquema del sistema, y respeta `prefers-reduced-motion` (sin animación).
   - **Verificar:** en la salida de `npm run build`, `echarts` no aparece en los chunks iniciales.
-- **e2e:**
-  - El mock agrega `rpc/daily_category_totals` y `rpc/breakdown_totals`.
-  - `e2e/summary.e2e.ts`: resumen con comparación, cambio Gastos/Ingresos, el gráfico visible, pestañas de desglose y la llamada con el rango anterior.
-  - Screenshots `resumen`, `resumen-ingresos` y `resumen-desglose`.
-- **Spec:** §6 y §7 Resumen con las decisiones (alcance Espacio, promedios, barras por mes en Año y Siempre); §8 con las RPCs nuevas; §12.
+
+**Datos:**
+
+- `ReportsApi` (`core/reports`) con `dailyCategoryTotals` y `breakdownTotals`.
+- `ReportsService`: recursos por periodo y `revision` (transacciones, tasas y presupuestos), más el `category_totals` de `comparisonRange`.
+
+**UI nueva** (al catálogo `/ui`):
+
+- `cc-progress-ring` (átomo): anillo SVG con `value` (0–1), `tone` (`positive` o `error`), `label` y el texto del centro.
+- `cc-total-toggle` (molécula): dos tarjetas como `radiogroup` (flechas del teclado), cada una con su etiqueta, monto y nota. La elegida va rellena con su tono: tokens nuevos `--cc-tone-expense` e `--cc-tone-income` (con sus `on-*`), que salen del tema y cumplen AA.
+- `cc-stat-group`: variante `tiles` (casillas con fondo, en fila). La usan los promedios y los saldos de Transacciones.
+- `cc-breakdown-list` (organismo): filas con `cc-icon-badge`, nombre, `cc-amount` y `cc-progress-bar` con el %. Filas desplegables (subcategorías) y la fila "Más…". Emite la categoría tocada.
+- `cc-bar-chart` (átomo): las barras apiladas.
+
+**e2e:**
+
+- El mock agrega `rpc/daily_category_totals` y `rpc/breakdown_totals`.
+- `e2e/summary.e2e.ts`:
+  - el cambio con las tarjetas;
+  - la nota con el rango recortado (revisa `rpcCalls('category_totals')`);
+  - el gráfico con su aria-label;
+  - "Más…" y una subcategoría que lleva a Transacciones con el filtro;
+  - la fila de presupuesto, que lleva a Presupuesto;
+  - las pestañas de desglose.
+- Screenshots `resumen`, `resumen-ingresos`, `resumen-categorias` (desplegado) y `resumen-desglose`.
 
 ## 2.3 Mis finanzas (patrimonio)
 
@@ -1054,6 +1334,111 @@ grant execute on function public.net_worth(uuid, date) to authenticated;
   - Screenshot `cuentas-mis-finanzas`.
 - **Spec:** la decisión (pestaña de Cuentas) y sus reglas ya quedaron en §7 Cuentas desde la parte 1. La parte 2 agrega `net_worth` a §8, la nota de los bienes en §6 y la decisión en §12.
 
+## 2.4 Nuevo movimiento y registro rápido
+
+Como en 1Money (capturas de transacciones y categorías). Aplica al crear y al editar, desde cualquier pantalla.
+
+**"¿Qué vas a registrar?"** ("+" y atajo `N`):
+
+- `cc-entry-chooser` (organismo) y su overlay `cc-entry-chooser-sheet` reemplazan el `cc-option-panel` de `QuickEntryFlow.chooseNew()`.
+- Tres pestañas (`cc-tabs` con ícono): Ingreso, Gasto y Transferencia. Abre siempre en Gasto.
+- **Gasto e Ingreso:** la cuadrícula de categorías de ese tipo, con lo registrado en el periodo debajo de cada ícono, en su color.
+  - `cc-category-grid` gana `donut` (por defecto true) y `cc-category-bubble` gana `amountColor: 'neutral' | 'category'`.
+  - Las cifras salen de `TotalsService.find` (alcance Espacio, como Categorías).
+- **Transferencia:** las cuentas en que se puede escribir, por grupo (Cuentas, Ahorros, Deudas, Me deben), con el total del grupo y el saldo de cada una.
+  - `cc-account-list` y `cc-account-row` ganan `actionable` y `(opened)`.
+  - Tocar una cuenta abre el registro rápido de transferencia desde esa cuenta (`transferSession(id)`).
+- En expandida, Transacciones lo abre como diálogo y el registro rápido sigue en el panel.
+
+**Registro rápido** (`cc-quick-entry`, en sus tres layouts: sheet, diálogo y panel):
+
+- **Arriba, dos bloques** (`cc-entry-endpoints`, molécula), cada uno con su color y su ícono (contrastado con `paletteForeground`):
+  - gastos: "De cuenta → A categoría";
+  - ingresos: "De categoría → A cuenta";
+  - transferencias: "De cuenta → A cuenta";
+  - ajustes: un solo bloque, Cuenta, más "Sube/Baja" como hoy.
+  - "Sale" y "Llega" de las transferencias entre monedas no cambian.
+- **Selector dentro del mismo overlay:** tocar un bloque abre el selector como vista, con ←:
+  - las cuentas por grupo con su saldo (la misma lista del "¿Qué vas a registrar?");
+  - o las categorías del mismo tipo (la grilla sin donut). Elegir otra categoría reinicia la subcategoría y, al crear, las etiquetas siguen a la nueva.
+- **Subcategorías:** chips con ícono en una fila desplazable (`.cc-chip-row`). La elegida va rellena con el color de la categoría.
+  - `ChipOption` gana `icon`, y `cc-chip-choice` rellena la elegida con su `color`.
+- **Monto:** grande, en el color de la categoría y con contraste AA.
+  - `cc-amount-display` gana `color` y tamaño grande.
+  - El texto usa `paletteTextColor(key)` (`color-palette.ts`, nuevo): la misma clave o, si no llega a 4,5:1 sobre la superficie, su `-deep` o `-dark`, en claro y en oscuro. Una prueba unitaria lo verifica para cada color, como la de `readableForeground`. Las cifras de las burbujas del selector usan el mismo helper.
+- **Nota:** visible, como `cc-text-field` ("Notas…"), sin abrir nada.
+- **Etiquetas, cuotas e "incluir en el espacio":** siguen donde están. La disclosure queda solo para las etiquetas.
+- **Fecha:** una línea, "Hoy, 27 nov" (`entryDateText(date, today)`, con prueba).
+  - Tocarla abre una vista (`cc-date-choice`, molécula) con Hoy, Ayer y Elegir día (`cc-date-field`, el calendario nativo).
+  - Periodicidad y recordatorio llegan con los recurrentes (F3): no se muestran.
+- **Al crear:** el teclado sigue visible como hoy.
+- **Al editar:**
+  - en el sheet, el teclado aparece al tocar el monto; en el diálogo y el panel hay espacio y se ve siempre (y el teclado físico escribe ahí);
+  - abajo van las acciones Borrar, Fecha y Duplicar;
+  - **Borrar** confirma en una vista del mismo overlay y, al confirmar, borra y cierra. Hoy el sheet se cierra y abre otra confirmación; `QuickEntryFlow.finish('delete')` deja de preguntar.
+  - **Duplicar** (`closed('duplicate')` → `duplicateSession(tx)`) abre un movimiento nuevo con los datos guardados del original, un id nuevo y la fecha de hoy. Si hay cambios sin guardar, primero pregunta "¿Descartar los cambios?".
+- **✕ y ✓ flotantes (§13.5):**
+  - La ✕ flota arriba a la derecha; el título queda solo como nombre accesible.
+  - El ✓ es la tecla del teclado mientras el teclado se ve; sin teclado (al editar), es el ✓ flotante. Así nunca hay dos ✓.
+  - El pie con Cancelar y Guardar del diálogo desaparece.
+- **Vistas** (selector de cuenta o categoría, fecha, borrar y descartar), con el patrón de `cc-budget-detail-sheet`:
+  - Cada vista lleva ← ("Volver"). Esc y el atrás del sistema (Android o navegador) vuelven a la vista anterior sin cerrar.
+  - Al volver, el formulario conserva su scroll y el foco vuelve al control que abrió la vista.
+  - Los helpers de scroll y foco (`scrollPositions`, `activeElementIn`, `focusHeading`) salen de `budget-detail-sheet` a un archivo compartido.
+  - `cc-quick-entry` inyecta `OverlayHandle` opcional: en el panel de Transacciones las vistas funcionan igual, sin entrada de historial, y Esc vuelve.
+- **Descartar cambios:** `OverlayService` gana una guarda de cierre (`OverlayHandle.guardClose`) para la ✕, el fondo, Esc y el atrás.
+  - Con cambios sin guardar, en vez de cerrar, el registro rápido muestra la vista "¿Descartar los cambios?".
+  - Hoy esos cierres descartan sin preguntar; solo el panel preguntaba.
+- **Diálogo y panel:** los bloques van arriba, a todo el ancho. Debajo, dos columnas: el monto y el teclado a la izquierda; las subcategorías, la nota, la fecha y los detalles a la derecha. Una vista ocupa todo el contenido.
+- **Teclado físico:** igual que hoy (dígitos, operadores, Enter, Ctrl/⌘+S). Esc vuelve de una vista o cierra con la guarda.
+- **Modelo:**
+  - `QuickEntryAccount` gana `icon`, `color`, `balance` y el grupo como clave (`AccountGroup`).
+  - `QuickEntryCategory` gana `icon` y `color`.
+  - `QuickEntryData` gana `categories` (las del mismo tipo, para la vista).
+  - `QuickEntryResult` gana `'duplicate'`.
+- **e2e:**
+  - Se ajustan `transactions.e2e.ts` (la cuenta y "Hacia" se eligen con el bloque y su vista; "Eliminar" pasa a "Borrar"), `transactions-page.e2e.ts` y los demos del registro rápido en `/ui`.
+  - Se suman:
+    - "¿Qué vas a registrar?" con sus tres pestañas, y una transferencia desde la lista;
+    - la vista de fecha;
+    - al editar, el teclado oculto hasta tocar el monto;
+    - Duplicar;
+    - descartar con la ✕ y cambios sin guardar;
+    - el atrás del sistema desde una vista (`page.goBack()`).
+  - Screenshots `nuevo-movimiento` (cada pestaña), `registro-rapido-gasto`, `registro-rapido-cuenta`, `registro-rapido-fecha` y `registro-rapido-editar`.
+
+## 2.5 Transacciones
+
+Comparada con la captura de 1Money: se cierran las diferencias que encajan con el sistema de diseño.
+
+- **Encabezado de cada día:** el título de siempre ("Hoy", "Jueves 26 nov") y, a la derecha, el neto del día (ingresos − gastos), con signo y el color de su signo.
+  - Sigue las reglas de `transaction_totals` (lo filtrado; sin filtro de estado, solo lo confirmado).
+  - Sale de `transaction_day_totals`, así que no depende de cuánto de la lista se haya cargado.
+  - `TransactionListGroup` gana `total` opcional; el detalle de cuenta no lo usa.
+- **Filas:**
+  - El título pasa a "Categoría (Subcategoría)", en lugar de "Padre › Hija".
+  - La segunda línea, la cuenta con su ícono, más las etiquetas y las cuotas. La tercera, la nota.
+  - El monto va con el color del tipo: `tone` por ítem, `auto` en gastos e ingresos (que ya van con signo) y `neutral` en transferencias y ajustes.
+  - Las transferencias siguen como "Efectivo → Nequi", y el candado sigue.
+- **Saldo inicial y saldo final** (`cc-stat-group variant="tiles"`, arriba de los totales):
+  - **Fechas** (`balanceDates(range, today)`, `domain/transactions`, con prueba):
+    - el inicial es el saldo al cierre del día anterior al periodo;
+    - el final, al cierre del periodo, o de hoy si está en curso;
+    - en Siempre solo hay saldo final.
+  - **Cuentas:** las del total del encabezado (incluidas en el total) o, con filtro de cuenta, esas cuentas.
+  - **Cuándo no se muestran** (`showsBalances(filters, search)`, con prueba): con búsqueda o con filtros de otro tipo (categoría, etiqueta, tipo, persona o estado), porque un saldo no aplica.
+  - Salen de `TotalsApi.accountsBalance(space, date, accountIds)`, con dos llamadas. Las monedas sin tasa se suman al aviso.
+- **e2e:**
+  - El mock agrega `rpc/transaction_day_totals` y `rpc/accounts_balance`.
+  - En `transactions-page.e2e.ts`: el total de cada día, el formato de las filas, los saldos sin filtro y con filtro de cuenta (revisa las fechas en `rpcCalls('accounts_balance')`) y que no aparezcan con un filtro de categoría.
+  - Screenshot `transacciones` actualizado.
+
+## 2.6 Sheets
+
+- **Regla nueva en §13.5:** en compacta, los overlays salen desde abajo con el alto de su contenido y la pantalla de fondo visible. Solo pasan a pantalla completa (el máximo, con scroll interno) cuando el contenido es largo.
+- **Hoy ya se cumple:** no hay opción de alto completo, y el máximo es `--cc-picker-panel-max-height` (88 dvh; 92 dvh en el registro rápido, el detalle de presupuesto y la calculadora).
+- Se aplica a lo nuevo ("¿Qué vas a registrar?" y las vistas del registro rápido) y se revisa con los screenshots que ningún overlay existente fuerce más alto.
+
 ## Layouts · Parte 2
 
 **Resumen · móvil**
@@ -1061,47 +1446,87 @@ grant execute on function public.net_worth(uuid, date) to authenticated;
 ```
 ┌──────────────────────────────────┐
 │             Resumen              │
-│ Ingresos      +$ 6.200.000       │
-│               ▲ 4 % vs. Noviembre│
-│ Gastos        −$ 4.100.000       │
-│               ▼ 9 % vs. Noviembre│
-│ Balance       +$ 2.100.000       │
-│ [  Gastos  |  Ingresos  ]        │
-│ Por día                          │
-│  █ ▅   ▇     ▃ █  ▂   ▆          │  barras apiladas por categoría
-│ ─┴─┴───┴─────┴─┴──┴───┴─         │
-│ Promedio  día $ 136.000          │
-│           semana $ 957.000       │
-│           mes $ 4.150.000        │
-│ Por categoría                    │
-│        ( donut )                 │
-│ (🛒) Mercado    38 %  $ 1.558.000│
-│      ▓▓▓▓▓▓▓░░░░░                │
-│ (🏠) Hogar      25 %  $ 1.025.000│
+│        Balance                   │
+│      +$ 2.100.000          ( 34 %)│  anillo: tasa de ahorro
+│ ┌───────────────┐┌───────────────┐│
+│ │▓▓▓ Gastos ▓▓▓▓││   Ingresos    ││  la elegida va rellena
+│ │▓ −$ 4.100.000▓││ +$ 6.200.000  ││
+│ │▓▼ 9 % vs. 28 sep – 26 oct ▓▓▓▓││ ▲ 4 % vs. 28 sep – 26 oct
+│ └───────────────┘└───────────────┘│
+│  █ ▅   ▇     ▃ █  ▂   ▆   ┊ $ 2M │  top 3 con su color, el resto gris;
+│  █ █   █     █ █  █   █   ┊ $ 1M │  eje de montos a la derecha
+│ ─┴─┴───┴─────┴─┴──┴───┴───┴──────│
+│ 28 oct  4 nov  11 nov  18 nov 27 nov
+│ [Día (prom.)][Semana (prom.)][Mes]│
+│ [ $ 136.000 ][  $ 957.000   ][$4,1M]
+│ (🛒) Mercado          $ 1.558.000│
+│      ▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░  38 % │
+│ (🏠) Hogar            $ 1.025.000│
+│      ▓▓▓▓▓▓░░░░░░░░░░░░░░░  25 % │
+│ (🚗) Transporte         $ 600.000│
+│ (⌄)  Más…               $ 917.000│  gris; despliega el resto
+│ Presupuesto                      │
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒░░░ Gastos ($ 850k) │  cc-budget-row, abre Presupuesto
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ Ingresos ($ 2M) │
 │ [Etiqueta | Cuenta | Persona]    │
 │ Fijos           41 %  $ 1.681.000│
 └──────────────────────────────────┘
+Tocar Mercado → despliega Supermercado, Plaza y General; tocar una → Transacciones filtrado.
 ```
 
-**Resumen · escritorio**
+**Resumen · escritorio** (dos columnas)
 
 ```
-┌──────┬──────────────────────────────────────────────────────────────────────────┐
-│ rail │                                Resumen                                    │
-│      │ Ingresos +$ 6.200.000 ▲4 %  │ Gastos −$ 4.100.000 ▼9 %  │ Balance +$ 2.1M  │
-│      │ [ Gastos | Ingresos ]                                                     │
-│      │ ┌───────────────────────────────────────────┐ ┌─────────────────────────┐ │
-│      │ │ Por día                                   │ │ Por categoría           │ │
-│      │ │  █ ▅   ▇     ▃ █  ▂   ▆  ▅ ▇ ▃            │ │       ( donut )         │ │
-│      │ │ ─┴─┴───┴─────┴─┴──┴───┴──┴─┴─┴─           │ │ Mercado   38 %  1.558k  │ │
-│      │ ├───────────────────────────────────────────┤ │ Hogar     25 %  1.025k  │ │
-│      │ │ Promedio: día $136k · semana $957k · mes  │ │ …                       │ │
-│      │ └───────────────────────────────────────────┘ ├─────────────────────────┤ │
-│      │                                               │ [Etiqueta|Cuenta|Persona]│ │
-│      │                                               │ Fijos     41 %  1.681k  │ │
-│      │                                               └─────────────────────────┘ │
-└──────┴──────────────────────────────────────────────────────────────────────────┘
-Mediana: una columna, como en móvil, con las cifras en fila.
+┌──────┬──────────────────────────────────────┬───────────────────────────────────┐
+│ rail │ Resumen                              │                                   │
+│      │ Balance +$ 2.100.000         ( 34 %) │ (🛒) Mercado  ▓▓▓▓▓▓▓░░  $ 1.558k │
+│      │ [▓ Gastos −$ 4,1M ▓][ Ingresos +$6,2M]│ (🏠) Hogar    ▓▓▓▓░░░░░  $ 1.025k │
+│      │  ▼ 9 % vs. …         ▲ 4 % vs. …     │ (🚗) Transp.  ▓▓░░░░░░░    $ 600k │
+│      │  █ ▅   ▇   ▃ █  ▂   ▆  ▅ ▇  ┊ $ 2M   │ (⌄)  Más…    ▓▓▓░░░░░░    $ 917k │
+│      │ ─┴─┴───┴───┴─┴──┴───┴──┴─┴──┴──────  │ Presupuesto                       │
+│      │ [Día (prom.)][Semana (prom.)][Mes]   │ ▒▒▒▒▒▒▒▒░░ Gastos     ($ 850k)    │
+│      │                                      │ ▒▒▒▒▒▒▒▒▒▒ Ingresos   ($ 2M)      │
+│      │                                      │ [Etiqueta | Cuenta | Persona]     │
+│      │                                      │ Fijos       41 %      $ 1.681k    │
+└──────┴──────────────────────────────────────┴───────────────────────────────────┘
+Mediana: una columna, como en móvil.
+```
+
+**"¿Qué vas a registrar?" · móvil** (sheet con el alto de su contenido)
+
+```
+┌──────────────────────────────────┐
+│  (↑) Ingreso  (↓) Gasto  (⇄) Transf.
+│               ‾‾‾‾‾‾‾            │  abre en Gasto
+│ Mercado  Hogar   Transp.  Salud  │
+│  (🛒)     (🏠)    (🚗)     (💊)  │
+│ $ 1,5M   $ 1M    $ 600k   $ 80k  │  en el color de cada categoría (AA)
+│ Ocio     Compras  …              │
+└──────────────────────────────────┘
+Transferencia: Cuentas $ 4.250.000 / (💵) Efectivo $ 350.000 / (🏦) Bancolombia … / Ahorros …
+```
+
+**Registro rápido · móvil** (crear un gasto)
+
+```
+┌──────────────────────────────────┐
+│▓▓ De cuenta ▓▓▓▓▓│▒▒ A categoría ✕│  bloques con el color de cada uno
+│▓▓ (💵) Efectivo ▓│▒▒ (🛒) Mercado ▒│
+│ ((Supermercado)) (Plaza) (Tienda) →  la elegida, rellena
+│              Gasto               │
+│           $ 25.000               │  grande, en el color de la categoría
+│ ┌──────────────────────────────┐ │
+│ │ Notas…                       │ │
+│ └──────────────────────────────┘ │
+│ Hoy, 27 nov                    › │  abre Hoy / Ayer / Elegir día
+│ ▸ Etiquetas · Fijos              │
+│  ÷   7   8   9   ⌫               │
+│  ×   4   5   6  000              │
+│  −   1   2   3   ✓               │
+│  +   0   0   ,   ✓               │
+└──────────────────────────────────┘
+Editar: sin teclado hasta tocar el monto; abajo [🗑 Borrar] [📅 Fecha] [⧉ Duplicar] y el ✓ flotante.
+Tocar un bloque → vista con ← (cuentas por grupo con saldo, o categorías del mismo tipo).
 ```
 
 **Cuentas · Mis finanzas · móvil**
@@ -1140,9 +1565,33 @@ Mediana: una columna, como en móvil, con las cifras en fila.
 └──────┴──────────────────────────────────────┴──────────────────────────────────┘
 ```
 
+## Spec, catálogo y commits · Parte 2
+
+- **Spec** (v0.11, antes del código):
+  - §2: gráficas (sin donut en el Resumen; `ngx-echarts` 22 y `echarts` 6).
+  - §6: "Por categoría" con barras y lista, promedios, comparación y la nota de los bienes.
+  - §7: Resumen, "¿Qué vas a registrar?", registro rápido y Transacciones.
+  - §8: las RPCs nuevas y la conversión por movimiento.
+  - §12: las decisiones de la F1e2.
+  - §13.1: los componentes nuevos.
+  - §13.5: la regla de los sheets, y las vistas y la guarda de descarte del registro rápido.
+- **Catálogo `/ui`:** `cc-progress-ring`, `cc-total-toggle`, `cc-stat-group` (`tiles`), `cc-bar-chart`, `cc-breakdown-list`, `cc-entry-endpoints`, `cc-date-choice`, `cc-entry-chooser`, `cc-net-worth`, y las variantes nuevas de burbuja, grilla, chips, `cc-amount-display`, lista de cuentas y lista de movimientos.
+- **Commits:**
+  1. `docs: plan de la F1e2`.
+  2. `docs(spec): decisiones de la F1e2`.
+  3. `feat(db): report_totals` (migración, pgTAP y tipos).
+  4. `feat(summary): resumen, comparación y gráfico`.
+  5. `feat(accounts): mis finanzas`.
+  6. `feat(quick-entry): nuevo movimiento y registro rápido`.
+  7. `feat(transactions): totales por día, filas y saldos`.
+
 ## Verificación y entrega · Parte 2
 
-Igual que la parte 1, y además se revisa que ECharts no aparezca en los chunks iniciales del build. PR contra `main`, sin merge. Nada en producción.
+- **Al escribir la migración:** `npm run db:reset` y `npm run db:test`, y después `npm run supabase:types`.
+- **Al final, una vez:** `npm run lint`, `npm test`, `npm run build`, `npm run e2e` (los 4 proyectos) y `npm run db:test`.
+- **Revisión visual:** los screenshots de móvil y escritorio, en claro y oscuro, junto a las capturas de referencia. Las capturas nunca se copian al repo, ni a e2e ni a docs.
+- **Build:** en su salida, `echarts` no aparece en los chunks iniciales.
+- **PR:** contra `main`, sin merge. Nada en producción: la migración `report_totals` la aplica el usuario después.
 
 ---
 
@@ -1178,3 +1627,14 @@ Igual que la parte 1, y además se revisa que ECharts no aparezca en los chunks 
   - `e2e/support/supabase.ts`.
   - `e2e/support/catalog-fixture.ts`: `HOUSEHOLD_WITH_MOVEMENTS`.
   - `e2e/transactions.e2e.ts`: el patrón.
+- **Parte 2:**
+  - `supabase/migrations/20261127135513_search_and_subcategory_budgets.sql`: `category_totals`, `search_transactions` y `transaction_totals`, que se reemplazan.
+  - `src/app/features/summary/` (hoy solo el encabezado) y su ruta en `src/app/app.routes.ts`.
+  - `src/app/domain/periods/periods.ts` y `period-labels.ts`: `shiftPeriod`, `periodRange` y `rangeText`.
+  - `src/app/core/totals/`: `TotalsApi` y `TotalsService`.
+  - `src/app/features/budget/budget-page.ts`: `sumBudgets` y `viewTransactions`.
+  - `src/app/shared/ui/organisms/quick-entry/` y `quick-entry-sheet/`, y `src/app/features/transactions/quick-entry-flow.ts`.
+  - `src/app/shared/ui/organisms/budget-detail-sheet/`: el patrón de vistas.
+  - `src/app/shared/ui/services/overlay.service.ts` y `molecules/overlay-panel/`.
+  - `src/app/shared/ui/colors/color-palette.ts` y `src/app/domain/color/contrast.ts`.
+  - `src/app/features/transactions/transaction-items.ts` y `shared/ui/organisms/transaction-list/`.

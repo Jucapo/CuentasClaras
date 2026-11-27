@@ -4,6 +4,7 @@ import { MatRipple } from '@angular/material/core';
 import { Params, RouterLink } from '@angular/router';
 import { LinkCommands } from '../../atoms/button/button';
 import { Icon } from '../../atoms/icon/icon';
+import { iconOrFallback } from '../../icons/icon-glyphs';
 
 /**
  * Row of a list: leading visual (`[ccListItemLeading]`), title and subtitle, trailing content
@@ -21,6 +22,10 @@ import { Icon } from '../../atoms/icon/icon';
 export class ListItem {
   readonly title = input.required<string>();
   readonly subtitle = input<string>();
+  /** Icon key before the subtitle, e.g. the account of a movement. */
+  readonly subtitleIcon = input<string>();
+  /** A third line, e.g. the note of a movement. */
+  readonly note = input<string>();
   readonly link = input<LinkCommands>();
   readonly queryParams = input<Params | null>(null);
   /** Dims the row, e.g. for archived items. */
@@ -30,4 +35,6 @@ export class ListItem {
   /** Marks the row whose detail is open next to the list. */
   readonly selected = input(false);
   readonly activate = output<void>();
+
+  protected readonly iconName = iconOrFallback;
 }

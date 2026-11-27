@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.panel {
+  padding-top: var(--cc-space-2);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--cc-space-4) 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}

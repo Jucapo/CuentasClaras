@@ -6,9 +6,9 @@ export type ProgressTone = 'primary' | 'error' | 'positive';
 
 /**
  * A bar that fills with `value` (0 to 1; above 1 it stays full), e.g. how much of a budget was
- * spent. As a `backdrop` it fills the background of its row (spec §4.7) in a soft tone of `color`,
- * a palette key; the row sets `position: relative` and `isolation: isolate`. The accessible name
- * says what it measures.
+ * spent. With `color`, a palette key, the bar fills in that color. As a `backdrop` it fills the
+ * background of its row (spec §4.7) in a soft tone of `color` instead; the row sets
+ * `position: relative` and `isolation: isolate`. The accessible name says what it measures.
  */
 @Component({
   selector: 'cc-progress-bar',
@@ -21,7 +21,7 @@ export type ProgressTone = 'primary' | 'error' | 'positive';
     '[attr.aria-label]': 'label()',
     '[attr.aria-valuenow]': 'clampedPercent()',
     '[attr.aria-valuetext]': 'percent() + " %"',
-    '[class]': 'tone() + " " + size() + " " + variant()',
+    '[class]': 'tone() + " " + size() + " " + variant() + (color() ? " colored" : "")',
     '[style.--cc-progress-value]': 'fill()',
     '[style.--cc-progress-tint]': 'tint()',
   },
@@ -33,7 +33,7 @@ export class ProgressBar {
   readonly tone = input<ProgressTone>('primary');
   readonly size = input<'md' | 'lg'>('md');
   readonly variant = input<'bar' | 'backdrop'>('bar');
-  /** Palette key whose soft tone fills a backdrop. */
+  /** Palette key that fills the bar, or whose soft tone fills a backdrop. */
   readonly color = input<string | null>(null);
 
   protected readonly fill = computed(() => Math.min(Math.max(this.value(), 0), 1));

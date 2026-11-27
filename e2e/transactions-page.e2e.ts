@@ -35,7 +35,7 @@ test('lists the movements of the period by day with the totals of what is shown'
   const list = movements(page);
   await expect(list.getByRole('heading', { name: 'Ayer' })).toBeVisible();
   await expect(list.getByRole('button', { name: /^Mercado/ })).toContainText('Bancolombia');
-  await expect(list.getByRole('button', { name: /^Hogar › Arriendo/ })).toContainText('Fijos');
+  await expect(list.getByRole('button', { name: /^Hogar \(Arriendo\)/ })).toContainText('Fijos');
 
   const totals = page.getByRole('group', { name: 'Totales de lo que se ve' });
   await expect(totals).toContainText('+$ 6,500,000.00');
@@ -64,6 +64,46 @@ test('the totals add up the accounts outside the space and say how much', async 
   await page.getByRole('searchbox', { name: 'Buscar' }).fill('Bancolombia');
   await expect(totals).toContainText('-$ 2,420,500.00');
   await expect(totals).not.toContainText('fuera del espacio');
+});
+
+test('each day shows its net, and the balances open and close the period', async ({ page }) => {
+  const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
+  await page.goto('/transacciones');
+  const list = movements(page);
+
+  // The net of each day, whatever part of the list is loaded (spec §7).
+  await expect(list.getByRole('heading', { name: /^Ayer/ })).toContainText('+$ 6,500,000.00');
+  await expect(list.getByRole('heading', { name: /^Martes 24 nov/ })).toContainText('-$ 25,000.00');
+  // "Categoría (Subcategoría)", the account and the note on its own line.
+  const market = list.getByRole('button', { name: /^Mercado/ });
+  await expect(market).toContainText('Bancolombia');
+  await expect(market).toContainText('Mercado de la semana');
+
+  // At the close of 31 oct and of today, of the accounts of the header total.
+  const balances = page.getByRole('group', { name: 'Saldos del periodo' });
+  await expect(balances).toContainText('$ 2,941,900.50');
+  await expect(balances).toContainText('$ 7,296,400.50');
+  expect(api.rpcCalls('accounts_balance')).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ on_date: '2026-10-31', account_ids: [] }),
+      expect.objectContaining({ on_date: '2026-11-26', account_ids: [] }),
+    ]),
+  );
+  await capture(page, 'transacciones-saldos');
+
+  // With an account filter, those accounts.
+  await page.getByRole('button', { name: 'Cuenta' }).click();
+  await page.getByRole('checkbox', { name: 'Efectivo' }).click();
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await expect(balances).toContainText('$ 325,000.00');
+  expect(api.rpcCalls('accounts_balance').at(-1)).toMatchObject({ account_ids: ['acc-cash'] });
+
+  // Another filter says nothing about a balance.
+  await page.getByRole('button', { name: 'Tipo' }).click();
+  await page.getByRole('checkbox', { name: 'Gasto' }).click();
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await expect(page.getByRole('button', { name: 'Tipo: Gasto' })).toBeVisible();
+  await expect(balances).toHaveCount(0);
 });
 
 test('searches and filters with chips that say what is on', async ({ page }) => {
@@ -108,8 +148,12 @@ test('a movement opens in the quick entry, beside the list on wide screens', asy
   await expect(entry.locator('cc-amount-display')).toContainText('$ 320,500.00');
   await captureViewport(page, 'transacciones-editar');
 
-  // Adds 10,000 and saves.
+  // Adds 10,000 and saves. In a sheet the keypad shows once the amount is touched (spec §7).
   if (isMobile) {
+    await expect(entry.locator('[data-key="submit"]')).toHaveCount(0);
+    await expect(entry.getByRole('group', { name: 'Acciones del movimiento' })).toBeVisible();
+    await captureViewport(page, 'registro-rapido-editar');
+    await entry.getByRole('button', { name: /^Gasto/ }).click();
     for (const key of ['plus', '1', '0', '000']) {
       await entry.locator(`[data-key="${key}"]`).click();
     }
@@ -162,10 +206,10 @@ test('a movement is deleted after confirming', async ({ page, isMobile }) => {
 
   await list.getByRole('button', { name: /^Transporte/ }).click();
   const entry = quickEntry(page, isMobile);
+  // The question is a view of the same entry (spec §13.5).
+  await entry.getByRole('button', { name: 'Borrar', exact: true }).click();
+  await expect(entry.getByRole('heading', { name: '¿Eliminar este movimiento?' })).toBeVisible();
   await entry.getByRole('button', { name: 'Eliminar' }).click();
-  const confirm = confirmation(page, isMobile);
-  await expect(confirm.getByRole('heading', { name: '¿Eliminar este movimiento?' })).toBeVisible();
-  await confirm.getByRole('button', { name: 'Eliminar' }).click();
 
   await expect(list.getByRole('button', { name: /^Transporte/ })).toHaveCount(0);
   expect(api.writes()).toContainEqual(

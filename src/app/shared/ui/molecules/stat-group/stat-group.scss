@@ -47,18 +47,58 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+.value.expense {
+  color: var(--cc-tone-expense);
+}
+
+.value.income {
+  color: var(--cc-tone-income);
+}
+
 @include breakpoints.container-stat-columns {
+  :host(.list) {
+    .stats {
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      gap: var(--cc-space-3);
+    }
+
+    .stat {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--cc-space-0-5);
+    }
+
+    .value {
+      text-align: start;
+    }
+  }
+}
+
+// Tiles: always side by side, each figure in its own box with the label on top.
+:host(.tiles) {
   .stats {
     grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    gap: var(--cc-space-3);
+    gap: var(--cc-space-1);
   }
 
   .stat {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--cc-space-0-5);
+    justify-items: center;
+    padding: var(--cc-space-2);
+    border-radius: var(--cc-radius-md);
+    background-color: var(--mat-sys-surface-container);
+    text-align: center;
+  }
+
+  .label {
+    font: var(--mat-sys-label-medium);
   }
 
   .value {
-    text-align: start;
+    max-width: 100%;
+    overflow: hidden;
+    font: var(--mat-sys-title-small);
+    text-align: center;
+    text-overflow: ellipsis;
   }
 }

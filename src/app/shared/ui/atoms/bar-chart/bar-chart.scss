@@ -1,0 +1,18 @@
+:host {
+  position: relative;
+  display: block;
+  height: var(--cc-bar-chart-height);
+  font: var(--mat-sys-body-small);
+}
+
+.probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+}

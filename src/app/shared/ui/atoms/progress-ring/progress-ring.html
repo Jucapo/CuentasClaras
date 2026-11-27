@@ -1,0 +1,22 @@
+<svg class="ring" aria-hidden="true" [attr.viewBox]="geometry.viewBox">
+  <circle
+    class="track"
+    [attr.cx]="geometry.center"
+    [attr.cy]="geometry.center"
+    [attr.r]="geometry.radius"
+    [attr.stroke-width]="geometry.stroke"
+  />
+  <!-- SVG circles start at 3 o'clock: the group turns them to start at the top. -->
+  <g [attr.transform]="'rotate(-90 ' + geometry.center + ' ' + geometry.center + ')'">
+    <circle
+      class="fill"
+      [attr.cx]="geometry.center"
+      [attr.cy]="geometry.center"
+      [attr.r]="geometry.radius"
+      [attr.stroke-width]="geometry.stroke"
+      [attr.pathLength]="geometry.pathLength"
+      [attr.stroke-dasharray]="dasharray()"
+    />
+  </g>
+</svg>
+<span class="center" aria-hidden="true"><ng-content /></span>

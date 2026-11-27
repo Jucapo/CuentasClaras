@@ -1,0 +1,30 @@
+<cc-overlay-panel [title]="data().title" (closed)="closed.emit()">
+  <cc-tabs ccOverlayToolbar [label]="text.tabs" [options]="tabs" [(value)]="tab" />
+  <div class="panel">
+    @switch (tab()) {
+      @case ('transfer') {
+        <cc-account-list
+          [groups]="data().accountGroups"
+          [actionable]="true"
+          (opened)="pickAccount($event)"
+        />
+      }
+      @default {
+        @let items = tab() === 'expense' ? data().expenses : data().incomes;
+        @if (items.length) {
+          <cc-category-grid
+            centerLabel=""
+            amountColor="category"
+            [label]="tab() === 'expense' ? text.expenses : text.incomes"
+            [items]="items"
+            [donut]="false"
+            [currency]="data().currency"
+            (opened)="pickCategory($event)"
+          />
+        } @else {
+          <p class="empty">{{ text.noCategories }}</p>
+        }
+      }
+    }
+  </div>
+</cc-overlay-panel>

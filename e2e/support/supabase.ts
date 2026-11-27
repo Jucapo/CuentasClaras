@@ -223,15 +223,39 @@ export async function mockDataApi(
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       return route.fulfill({ json: accountsTotal(ledger, body, spaceSettings) });
     }
-    if (name === 'search_transactions' || name === 'transaction_totals') {
+    if (name === 'net_worth') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      return route.fulfill({ json: netWorth(ledger, body, spaceSettings) });
+    }
+    if (name === 'daily_category_totals' || name === 'breakdown_totals') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      const movements = spaceMovements(ledger, tables['categories'], body, spaceSettings);
+      return route.fulfill({
+        json:
+          name === 'daily_category_totals'
+            ? dailyCategoryTotals(movements)
+            : breakdownTotals(movements, String(body['dimension'])),
+      });
+    }
+    if (
+      name === 'search_transactions' ||
+      name === 'transaction_totals' ||
+      name === 'transaction_day_totals'
+    ) {
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       const found = searchTransactions(ledger, tables['categories'], body);
       return route.fulfill({
         json:
           name === 'search_transactions'
             ? withEmbeds(found)
-            : transactionTotals(ledger, found, spaceSettings, body),
+            : name === 'transaction_totals'
+              ? transactionTotals(ledger, found, spaceSettings, body)
+              : transactionDayTotals(ledger, found, spaceSettings, body),
       });
+    }
+    if (name === 'accounts_balance') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      return route.fulfill({ json: accountsBalance(ledger, body, spaceSettings) });
     }
     return route.fulfill({ status: 204 });
   });
@@ -627,6 +651,145 @@ function categoryTotals(
   });
 }
 
+/** Plays the part of net_worth: active accounts but assets, per group and currency, converted. */
+function netWorth(ledger: Ledger, body: Record<string, unknown>, settings: Row) {
+  const main = String(settings['main_currency']);
+  const onDate = String(body['on_date']);
+  const sums = new Map<string, number>();
+  for (const account of ledger.accounts) {
+    if (account['archived_at'] || account['account_group'] === 'assets') {
+      continue;
+    }
+    const key = `${account['account_group']}|${account['currency']}`;
+    sums.set(key, (sums.get(key) ?? 0) + balanceOf(account, ledger.transactions));
+  }
+  return [...sums.entries()].map(([key, balance]) => {
+    const [group, currency] = key.split('|');
+    return {
+      account_group: group,
+      currency,
+      balance,
+      converted: convert(ledger, balance, currency, main, onDate),
+      main_currency: main,
+    };
+  });
+}
+
+/** A movement of the space scope, as private.space_movements returns it. */
+interface SpaceMovement {
+  readonly date: string;
+  readonly kind: unknown;
+  readonly currency: string;
+  /** Null without a rate. */
+  readonly converted: number | null;
+  readonly topCategoryId: unknown;
+  readonly accountId: unknown;
+  readonly createdBy: unknown;
+  readonly tagIds: readonly unknown[];
+}
+
+/** Plays the part of private.space_movements: confirmed, shared or included, each converted. */
+function spaceMovements(
+  ledger: Ledger,
+  categories: readonly Row[],
+  body: Record<string, unknown>,
+  settings: Row,
+): SpaceMovement[] {
+  const main = String(settings['main_currency']);
+  const from = body['from_date'] as string | null;
+  const to = body['to_date'] as string | null;
+  return ledger.transactions.flatMap((movement) => {
+    const date = String(movement['date']);
+    const account = ledger.accounts.find((candidate) => candidate['id'] === movement['account_id']);
+    const shared = movement['include_in_space'] === true || account?.['visibility'] === 'shared';
+    const category = categories.find((candidate) => candidate['id'] === movement['category_id']);
+    if (
+      movement['status'] !== 'confirmed' ||
+      (movement['type'] !== 'expense' && movement['type'] !== 'income') ||
+      (from !== null && date < from) ||
+      (to !== null && date > to) ||
+      !shared ||
+      !category
+    ) {
+      return [];
+    }
+    const currency = String(movement['currency']);
+    return [
+      {
+        date,
+        kind: category['kind'],
+        currency,
+        converted: convert(ledger, Number(movement['amount']), currency, main, date),
+        topCategoryId: category['parent_id'] ?? category['id'],
+        accountId: movement['account_id'],
+        createdBy: movement['created_by'] ?? E2E_USER.id,
+        tagIds: (movement['tag_ids'] as unknown[] | undefined) ?? [],
+      },
+    ];
+  });
+}
+
+/** Sums converted amounts by a key, with the currencies left out for lack of a rate. */
+function sumByKey<K>(
+  rows: readonly SpaceMovement[],
+  keyOf: (row: SpaceMovement) => readonly K[],
+): Map<K, { amount: number; movements: number; missing: Set<string> }> {
+  const sums = new Map<K, { amount: number; movements: number; missing: Set<string> }>();
+  for (const row of rows) {
+    for (const key of keyOf(row)) {
+      const sum = sums.get(key) ?? { amount: 0, movements: 0, missing: new Set<string>() };
+      sum.movements += 1;
+      if (row.converted === null) {
+        sum.missing.add(row.currency);
+      } else {
+        sum.amount += row.converted;
+      }
+      sums.set(key, sum);
+    }
+  }
+  return sums;
+}
+
+/** Plays the part of daily_category_totals: per day and top-level category. */
+function dailyCategoryTotals(movements: readonly SpaceMovement[]) {
+  const sums = sumByKey(movements, (row) => [`${row.date}|${row.topCategoryId}|${row.kind}`]);
+  return [...sums.entries()]
+    .map(([key, sum]) => {
+      const [date, categoryId, kind] = key.split('|');
+      return {
+        date,
+        category_id: categoryId,
+        kind,
+        amount: sum.amount,
+        missing_rate_currencies: [...sum.missing].sort(),
+      };
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Plays the part of breakdown_totals: per tag (each one), account or person. */
+function breakdownTotals(movements: readonly SpaceMovement[], dimension: string) {
+  const sums = sumByKey(movements, (row) => {
+    const keys =
+      dimension === 'tag'
+        ? row.tagIds.length > 0
+          ? row.tagIds
+          : [null]
+        : [dimension === 'account' ? row.accountId : row.createdBy];
+    return keys.map((key) => JSON.stringify([key, row.kind]));
+  });
+  return [...sums.entries()].map(([entry, sum]) => {
+    const [key, kind] = JSON.parse(entry) as [unknown, unknown];
+    return {
+      key,
+      kind,
+      amount: sum.amount,
+      movements: sum.movements,
+      missing_rate_currencies: [...sum.missing].sort(),
+    };
+  });
+}
+
 /** Plays the part of accounts_total: active accounts included in the total, converted. */
 function accountsTotal(ledger: Ledger, body: Record<string, unknown>, settings: Row) {
   const main = String(settings['main_currency']);
@@ -807,6 +970,68 @@ function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row,
     currency: main,
     missing_rate_currencies: [...missing].sort(),
   };
+}
+
+/** Plays the part of transaction_day_totals: transaction_totals per day, newest first. */
+function transactionDayTotals(ledger: Ledger, found: readonly Row[], settings: Row, args: Row) {
+  const dates = [...new Set(found.map((movement) => String(movement['date'])))].sort().reverse();
+  return dates
+    .map((date) => ({
+      date,
+      ...transactionTotals(
+        ledger,
+        found.filter((movement) => movement['date'] === date),
+        settings,
+        args,
+      ),
+    }))
+    .filter((day) => day.income !== 0 || day.expense !== 0 || day.missing_rate_currencies.length)
+    .map(({ date, income, expense, net, missing_rate_currencies }) => ({
+      date,
+      income,
+      expense,
+      net,
+      missing_rate_currencies,
+    }));
+}
+
+/**
+ * Plays the part of accounts_balance: the balance at the close of on_date of the accounts of the
+ * header total (or the given ones), taking back what came before the initial balance date.
+ */
+function accountsBalance(ledger: Ledger, body: Record<string, unknown>, settings: Row) {
+  const main = String(settings['main_currency']);
+  const onDate = String(body['on_date']);
+  const ids = (body['account_ids'] as string[] | null) ?? [];
+  let balance = 0;
+  const missing = new Set<string>();
+  for (const account of ledger.accounts) {
+    const chosen =
+      ids.length > 0
+        ? ids.includes(String(account['id']))
+        : account['include_in_total'] && !account['archived_at'];
+    if (!chosen) {
+      continue;
+    }
+    const start = String(account['initial_balance_date']);
+    const own = ledger.transactions
+      .filter((movement) => movement['status'] === 'confirmed')
+      .reduce((sum, movement) => {
+        const date = String(movement['date']);
+        const delta = deltaFor(movement, account['id']);
+        if (date >= start && date <= onDate) {
+          return sum + delta;
+        }
+        return date > onDate && date < start ? sum - delta : sum;
+      }, Number(account['initial_balance']));
+    const converted = convert(ledger, own, String(account['currency']), main, onDate);
+    if (converted === null) {
+      missing.add(String(account['currency']));
+    } else {
+      balance += converted;
+    }
+  }
+  return { balance, currency: main, missing_rate_currencies: [...missing].sort() };
 }
 
 function membershipRow(defaultAccountId: string | null, settings: Row) {

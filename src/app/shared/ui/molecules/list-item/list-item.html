@@ -35,7 +35,15 @@
   <span class="texts">
     <span class="title">{{ title() }}</span>
     @if (subtitle(); as subtitle) {
-      <span class="subtitle">{{ subtitle }}</span>
+      <span class="subtitle">
+        @if (subtitleIcon(); as icon) {
+          <cc-icon class="subtitle-icon" size="sm" [name]="iconName(icon)" />
+        }
+        <span class="subtitle-text">{{ subtitle }}</span>
+      </span>
+    }
+    @if (note(); as note) {
+      <span class="note">{{ note }}</span>
     }
   </span>
   <span class="trailing"><ng-content select="[ccListItemTrailing]" /></span>

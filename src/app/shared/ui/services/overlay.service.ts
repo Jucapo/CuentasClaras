@@ -15,10 +15,33 @@ export type LeaveView = () => void;
 export class OverlayHandle<R> {
   private closeOverlay: ((result?: R) => void) | null = null;
   private openView: ((onBack: () => void) => LeaveView) | null = null;
+  private guard: (() => boolean) | null = null;
 
   /** Closes the overlay; no result means it was dismissed. */
   close(result?: R): void {
     this.closeOverlay?.(result);
+  }
+
+  /**
+   * Asked before the backdrop, Esc or the system back button dismiss the overlay (spec §13.5):
+   * true lets it close; false keeps it open, and the component then asks, e.g. "¿Descartar los
+   * cambios?", once this call returns (so its view goes on top of the overlay's history entry).
+   * Closing from the component (`close`) does not ask.
+   */
+  guardClose(guard: () => boolean): void {
+    this.guard = guard;
+  }
+
+  /** Whether the overlay may be dismissed now; see `guardClose`. */
+  mayDismiss(): boolean {
+    return this.guard?.() ?? true;
+  }
+
+  /** Dismisses the overlay unless its guard keeps it open. */
+  requestClose(): void {
+    if (this.mayDismiss()) {
+      this.close();
+    }
   }
 
   /**
@@ -97,6 +120,8 @@ export class OverlayService {
       autoFocus: options.autoFocus ?? 'first-heading',
       // Back and navigation are handled below: back closes only the top overlay.
       closeOnNavigation: false,
+      // The backdrop and Esc go through the handle's guard (see dismissOn).
+      disableClose: true,
     };
     const sizeClass = `cc-overlay-${options.size ?? 'picker'}`;
 
@@ -112,6 +137,7 @@ export class OverlayService {
         (result) => ref.dismiss(result),
         (onBack) => history.enterView(onBack),
       );
+      dismissOn(ref.backdropClick(), ref.keydownEvents(), handle);
       closed = ref.afterDismissed();
     } else {
       const { MatDialog } = await import('@angular/material/dialog');
@@ -123,22 +149,24 @@ export class OverlayService {
         (result) => ref.close(result),
         (onBack) => history.enterView(onBack),
       );
+      dismissOn(ref.backdropClick(), ref.keydownEvents(), handle);
       closed = ref.afterClosed();
     }
 
     // Views are entered once the overlay is open, after this.
-    const history = this.trackHistory(() => handle.close());
+    const history = this.trackHistory(handle);
     const result = await firstValueFrom(closed);
     await history.release();
     return result;
   }
 
   /**
-   * Adds a history entry for the overlay: popping it ("back") dismisses the overlay, and closing
-   * the overlay any other way removes the entry, and those of its views. No entry while a
-   * navigation is running, e.g. the confirmation of a guard.
+   * Adds a history entry for the overlay: popping it ("back") dismisses the overlay, unless its
+   * guard keeps it (then the entry comes back), and closing the overlay any other way removes the
+   * entry, and those of its views. No entry while a navigation is running, e.g. the confirmation of
+   * a guard.
    */
-  private trackHistory(dismiss: () => void): OverlayHistory {
+  private trackHistory<R>(handle: OverlayHandle<R>): OverlayHistory {
     const window = this.window;
     if (!window || this.router.currentNavigation() !== null) {
       return { enterView: () => () => undefined, release: async () => undefined };
@@ -146,17 +174,25 @@ export class OverlayService {
     const id = nextOverlayId++;
     const views = new Set<() => void>();
     const isOpen = () => (overlayIdIn(window.history.state) ?? 0) >= id;
-    window.history.pushState(
-      { ...window.history.state, [HISTORY_KEY]: id },
-      '',
-      window.location.href,
-    );
+    const pushEntry = () =>
+      window.history.pushState(
+        { ...window.history.state, [HISTORY_KEY]: id },
+        '',
+        window.location.href,
+      );
+    pushEntry();
 
     const onPopState = () => {
-      if (!isOpen()) {
-        stopListening();
-        dismiss();
+      if (isOpen()) {
+        return;
       }
+      if (handle.mayDismiss()) {
+        stopListening();
+        handle.close();
+        return;
+      }
+      // Kept open: its entry comes back, under the question the component is about to show.
+      pushEntry();
     };
     // A navigation elsewhere (a link, the session ending) also closes the overlay.
     const navigation = this.router.events
@@ -166,7 +202,7 @@ export class OverlayService {
       )
       .subscribe(() => {
         stopListening();
-        dismiss();
+        handle.close();
       });
     const stopListening = () => {
       window.removeEventListener('popstate', onPopState);
@@ -226,6 +262,21 @@ interface OverlayHistory {
   readonly enterView: (onBack: () => void) => LeaveView;
   /** Removes the entries once the overlay closed. */
   readonly release: () => Promise<void>;
+}
+
+/** The backdrop and Esc dismiss the overlay through its guard (Esc a view handled stays put). */
+function dismissOn<R>(
+  backdropClick: Observable<MouseEvent>,
+  keydown: Observable<KeyboardEvent>,
+  handle: OverlayHandle<R>,
+): void {
+  backdropClick.subscribe(() => handle.requestClose());
+  keydown
+    .pipe(filter((event) => event.key === 'Escape' && !event.defaultPrevented))
+    .subscribe((event) => {
+      event.preventDefault();
+      handle.requestClose();
+    });
 }
 
 /** Goes one entry back; false if the browser did not move in time. */

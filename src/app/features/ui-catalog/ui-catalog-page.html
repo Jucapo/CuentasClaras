@@ -90,6 +90,35 @@
         </ng-template>
       </app-catalog-entry>
 
+      <app-catalog-entry
+        name="cc-progress-ring"
+        description="Tasa de ahorro: positiva, negativa (tono de error) y por encima del 100 %"
+      >
+        <ng-template>
+          <cc-progress-ring label="Tasa de ahorro: 62 %" [value]="0.62">62 %</cc-progress-ring>
+          <cc-progress-ring label="Tasa de ahorro: -35 %" tone="error" [value]="-0.35">
+            -35 %
+          </cc-progress-ring>
+          <cc-progress-ring label="Tasa de ahorro: 100 %" [value]="1">100 %</cc-progress-ring>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-bar-chart"
+        description="Barras apiladas por día: las 3 categorías mayores con su color y el resto en gris; el tooltip al tocar una barra"
+        layout="column"
+      >
+        <ng-template>
+          <cc-bar-chart
+            label="Gastos de Noviembre: $ 2,575,500.00; la mayor es Hogar, $ 2,100,000.00."
+            currency="COP"
+            [buckets]="chartBuckets"
+            [series]="chartSeries"
+            [ticks]="chartTicks"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
       <app-catalog-entry name="cc-donut" description="Vacío y segmentado por categoría">
         <ng-template>
           <div class="donut-demo">
@@ -659,6 +688,25 @@
             result="$ 0.00"
             error="Escribe un monto mayor que cero."
           />
+          <cc-amount-display size="lg" label="Gasto" color="green" result="$ 320,500.00" />
+          <cc-amount-display size="lg" label="Gasto" color="yellow" result="$ 15,000.00" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-entry-endpoints"
+        description="De dónde sale y a dónde va: gasto (cuenta → categoría) y transferencia sin destino"
+        layout="column"
+      >
+        <ng-template>
+          <cc-entry-endpoints label="Origen y destino" [endpoints]="expenseEndpoints" />
+          <cc-entry-endpoints label="Origen y destino" [endpoints]="transferEndpoints" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-date-choice" description="Hoy (elegido), Ayer y Elegir día">
+        <ng-template>
+          <cc-date-choice value="2026-11-26" today="2026-11-26" />
         </ng-template>
       </app-catalog-entry>
 
@@ -671,6 +719,12 @@
           <cc-chip-choice
             label="Subcategoría"
             [options]="subcategoryChips"
+            [(value)]="chipChoice"
+          />
+          <cc-chip-choice
+            label="Con ícono y el color de la categoría"
+            accent="orange"
+            [options]="iconChips"
             [(value)]="chipChoice"
           />
         </ng-template>
@@ -702,6 +756,22 @@
             footnote="Incluye $ 45,000.00 de cuentas fuera del espacio"
             footnoteIcon="lock"
             [items]="statItems"
+          />
+          <cc-stat-group variant="tiles" label="Promedios" [items]="averageItems" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-total-toggle"
+        description="Gastos e Ingresos como selector: la elegida va rellena, con su nota de comparación"
+        layout="column"
+      >
+        <ng-template>
+          <cc-total-toggle
+            label="Qué mostrar"
+            [options]="totalOptions"
+            [value]="totalKind()"
+            (valueChange)="totalKind.set($event)"
           />
         </ng-template>
       </app-catalog-entry>
@@ -970,6 +1040,42 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-net-worth"
+        description="Mis finanzas: activos contra deudas, cada grupo con sus monedas, y por moneda"
+        layout="column"
+      >
+        <ng-template>
+          <cc-net-worth
+            currency="COP"
+            [figures]="netWorthFigures"
+            [groups]="netWorthGroups"
+            [byCurrency]="netWorthCurrencies"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-breakdown-list"
+        description="Las 3 mayores, «Más…» con el resto, una categoría que despliega sus subcategorías y la lista vacía"
+        layout="column"
+      >
+        <ng-template>
+          <cc-breakdown-list
+            label="Gastos por categoría"
+            currency="COP"
+            [items]="breakdownItems"
+            [rest]="breakdownRest"
+          />
+          <cc-breakdown-list
+            label="Ingresos"
+            currency="COP"
+            emptyText="Sin ingresos en Noviembre."
+            [items]="[]"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-transaction-list"
         description="Por día, con «Ver más», abierto en el panel, privado (candado) y transferencia sin signo"
         layout="column"
@@ -981,6 +1087,16 @@
             [groups]="transactionGroups"
             [hasMore]="true"
           />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-entry-chooser"
+        description="¿Qué vas a registrar?: abre en Gasto, con lo del periodo en el color de cada categoría; Transferencia lista las cuentas"
+        layout="column"
+      >
+        <ng-template>
+          <cc-entry-chooser [data]="chooserData" />
         </ng-template>
       </app-catalog-entry>
 
