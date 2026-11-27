@@ -3,8 +3,10 @@ import { AccountsService } from '../accounts/accounts.service';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { PeriodService } from '../periods/period.service';
 import { SpaceService } from '../spaces/space.service';
+import { DataResult } from '../action-result';
+import { TransactionQuery } from '../transactions/transaction.models';
 import { TransactionsService } from '../transactions/transactions.service';
-import { AccountsTotal, CategoryTotal } from './totals.models';
+import { AccountsTotal, CategoryTotal, TransactionTotals } from './totals.models';
 import { TotalsApi } from './totals.api';
 
 /**
@@ -101,5 +103,11 @@ export class TotalsService {
   /** Totals of one category, if any. */
   find(categoryId: string): CategoryTotal | null {
     return this.categoryTotals().find((total) => total.categoryId === categoryId) ?? null;
+  }
+
+  /** Incomes, expenses and net of what Transacciones lists (spec §7); null without a space. */
+  async forTransactions(query: TransactionQuery): Promise<DataResult<TransactionTotals | null>> {
+    const spaceId = this.spaces.activeSpace()?.id;
+    return spaceId ? this.api.transactionTotals(spaceId, query) : { ok: true, value: null };
   }
 }

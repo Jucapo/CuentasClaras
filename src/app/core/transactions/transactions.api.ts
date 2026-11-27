@@ -6,7 +6,13 @@ import {
   NOT_ALLOWED_MESSAGE,
 } from '../supabase/data-error-messages';
 import { SupabaseService } from '../supabase/supabase.service';
-import { Transaction, TransactionEntry, TransactionPage } from './transaction.models';
+import { Tables } from '../supabase/database.types';
+import {
+  Transaction,
+  TransactionEntry,
+  TransactionPage,
+  TransactionQuery,
+} from './transaction.models';
 
 // The deferral points to its purchase; the transaction also has a financing link (F2).
 const TRANSACTION_SELECT =
@@ -14,12 +20,54 @@ const TRANSACTION_SELECT =
 
 type Embedded<T> = T | readonly T[] | null;
 
+/** A row of `TRANSACTION_SELECT`, from the table or from `search_transactions`. */
+type TransactionRow = Tables<'transactions'> & {
+  readonly transaction_tags: readonly { tag_id: string }[] | null;
+  readonly author: Embedded<{ display_name: string }>;
+  readonly deferral: Embedded<{ installments: number; rate: number }>;
+};
+
 // PostgREST returns a single object or a list depending on how it reads the foreign key.
 function first<T>(value: Embedded<T>): T | null {
   if (Array.isArray(value)) {
     return (value[0] as T | undefined) ?? null;
   }
   return (value as T | null) ?? null;
+}
+
+function toTransaction({ transaction_tags, author, deferral, ...row }: TransactionRow): Transaction {
+  const plan = first(deferral);
+  return {
+    ...row,
+    tag_ids: (transaction_tags ?? []).map((link) => link.tag_id),
+    author_name: first(author)?.display_name ?? null,
+    installments: plan?.installments ?? 1,
+    monthly_rate: plan?.rate ?? 0,
+  };
+}
+
+function toPage(rows: readonly TransactionRow[] | null, limit: number): TransactionPage {
+  const items = rows ?? [];
+  return { items: items.slice(0, limit).map(toTransaction), hasMore: items.length > limit };
+}
+
+/** Arguments of `search_transactions` and `transaction_totals`: empty filters do not filter. */
+export function transactionQueryArgs(spaceId: string, query: TransactionQuery) {
+  const { range, search, filters } = query;
+  // The generated types have no nulls for arguments with defaults; null is what they mean.
+  return {
+    target_space_id: spaceId,
+    from_date: range.start as string,
+    to_date: range.end as string,
+    search_terms: [...search.terms],
+    search_amount: search.amount as number,
+    filter_account_ids: [...filters.accountIds],
+    filter_category_ids: [...filters.categoryIds],
+    filter_tag_ids: [...filters.tagIds],
+    filter_types: [...filters.types],
+    filter_author_ids: [...filters.authorIds],
+    filter_statuses: [...filters.statuses],
+  };
 }
 
 /** Supabase queries for movements. */
@@ -80,23 +128,30 @@ export class TransactionsApi {
     if (error) {
       return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
     }
-    const rows = data ?? [];
-    return {
-      ok: true,
-      value: {
-        items: rows.slice(0, limit).map(({ transaction_tags, author, deferral, ...row }) => {
-          const plan = first(deferral as Embedded<{ installments: number; rate: number }>);
-          return {
-            ...row,
-            tag_ids: (transaction_tags ?? []).map((link) => link.tag_id),
-            author_name: first(author as Embedded<{ display_name: string }>)?.display_name ?? null,
-            installments: plan?.installments ?? 1,
-            monthly_rate: plan?.rate ?? 0,
-          } satisfies Transaction;
-        }),
-        hasMore: rows.length > limit,
-      },
-    };
+    return { ok: true, value: toPage(data as unknown as TransactionRow[] | null, limit) };
+  }
+
+  /**
+   * Movements the user sees in a period, with the search and filters of Transacciones (spec §7),
+   * newest first, one page at a time.
+   */
+  async search(
+    spaceId: string,
+    query: TransactionQuery,
+    offset: number,
+    limit: number,
+  ): Promise<DataResult<TransactionPage>> {
+    const { data, error, status } = await this.client
+      .rpc('search_transactions', transactionQueryArgs(spaceId, query))
+      .select(TRANSACTION_SELECT)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+      // One more than a page tells whether there is a next one.
+      .range(offset, offset + limit);
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
+    }
+    return { ok: true, value: toPage(data as unknown as TransactionRow[] | null, limit) };
   }
 
   /** Whether an account has movements, as source or destination. */

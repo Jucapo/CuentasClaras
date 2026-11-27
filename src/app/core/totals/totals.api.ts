@@ -4,7 +4,9 @@ import { DateRange } from '../../domain/periods/periods';
 import { actionFailed, DataResult } from '../action-result';
 import { dataErrorMessage, LOAD_ERROR_MESSAGE } from '../supabase/data-error-messages';
 import { SupabaseService } from '../supabase/supabase.service';
-import { AccountsTotal, CategoryTotal } from './totals.models';
+import { TransactionQuery } from '../transactions/transaction.models';
+import { transactionQueryArgs } from '../transactions/transactions.api';
+import { AccountsTotal, CategoryTotal, TransactionTotals } from './totals.models';
 
 /** Supabase RPCs that add up movements (security invoker: they follow RLS). */
 @Injectable({ providedIn: 'root' })
@@ -39,6 +41,31 @@ export class TotalsApi {
         remaining: (row.remaining as number | null) ?? null,
         missingRateCurrencies: row.missing_rate_currencies ?? [],
       })),
+    };
+  }
+
+  /** Incomes, expenses and net of the movements Transacciones lists for `query`. */
+  async transactionTotals(
+    spaceId: string,
+    query: TransactionQuery,
+  ): Promise<DataResult<TransactionTotals | null>> {
+    const { data, error, status } = await this.client
+      .rpc('transaction_totals', transactionQueryArgs(spaceId, query))
+      .maybeSingle();
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
+    }
+    return {
+      ok: true,
+      value: data
+        ? {
+            income: data.income,
+            expense: data.expense,
+            net: data.net,
+            currency: data.currency,
+            missingRateCurrencies: data.missing_rate_currencies ?? [],
+          }
+        : null,
     };
   }
 

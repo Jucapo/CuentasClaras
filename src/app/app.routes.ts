@@ -152,6 +152,9 @@ export const routes: Routes = [
       {
         path: APP_PATHS.transactions,
         title: 'Transacciones',
+        // In the expanded class a movement is edited beside the list (spec §7).
+        data: LIST_DETAIL,
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/transactions/transactions-page').then((m) => m.TransactionsPage),
       },

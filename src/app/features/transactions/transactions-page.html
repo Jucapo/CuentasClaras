@@ -1,1 +1,69 @@
-<cc-page-header title="Transacciones" />
+<cc-list-detail-layout [detailOpen]="session() !== null">
+  <div ccListPane class="list">
+    <cc-page-header [title]="text.title">
+      @if (canEdit()) {
+        <cc-icon-button icon="add" [label]="text.add" shortcut="N" (click)="create()" />
+      }
+    </cc-page-header>
+
+    <div class="controls">
+      <cc-text-field
+        type="search"
+        [label]="text.search"
+        [placeholder]="text.searchPlaceholder"
+        [(value)]="query"
+      />
+      <cc-filter-chips
+        [label]="text.filters"
+        [filters]="chips()"
+        (opened)="openFilter($event)"
+        (cleared)="clearFilter($event)"
+        (clearedAll)="clearFilters()"
+      />
+    </div>
+
+    @if (statItems().length > 0) {
+      <cc-stat-group class="totals" [label]="text.totals" [items]="statItems()" />
+    }
+    <cc-missing-rates-notice
+      [currencies]="missingRates()"
+      [canDefine]="canEdit()"
+      (define)="defineRate($event)"
+    />
+
+    @if (listError(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+    <cc-transaction-list
+      [label]="text.list"
+      [groups]="groups()"
+      [emptyText]="emptyText()"
+      [hasMore]="hasMore()"
+      [loading]="loading()"
+      [selectedId]="selectedId()"
+      (opened)="open($event)"
+      (more)="loadMore()"
+    />
+    @if (showClearAll()) {
+      <div class="clear-all">
+        <cc-button variant="text" (click)="clearAll()">{{ text.clearAll }}</cc-button>
+      </div>
+    }
+  </div>
+
+  <div ccDetailPane class="detail">
+    @if (session(); as current) {
+      @for (shown of [current]; track shown.key) {
+        <cc-quick-entry layout="pane" [data]="shown.data" (closed)="closed($event)" />
+      }
+    }
+  </div>
+
+  <div ccDetailEmpty class="empty-detail">
+    <cc-icon name="receipt_long" size="xl" />
+    <p class="empty-text">{{ text.pickOne }}</p>
+    @if (canEdit()) {
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="create()">{{ text.add }}</cc-button>
+    }
+  </div>
+</cc-list-detail-layout>

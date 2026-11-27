@@ -1,4 +1,9 @@
 import { IsoDate } from '../../domain/dates/local-date';
+import { DateRange } from '../../domain/periods/periods';
+import {
+  SearchArguments,
+  TransactionFilters,
+} from '../../domain/transactions/transaction-filters';
 import { Tables } from '../supabase/database.types';
 
 /** A movement as lists show it: the row, its tags, who recorded it and its card deferral. */
@@ -39,4 +44,11 @@ export interface TransactionEntry {
 export interface TransactionPage {
   readonly items: readonly Transaction[];
   readonly hasMore: boolean;
+}
+
+/** What Transacciones asks for: the period, the search and the filters (spec §7). */
+export interface TransactionQuery {
+  readonly range: DateRange;
+  readonly search: SearchArguments;
+  readonly filters: TransactionFilters;
 }
