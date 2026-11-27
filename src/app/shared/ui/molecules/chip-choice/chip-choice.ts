@@ -1,8 +1,16 @@
-import { Component, input, model } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 import { FormValueControl } from '@angular/forms/signals';
 import { MatChipListbox, MatChipListboxChange, MatChipOption } from '@angular/material/chips';
 import { ColorSwatch } from '../../atoms/color-swatch/color-swatch';
 import { FormControlBase } from '../../atoms/form-control-base';
+import { Icon } from '../../atoms/icon/icon';
+import {
+  colorOrFallback,
+  paletteColor,
+  paletteForeground,
+  paletteTextColor,
+} from '../../colors/color-palette';
+import { iconOrFallback } from '../../icons/icon-glyphs';
 import { ChipOption } from '../chip-select/chip-select';
 
 let nextChipChoiceId = 0;
@@ -10,13 +18,20 @@ let nextChipChoiceId = 0;
 /**
  * Single choice shown as chips in one scrolling row, e.g. the subcategory of a movement. Binds a
  * string (null when nothing is picked) with [formField]; without `allowNone` tapping the picked
- * chip keeps it. Styled like `cc-chip-select`, whose value is a list instead.
+ * chip keeps it. Styled like `cc-chip-select`, whose value is a list instead. With `accent`, a
+ * palette key, the chips take that color and the picked one is filled with it (spec §7).
  */
 @Component({
   selector: 'cc-chip-choice',
-  imports: [MatChipListbox, MatChipOption, ColorSwatch],
+  imports: [MatChipListbox, MatChipOption, ColorSwatch, Icon],
   templateUrl: './chip-choice.html',
   styleUrl: './chip-choice.scss',
+  host: {
+    '[class.accented]': 'accent() !== null',
+    '[style.--cc-chip-accent]': 'accentColor()',
+    '[style.--cc-chip-on-accent]': 'accentForeground()',
+    '[style.--cc-chip-accent-text]': 'accentText()',
+  },
 })
 export class ChipChoice extends FormControlBase implements FormValueControl<string | null> {
   readonly value = model<string | null>(null);
@@ -24,8 +39,27 @@ export class ChipChoice extends FormControlBase implements FormValueControl<stri
   readonly allowNone = input(false);
   /** Hides the visible label when the context already names the choice. */
   readonly hideLabel = input(false);
+  /** Palette key of the chips, e.g. the category of the subcategories. */
+  readonly accent = input<string | null>(null);
 
   protected readonly labelId = `cc-chip-choice-${nextChipChoiceId++}`;
+  protected readonly iconName = iconOrFallback;
+  private readonly accentKey = computed(() => {
+    const accent = this.accent();
+    return accent === null ? null : colorOrFallback(accent);
+  });
+  protected readonly accentColor = computed(() => {
+    const key = this.accentKey();
+    return key ? paletteColor(key) : null;
+  });
+  protected readonly accentForeground = computed(() => {
+    const key = this.accentKey();
+    return key ? paletteForeground(key) : null;
+  });
+  protected readonly accentText = computed(() => {
+    const key = this.accentKey();
+    return key ? paletteTextColor(key) : null;
+  });
 
   protected onChange(event: MatChipListboxChange, listbox: MatChipListbox): void {
     const picked = (event.value as string | undefined) ?? null;

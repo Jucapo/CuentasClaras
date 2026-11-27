@@ -2,8 +2,10 @@
   [title]="name()"
   [subtitle]="notes()"
   [link]="link()"
+  [actionable]="actionable()"
   [muted]="archived()"
   [selected]="selected()"
+  (activate)="activate.emit()"
 >
   <cc-icon-badge ccListItemLeading [icon]="icon()" [color]="color()" />
   <cc-amount ccListItemTrailing [amount]="balance()" [currency]="currency()" />

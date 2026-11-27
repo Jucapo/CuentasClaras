@@ -129,6 +129,28 @@ export function axisMonthText(month: IsoDate, withYear: boolean): string {
   return withYear ? `${text} ${year}` : text;
 }
 
+/**
+ * The date of a movement in one line (spec §7): "Hoy, 27 nov", "Ayer, 26 nov" or "Jueves, 20 nov",
+ * with the year when it is not the one of `today`.
+ */
+export function entryDateText(date: IsoDate, today: IsoDate): string {
+  const short = shortDate(date, dateParts(date).year !== dateParts(today).year);
+  if (date === today) {
+    return `Hoy, ${short}`;
+  }
+  if (date === addDays(today, -1)) {
+    return `Ayer, ${short}`;
+  }
+  return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${short}`;
+}
+
+/** A date spelled out, e.g. "27 de noviembre", with the year when it is not the one of `today`. */
+export function longDateText(date: IsoDate, today: IsoDate): string {
+  const { year, month, day } = dateParts(date);
+  const text = `${day} de ${MONTH_NAMES[month - 1].toLowerCase()}`;
+  return year === dateParts(today).year ? text : `${text} de ${year}`;
+}
+
 /** Long form of a date for a list header, e.g. "Jueves 26 nov". */
 export function dayTitle(date: IsoDate, today: IsoDate): string {
   return periodTitle(

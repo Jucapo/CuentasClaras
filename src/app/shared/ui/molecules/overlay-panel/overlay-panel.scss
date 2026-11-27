@@ -45,10 +45,10 @@
 // top corner and the ✓ in the bottom one; the body leaves room so the ✓ never covers its last row.
 :host(.floating) {
   padding-top: var(--cc-space-2);
+}
 
-  .body {
-    padding-bottom: var(--cc-overlay-confirm-clearance);
-  }
+:host(.with-confirm) .body {
+  padding-bottom: var(--cc-overlay-confirm-clearance);
 }
 
 .floating-close {

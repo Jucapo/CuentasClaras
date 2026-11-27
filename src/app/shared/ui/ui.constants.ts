@@ -40,7 +40,7 @@ export const UI_TEXT = {
 /** Labels of the quick-entry keypad keys (spec §7). */
 export const KEYPAD_TEXT = {
   label: 'Teclado de monto',
-  backspace: 'Borrar',
+  backspace: 'Borrar dígito',
   plus: 'Sumar',
   minus: 'Restar',
   times: 'Multiplicar',

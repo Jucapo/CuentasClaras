@@ -46,6 +46,7 @@ const OWN_ENTER_SELECTOR = [
   styleUrl: './overlay-panel.scss',
   host: {
     '[class.floating]': 'floating()',
+    '[class.with-confirm]': 'confirmLabel() !== null',
     '(keydown)': 'onKeydown($event)',
   },
 })
@@ -61,6 +62,11 @@ export class OverlayPanel {
   readonly backButton = input(false);
   /** Accessible name and tooltip of the floating ✓, e.g. "Listo"; turns the confirmation layout on. */
   readonly confirmLabel = input<string | null>(null);
+  /**
+   * The confirmation layout without the ✓, for content that brings its own, e.g. the keypad of the
+   * quick entry: only the floating ✕.
+   */
+  readonly floatingClose = input(false);
   /** While the confirmation saves: the ✓ shows its progress and stays disabled. */
   readonly confirming = input(false);
   /** Names the busy state of the ✓, e.g. "Guardando". */
@@ -72,7 +78,9 @@ export class OverlayPanel {
   protected readonly titleId = `cc-overlay-title-${nextPanelId++}`;
   protected readonly closeLabel = UI_TEXT.close;
   protected readonly backLabel = UI_TEXT.back;
-  protected readonly floating = computed(() => this.confirmLabel() !== null);
+  protected readonly floating = computed(
+    () => this.confirmLabel() !== null || this.floatingClose(),
+  );
 
   protected confirm(): void {
     if (!this.confirming()) {
@@ -81,7 +89,7 @@ export class OverlayPanel {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    if (!this.floating() || event.defaultPrevented) {
+    if (this.confirmLabel() === null || event.defaultPrevented) {
       return;
     }
     if (matchesShortcut(event, CONFIRM_SHORTCUT)) {

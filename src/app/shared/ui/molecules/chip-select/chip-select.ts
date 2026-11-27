@@ -10,6 +10,8 @@ export interface ChipOption {
   readonly label: string;
   /** Palette key shown as a dot before the label. */
   readonly color?: string;
+  /** Icon before the label instead of the dot, e.g. a subcategory's in the quick entry. */
+  readonly icon?: string;
 }
 
 let nextChipSelectId = 0;

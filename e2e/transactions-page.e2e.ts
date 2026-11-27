@@ -108,8 +108,12 @@ test('a movement opens in the quick entry, beside the list on wide screens', asy
   await expect(entry.locator('cc-amount-display')).toContainText('$ 320,500.00');
   await captureViewport(page, 'transacciones-editar');
 
-  // Adds 10,000 and saves.
+  // Adds 10,000 and saves. In a sheet the keypad shows once the amount is touched (spec §7).
   if (isMobile) {
+    await expect(entry.locator('[data-key="submit"]')).toHaveCount(0);
+    await expect(entry.getByRole('group', { name: 'Acciones del movimiento' })).toBeVisible();
+    await captureViewport(page, 'registro-rapido-editar');
+    await entry.getByRole('button', { name: /^Gasto/ }).click();
     for (const key of ['plus', '1', '0', '000']) {
       await entry.locator(`[data-key="${key}"]`).click();
     }
@@ -162,10 +166,10 @@ test('a movement is deleted after confirming', async ({ page, isMobile }) => {
 
   await list.getByRole('button', { name: /^Transporte/ }).click();
   const entry = quickEntry(page, isMobile);
+  // The question is a view of the same entry (spec §13.5).
+  await entry.getByRole('button', { name: 'Borrar', exact: true }).click();
+  await expect(entry.getByRole('heading', { name: '¿Eliminar este movimiento?' })).toBeVisible();
   await entry.getByRole('button', { name: 'Eliminar' }).click();
-  const confirm = confirmation(page, isMobile);
-  await expect(confirm.getByRole('heading', { name: '¿Eliminar este movimiento?' })).toBeVisible();
-  await confirm.getByRole('button', { name: 'Eliminar' }).click();
 
   await expect(list.getByRole('button', { name: /^Transporte/ })).toHaveCount(0);
   expect(api.writes()).toContainEqual(

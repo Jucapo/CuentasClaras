@@ -29,7 +29,7 @@
         }
       </span>
       @if (currency(); as currency) {
-        <span class="spent">
+        <span class="spent" [style.color]="spentColor()">
           @if (amount() !== null) {
             <cc-amount [amount]="amount() ?? 0" [currency]="currency" tone="neutral" />
           }

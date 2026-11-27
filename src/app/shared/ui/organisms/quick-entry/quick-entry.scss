@@ -24,6 +24,17 @@
   }
 }
 
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+}
+
+// The floating ✕ sits beside the blocks, never on them.
+.endpoints {
+  padding-inline-end: var(--cc-overlay-close-clearance);
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -37,35 +48,30 @@
   gap: var(--cc-space-2);
 }
 
-.date {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--cc-space-2);
-}
-
-.date-field {
-  flex: 1 1 auto;
-}
-
-.details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cc-space-2);
+.tags {
+  display: block;
   padding-top: var(--cc-space-2);
 }
 
-.danger-zone {
+// Amount, keypad and actions: the left column of the dialog.
+.pad {
   display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  min-width: 0;
 }
 
-// Amount and keypad: pinned under the fields in the sheet, the left column of the dialog.
-.pad {
+// Keypad and actions pinned under the fields in the sheet.
+.pinned {
   display: flex;
   flex: 1 1 100%;
   flex-direction: column;
   gap: var(--cc-space-2);
   min-width: 0;
+}
+
+.pinned:empty {
+  display: none;
 }
 
 .two-amounts {
@@ -87,12 +93,14 @@
   align-items: start;
 }
 
-.fields {
-  min-width: 0;
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: var(--cc-space-1);
 }
 
-.footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--cc-space-2);
+// The floating ✓ sits in the bottom corner, beside the actions.
+.actions.beside-confirm {
+  padding-inline-end: var(--cc-overlay-confirm-clearance);
 }

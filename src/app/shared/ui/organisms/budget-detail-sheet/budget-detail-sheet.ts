@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { ConfirmOptions, ConfirmPanel } from '../../molecules/confirm-panel/confirm-panel';
+import { activeElementIn, focusHeading, scrollPositions } from '../../services/overlay-views';
 import { LeaveView, OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { AmountCalculator, AmountCalculatorData } from '../amount-calculator/amount-calculator';
 import { BudgetAmountChange } from '../budget-list/budget-list';
@@ -187,30 +188,5 @@ export class BudgetDetailSheet {
       },
       { injector: this.injector },
     );
-  }
-}
-
-/** The scrolled elements of the detail and of the overlay around it. */
-function scrollPositions(root: HTMLElement): (readonly [Element, number])[] {
-  const elements: Element[] = Array.from(root.querySelectorAll('*'));
-  for (let element = root.parentElement; element; element = element.parentElement) {
-    elements.push(element);
-  }
-  return elements
-    .filter((element) => element.scrollTop > 0)
-    .map((element) => [element, element.scrollTop] as const);
-}
-
-function activeElementIn(root: HTMLElement): HTMLElement | null {
-  const active = root.ownerDocument.activeElement;
-  return active instanceof HTMLElement && root.contains(active) ? active : null;
-}
-
-/** The title of a view gets the focus, so it is announced and the keyboard types into it. */
-function focusHeading(view: Element | null): void {
-  const heading = view?.querySelector<HTMLElement>('h2');
-  if (heading) {
-    heading.tabIndex = -1;
-    heading.focus();
   }
 }

@@ -3,7 +3,7 @@ import { formatMoney } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Icon } from '../../atoms/icon/icon';
-import { colorOrFallback, paletteColor } from '../../colors/color-palette';
+import { colorOrFallback, paletteColor, paletteTextColor } from '../../colors/color-palette';
 import { MONEY_FORMAT } from '../../money/money-format';
 import { UI_TEXT } from '../../ui.constants';
 
@@ -43,9 +43,15 @@ export class CategoryBubble {
   readonly currency = input<string | null>(null);
   /** Share of the budget used, 0–1 or more; no ring when null. */
   readonly progress = input<number | null>(null);
+  /** `category` paints the amount in the color of the category, with AA contrast (spec §7). */
+  readonly amountColor = input<'neutral' | 'category'>('neutral');
   readonly activate = output<void>();
 
   private readonly format = inject(MONEY_FORMAT);
+
+  protected readonly spentColor = computed(() =>
+    this.amountColor() === 'category' ? paletteTextColor(colorOrFallback(this.color())) : null,
+  );
 
   protected readonly over = computed(() => (this.remaining() ?? 0) < 0);
   protected readonly ringColor = computed(() =>

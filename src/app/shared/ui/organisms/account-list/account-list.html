@@ -29,8 +29,10 @@
           [currency]="account.currency"
           [notes]="account.notes"
           [link]="account.link"
+          [actionable]="actionable()"
           [archived]="!!account.archived"
           [selected]="!!account.selected"
+          (activate)="opened.emit(account.id)"
         />
       }
     </div>

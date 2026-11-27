@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { apply, form } from '@angular/forms/signals';
 import {
   AMOUNT_EXPRESSION_MESSAGES,
+  categoryTreeOf,
   defaultTagIds,
   includeInSpaceDefault,
   QUICK_ENTRY_MESSAGES,
@@ -17,11 +18,12 @@ import {
 const account = (overrides: Partial<QuickEntryAccount>): QuickEntryAccount => ({
   id: 'cash',
   name: 'Efectivo',
+  icon: 'payments',
+  color: 'green',
   currency: 'COP',
   isCard: false,
   isPrivate: false,
   includeInSpaceByDefault: false,
-  group: 'Cuentas',
   ...overrides,
 });
 
@@ -29,7 +31,7 @@ const context: QuickEntryContext = {
   accounts: [
     account({}),
     account({ id: 'usd', name: 'Dólares', currency: 'USD' }),
-    account({ id: 'card', name: 'Tarjeta', isCard: true, group: 'Deudas' }),
+    account({ id: 'card', name: 'Tarjeta', isCard: true }),
     account({ id: 'mine', name: 'Mía', isPrivate: true, includeInSpaceByDefault: true }),
   ],
 };
@@ -194,13 +196,32 @@ describe('toTransactionEntry', () => {
   });
 });
 
+const look = { icon: 'home', color: 'orange' };
+const home = {
+  id: 'home',
+  name: 'Casa',
+  ...look,
+  defaultTagIds: ['home'],
+  subcategories: [
+    { id: 'rent', name: 'Arriendo', ...look, defaultTagIds: ['fixed', 'home'] },
+    { id: 'repairs', name: 'Mantenimiento', ...look, defaultTagIds: [] },
+  ],
+};
+
+describe('categoryTreeOf', () => {
+  it('finds the top-level category of a category or of one of its subcategories', () => {
+    const market = { id: 'market', name: 'Mercado', ...look, defaultTagIds: [], subcategories: [] };
+    expect(categoryTreeOf([home, market], 'home')).toBe(home);
+    expect(categoryTreeOf([home, market], 'rent')).toBe(home);
+    expect(categoryTreeOf([home, market], 'market')).toBe(market);
+    expect(categoryTreeOf([home, market], null)).toBeNull();
+  });
+});
+
 describe('defaults', () => {
   it('applies the tags of the category and of the chosen subcategory', () => {
-    const category = { id: 'home', name: 'Casa', defaultTagIds: ['home'] };
-    const subcategories = [
-      { id: 'rent', name: 'Arriendo', defaultTagIds: ['fixed', 'home'] },
-      { id: 'repairs', name: 'Mantenimiento', defaultTagIds: [] },
-    ];
+    const category = home;
+    const subcategories = home.subcategories;
     expect(defaultTagIds('home', category, subcategories)).toEqual(['home']);
     expect(defaultTagIds('rent', category, subcategories)).toEqual(['home', 'fixed']);
     expect(defaultTagIds('repairs', category, subcategories)).toEqual(['home']);

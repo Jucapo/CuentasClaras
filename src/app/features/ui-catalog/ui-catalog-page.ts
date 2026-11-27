@@ -70,6 +70,15 @@ import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { TotalOption, TotalToggle } from '../../shared/ui/molecules/total-toggle/total-toggle';
 import {
+  EntryEndpoint,
+  EntryEndpoints,
+} from '../../shared/ui/molecules/entry-endpoints/entry-endpoints';
+import { DateChoice } from '../../shared/ui/molecules/date-choice/date-choice';
+import {
+  EntryChooser,
+  EntryChooserData,
+} from '../../shared/ui/organisms/entry-chooser/entry-chooser';
+import {
   BarChart,
   BarChartBucket,
   BarChartSeries,
@@ -255,6 +264,9 @@ interface WindowClassDemo {
     ProgressRing,
     BreakdownList,
     NetWorthPanel,
+    EntryEndpoints,
+    DateChoice,
+    EntryChooser,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -482,6 +494,19 @@ export class UiCatalogPage {
     { value: 'c3', label: 'Servicios públicos' },
     { value: 'c12', label: 'Mantenimiento' },
     { value: 'c13', label: 'Aseo' },
+  ];
+  protected readonly iconChips: readonly ChipOption[] = [
+    { value: 'c1', label: 'Hogar', icon: 'home' },
+    { value: 'c2', label: 'Arriendo', icon: 'key' },
+    { value: 'c3', label: 'Servicios públicos', icon: 'bolt' },
+  ];
+  protected readonly expenseEndpoints: readonly EntryEndpoint[] = [
+    { role: 'De cuenta', name: 'Efectivo', icon: 'payments', color: 'teal' },
+    { role: 'A categoría', name: 'Mercado', icon: 'shopping_cart', color: 'lime' },
+  ];
+  protected readonly transferEndpoints: readonly EntryEndpoint[] = [
+    { role: 'De cuenta', name: 'Bancolombia', icon: 'account_balance', color: 'amber' },
+    { role: 'A cuenta', name: 'Elige la cuenta', icon: 'account_balance_wallet', color: null },
   ];
   protected readonly transactionGroups: readonly TransactionListGroup[] = [
     {
@@ -840,6 +865,19 @@ export class UiCatalogPage {
   ]);
   /** A movement open in the detail pane, as Transacciones shows it in the expanded class. */
   protected readonly paneEntry = this.quickEntryData('expense');
+  /** "¿Qué vas a registrar?" with the accounts of the quick entry demo. */
+  protected readonly chooserData: EntryChooserData = {
+    title: '¿Qué vas a registrar?',
+    expenses: [
+      { id: 'c1', name: 'Hogar', icon: 'home', color: 'orange', amount: 210000000 },
+      { id: 'c4', name: 'Mercado', icon: 'shopping_cart', color: 'green', amount: 32050000 },
+      { id: 'c5', name: 'Transporte', icon: 'directions_car', color: 'blue', amount: 2500000 },
+      { id: 'c6', name: 'Ocio', icon: 'sports_esports', color: 'yellow', amount: 0 },
+    ],
+    incomes: [{ id: 'c7', name: 'Salario', icon: 'work', color: 'teal', amount: 650000000 }],
+    accountGroups: this.paneEntry.accountGroups,
+    currency: 'COP',
+  };
   protected readonly paneEntryKey = signal(0);
 
   protected clearChip(key: string): void {
@@ -1037,53 +1075,110 @@ export class UiCatalogPage {
       monthlyRatePercent: 0,
       adjustmentDirection: 'increase',
     };
+    const accounts = [
+      {
+        id: 'a1',
+        name: 'Bancolombia',
+        icon: 'account_balance',
+        color: 'amber',
+        currency: 'COP',
+        isCard: false,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+      {
+        id: 'a2',
+        name: 'Nequi',
+        icon: 'account_balance_wallet',
+        color: 'purple',
+        currency: 'COP',
+        isCard: false,
+        isPrivate: true,
+        includeInSpaceByDefault: true,
+      },
+      {
+        id: 'a3',
+        name: 'DollarApp',
+        icon: 'currency_exchange',
+        color: 'sky',
+        currency: 'USD',
+        isCard: false,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+      {
+        id: 'a4',
+        name: 'Tarjeta Visa',
+        icon: 'credit_card',
+        color: 'red',
+        currency: 'COP',
+        isCard: true,
+        isPrivate: false,
+        includeInSpaceByDefault: false,
+      },
+    ];
+    const home = { icon: 'home', color: 'orange' };
     return {
       mode: type === 'adjustment' ? 'edit' : 'create',
+      followDefaults: type !== 'adjustment',
       title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
-      accounts: [
+      accounts,
+      accountGroups: [
         {
-          id: 'a1',
-          name: 'Bancolombia',
-          currency: 'COP',
-          isCard: false,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Cuentas',
+          id: 'accounts',
+          label: 'Cuentas',
+          totals: [{ currency: 'COP', amount: 297190050 }],
+          accounts: [
+            { ...accounts[0], color: 'amber', balance: 254300000 },
+            { ...accounts[1], color: 'purple', balance: 42890050, notes: 'Privada' },
+          ],
         },
         {
-          id: 'a2',
-          name: 'Nequi',
-          currency: 'COP',
-          isCard: false,
-          isPrivate: true,
-          includeInSpaceByDefault: true,
-          group: 'Cuentas',
+          id: 'savings',
+          label: 'Ahorros',
+          totals: [{ currency: 'USD', amount: 120000 }],
+          accounts: [{ ...accounts[2], color: 'sky', balance: 120000 }],
         },
         {
-          id: 'a3',
-          name: 'DollarApp',
-          currency: 'USD',
-          isCard: false,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Ahorros',
-        },
-        {
-          id: 'a4',
-          name: 'Tarjeta Visa',
-          currency: 'COP',
-          isCard: true,
-          isPrivate: false,
-          includeInSpaceByDefault: false,
-          group: 'Deudas',
+          id: 'debts',
+          label: 'Deudas',
+          totals: [{ currency: 'COP', amount: -185000000 }],
+          accounts: [{ ...accounts[3], color: 'red', balance: -185000000 }],
         },
       ],
-      category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
-      subcategories:
+      categories:
         type === 'expense'
           ? [
-              { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
-              { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
+              {
+                id: 'c1',
+                name: 'Hogar',
+                ...home,
+                defaultTagIds: [],
+                subcategories: [
+                  {
+                    id: 'c2',
+                    name: 'Arriendo',
+                    icon: 'key',
+                    color: 'orange',
+                    defaultTagIds: ['t1'],
+                  },
+                  {
+                    id: 'c3',
+                    name: 'Servicios públicos',
+                    icon: 'bolt',
+                    color: 'amber',
+                    defaultTagIds: [],
+                  },
+                ],
+              },
+              {
+                id: 'c4',
+                name: 'Mercado',
+                icon: 'shopping_cart',
+                color: 'green',
+                defaultTagIds: [],
+                subcategories: [],
+              },
             ]
           : [],
       tags: this.tagOptions,

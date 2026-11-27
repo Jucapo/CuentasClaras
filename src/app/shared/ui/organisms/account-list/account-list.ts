@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CurrencyAmount } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { LinkCommands } from '../../atoms/button/button';
@@ -29,7 +29,11 @@ export interface AccountListGroup {
   readonly accounts: readonly AccountListItem[];
 }
 
-/** Accounts grouped by kind, each group with its total per currency, plus an overall total. */
+/**
+ * Accounts grouped by kind, each group with its total per currency, plus an overall total. Each
+ * account links to its screen, or with `actionable` is a button that emits `opened`, e.g. to pick
+ * the account of a movement (spec §7).
+ */
 @Component({
   selector: 'cc-account-list',
   imports: [AccountRow, Amount],
@@ -41,4 +45,7 @@ export class AccountList {
   /** Overall total per currency; hidden when empty. */
   readonly totals = input<readonly CurrencyAmount[]>([]);
   readonly totalLabel = input('Total');
+  readonly actionable = input(false);
+  /** An account was picked (with `actionable`). */
+  readonly opened = output<string>();
 }

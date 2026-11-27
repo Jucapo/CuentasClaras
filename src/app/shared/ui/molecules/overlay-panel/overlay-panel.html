@@ -15,7 +15,7 @@
   <ng-content />
 </div>
 <div class="actions"><ng-content select="[ccOverlayActions]" /></div>
-@if (confirmLabel(); as label) {
+@if (floating()) {
   <cc-icon-button
     class="floating-close"
     icon="close"
@@ -23,6 +23,8 @@
     [tooltip]="true"
     (click)="closed.emit()"
   />
+}
+@if (confirmLabel(); as label) {
   <cc-fab
     class="floating-confirm"
     icon="check"

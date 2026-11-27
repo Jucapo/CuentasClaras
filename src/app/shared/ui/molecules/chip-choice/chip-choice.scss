@@ -17,6 +17,17 @@
   white-space: nowrap;
 }
 
+// Chips in the color of a category: outlined and labeled in it, the picked one filled with it.
+:host(.accented) {
+  --mat-chip-outline-color: var(--cc-chip-accent);
+  --mat-chip-label-text-color: var(--cc-chip-accent-text);
+  --mat-chip-with-icon-icon-color: var(--cc-chip-accent-text);
+  --mat-chip-elevated-selected-container-color: var(--cc-chip-accent);
+  --mat-chip-selected-label-text-color: var(--cc-chip-on-accent);
+  --mat-chip-with-icon-selected-icon-color: var(--cc-chip-on-accent);
+  --mat-chip-flat-selected-outline-width: 0;
+}
+
 .support {
   margin: 0;
   font: var(--mat-sys-body-small);

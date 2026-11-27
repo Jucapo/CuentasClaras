@@ -1,6 +1,9 @@
 /** WCAG 1.4.11: minimum contrast of graphical objects such as icons. */
 export const MIN_GRAPHIC_CONTRAST = 3;
 
+/** WCAG 1.4.3 (AA): minimum contrast of normal text. */
+export const MIN_TEXT_CONTRAST = 4.5;
+
 /** Red, green and blue channels of a `#rrggbb` color, from 0 to 255. */
 export function parseHexColor(hex: string): readonly [number, number, number] {
   const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);

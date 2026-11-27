@@ -331,13 +331,18 @@ export class TransactionsPage implements HasUnsavedChanges {
     if (!session) {
       return;
     }
+    // The entry already asked before losing changes or deleting (spec §13.5).
     if (result === 'cancel') {
-      if (await this.confirmDiscard()) {
-        this.closePane();
-      }
+      this.closePane();
       return;
     }
-    // Deleting asks first; keeping the movement leaves it open.
+    if (result === 'duplicate') {
+      const copy = session.duplicate();
+      this.session.set(copy);
+      this.selectedId.set(null);
+      return;
+    }
+    // A failed delete leaves the movement open.
     if (await session.finish(result)) {
       this.closePane();
     }

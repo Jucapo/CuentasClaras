@@ -12,8 +12,9 @@ import {
 export type QuickEntrySheetResult = Exclude<QuickEntryResult, 'cancel'>;
 
 /**
- * `cc-quick-entry` in an overlay (spec §7): a tall sheet in the compact window class and a
- * two-column dialog elsewhere. Opened with `OverlayService` and `QuickEntryData`.
+ * `cc-quick-entry` in an overlay (spec §7): a sheet in the compact window class and a two-column
+ * dialog elsewhere. Opened with `OverlayService` and `QuickEntryData`. Its views (pickers, date,
+ * questions) live inside it, and it asks before losing changes (spec §13.5).
  */
 @Component({
   selector: 'cc-quick-entry-sheet',

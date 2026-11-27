@@ -1,0 +1,18 @@
+<div class="days">
+  @for (day of days(); track day.date) {
+    <button
+      type="button"
+      class="day"
+      [attr.aria-pressed]="day.date === value()"
+      (click)="pick(day.date)"
+    >
+      <cc-icon [name]="day.icon" />
+      <span class="label">{{ day.label }}</span>
+      <span class="date">{{ longDate(day.date) }}</span>
+    </button>
+  }
+</div>
+<div class="other">
+  <cc-icon class="other-icon" name="calendar_month" />
+  <cc-date-field class="field" [label]="text.pick" [value]="value()" (valueChange)="pick($event)" />
+</div>

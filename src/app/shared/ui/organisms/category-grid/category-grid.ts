@@ -73,6 +73,10 @@ export class CategoryGrid {
   readonly totals = input<readonly CategoryGridTotal[]>([]);
   /** Category whose screen is open next to the grid. */
   readonly selectedId = input<string | null>(null);
+  /** Without the donut it is a plain grid, e.g. to pick a category (spec §7). */
+  readonly donut = input(true);
+  /** `category` paints each amount in the color of its category. */
+  readonly amountColor = input<'neutral' | 'category'>('neutral');
   /** A category was chosen: its screen in edit mode, the quick entry in view mode. */
   readonly opened = output<string>();
   readonly add = output<void>();

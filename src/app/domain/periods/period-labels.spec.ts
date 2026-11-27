@@ -2,6 +2,8 @@ import {
   axisDayText,
   axisMonthText,
   dayTitle,
+  entryDateText,
+  longDateText,
   periodRangeText,
   periodTitle,
   rangeText,
@@ -102,5 +104,19 @@ describe('axis texts', () => {
     expect(axisDayText('2025-12-03')).toBe('3 dic');
     expect(axisMonthText('2026-11-01', false)).toBe('nov');
     expect(axisMonthText('2025-01-01', true)).toBe('ene 2025');
+  });
+});
+
+describe('entryDateText and longDateText', () => {
+  it('name the date of a movement relative to today', () => {
+    expect(entryDateText('2026-11-27', '2026-11-27')).toBe('Hoy, 27 nov');
+    expect(entryDateText('2026-11-26', '2026-11-27')).toBe('Ayer, 26 nov');
+    expect(entryDateText('2026-11-19', '2026-11-27')).toBe('Jueves, 19 nov');
+    expect(entryDateText('2025-12-31', '2026-01-01')).toBe('Ayer, 31 dic 2025');
+  });
+
+  it('spell a date out, with its year when it is another one', () => {
+    expect(longDateText('2026-11-27', '2026-11-27')).toBe('27 de noviembre');
+    expect(longDateText('2025-06-10', '2026-11-27')).toBe('10 de junio de 2025');
   });
 });
