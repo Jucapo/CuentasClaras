@@ -35,6 +35,34 @@
   color: var(--mat-sys-on-surface);
 }
 
+.total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  color: var(--mat-sys-on-surface-variant);
+
+  &.main {
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.total-label {
+  font: var(--mat-sys-label-medium);
+}
+
+.total-amount {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--mat-sys-label-large);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .main & {
+    font: var(--mat-sys-title-medium);
+  }
+}
+
 .cell {
   min-width: 0;
 }

@@ -75,6 +75,18 @@
   // Scrolling grid of the icon and color picker, under its live preview and tabs.
   --cc-appearance-scroll-height: 36dvh;
 
+  // Quick entry: a tall sheet on phones and a two-column dialog elsewhere, with its keypad.
+  --cc-entry-sheet-max-height: 92dvh;
+  --cc-entry-dialog-width: 48rem;
+  --cc-entry-column-min-width: 18rem;
+  --cc-keypad-key-height: 3.25rem;
+  --cc-amount-display-min-height: 4.5rem;
+
+  // Category bubbles: ring around the badge that fills as the budget is spent.
+  --cc-bubble-ring-width: 3px;
+  // Period selector in the header.
+  --cc-period-chip-max-width: 14rem;
+
   // Elevation: aliases of the Material 3 shadow levels.
   --cc-elevation-0: var(--mat-sys-level0);
   --cc-elevation-1: var(--mat-sys-level1);

@@ -1,9 +1,39 @@
 @switch (variant()) {
   @case ('view') {
-    <div class="bubble">
+    <button
+      type="button"
+      class="bubble interactive"
+      [attr.aria-label]="accessibleName()"
+      (click)="activate.emit()"
+    >
       <span class="name">{{ name() }}</span>
-      <cc-icon-badge size="lg" [icon]="icon()" [color]="color()" />
-    </div>
+      @if (currency(); as currency) {
+        <span class="remaining" [class.over]="over()">
+          @if (remaining() !== null) {
+            <cc-amount [amount]="remaining() ?? 0" [currency]="currency" tone="neutral" />
+          }
+        </span>
+      }
+      <span
+        class="ring"
+        [class.with-progress]="ringProgress() !== null"
+        [class.over]="over()"
+        [style.--cc-bubble-color]="ringColor()"
+        [style.--cc-bubble-progress]="ringProgress()"
+      >
+        <cc-icon-badge size="lg" [icon]="icon()" [color]="color()" />
+        @if (over()) {
+          <cc-icon class="over-mark" name="error" size="sm" [label]="overLabel" />
+        }
+      </span>
+      @if (currency(); as currency) {
+        <span class="spent">
+          @if (amount() !== null) {
+            <cc-amount [amount]="amount() ?? 0" [currency]="currency" tone="neutral" />
+          }
+        </span>
+      }
+    </button>
   }
   @case ('edit') {
     <button

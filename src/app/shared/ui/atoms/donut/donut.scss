@@ -18,6 +18,13 @@
   stroke: var(--mat-sys-surface-container-highest);
 }
 
+.segment {
+  fill: none;
+  transition:
+    stroke-dasharray var(--cc-transition-fast),
+    stroke-dashoffset var(--cc-transition-fast);
+}
+
 .center {
   position: relative;
   display: flex;

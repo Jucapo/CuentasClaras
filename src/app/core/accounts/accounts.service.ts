@@ -3,6 +3,7 @@ import { ActionResult, actionFailed, DataResult } from '../action-result';
 import { DeleteResult } from '../catalogs/catalog-result';
 import { SpaceService } from '../spaces/space.service';
 import { GENERIC_DATA_ERROR_MESSAGE } from '../supabase/data-error-messages';
+import { TransactionsService } from '../transactions/transactions.service';
 import { Account, AccountPatch, NewAccount } from './account.models';
 import { AccountsApi } from './accounts.api';
 
@@ -11,10 +12,15 @@ import { AccountsApi } from './accounts.api';
 export class AccountsService {
   private readonly api = inject(AccountsApi);
   private readonly spaces = inject(SpaceService);
+  private readonly transactions = inject(TransactionsService);
 
   private readonly store = resource({
-    params: () => this.spaces.activeSpace()?.id,
-    loader: async ({ params: spaceId }) => {
+    params: () => {
+      const spaceId = this.spaces.activeSpace()?.id;
+      // Balances are sums of movements: they reload whenever a movement changes.
+      return spaceId ? { spaceId, revision: this.transactions.revision() } : undefined;
+    },
+    loader: async ({ params: { spaceId } }) => {
       const result = await this.api.fetch(spaceId);
       if (!result.ok) {
         throw new Error(result.message);

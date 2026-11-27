@@ -37,9 +37,17 @@ html {
   width: min(var(--cc-confirm-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
 }
 
+.cdk-overlay-pane.cc-overlay-dialog.cc-overlay-entry {
+  width: min(var(--cc-entry-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
+}
+
 .cc-overlay-sheet .mat-bottom-sheet-container {
   max-height: var(--cc-picker-panel-max-height);
   padding: 0;
+}
+
+.cc-overlay-sheet.cc-overlay-entry .mat-bottom-sheet-container {
+  max-height: var(--cc-entry-sheet-max-height);
 }
 
 // Toasts (ToastService) float above the bottom navigation instead of covering it; from the medium

@@ -20,6 +20,22 @@ export const UI_TEXT = {
   dragToReorder: 'Arrastra para reordenar. Con el teclado: Alt y las flechas.',
   gridEditHelp: 'Toca una categoría para editarla. Mantenla presionada y arrástrala para moverla.',
   gridEditHelpKeyboard: 'Con el teclado: Alt y las flechas para moverla.',
+  overBudget: 'Te pasaste',
+  remaining: 'quedan',
+  previousPeriod: 'Periodo anterior',
+  nextPeriod: 'Periodo siguiente',
+  choosePeriod: 'Elegir periodo',
+  loadMore: 'Ver más',
+} as const;
+
+/** Labels of the quick-entry keypad keys (spec §7). */
+export const KEYPAD_TEXT = {
+  label: 'Teclado de monto',
+  backspace: 'Borrar',
+  plus: 'Sumar',
+  minus: 'Restar',
+  decimal: 'Decimales',
+  thousands: 'Tres ceros',
 } as const;
 
 /** SVG geometry of `cc-donut`, in viewBox units. */
@@ -28,6 +44,8 @@ export const DONUT_GEOMETRY = {
   center: 50,
   radius: 44,
   stroke: 8,
+  /** Space between segments, along the ring. */
+  segmentGap: 1.5,
 } as const;
 
 /** How long a touch must be held before a drag starts, so scrolling a grid keeps working. */
