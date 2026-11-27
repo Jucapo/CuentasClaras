@@ -23,14 +23,8 @@
 }
 
 .toolbar:empty,
-.header-action:empty,
 .actions:empty {
   display: none;
-}
-
-.header-action {
-  display: flex;
-  flex-shrink: 0;
 }
 
 .body {

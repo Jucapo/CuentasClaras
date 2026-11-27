@@ -6,7 +6,6 @@
       <cc-icon-button icon="close" [label]="closeLabel" (click)="closed.emit()" />
     }
     <h2 class="title" [id]="titleId">{{ title() }}</h2>
-    <div class="header-action"><ng-content select="[ccOverlayHeaderAction]" /></div>
   </header>
 }
 <div class="toolbar"><ng-content select="[ccOverlayToolbar]" /></div>

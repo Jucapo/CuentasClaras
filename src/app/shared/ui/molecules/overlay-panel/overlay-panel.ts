@@ -34,7 +34,7 @@ const OWN_ENTER_SELECTOR = [
  * content up to the top edge, a floating ✕ in the top corner and a round ✓ in the bottom one that
  * emits `confirmed`, also on Enter and Ctrl/⌘+S. `confirming` shows its progress.
  *
- * Without it: close button, title and an optional main action (`[ccOverlayHeaderAction]`).
+ * Without it (one choice, confirmations, the period): a bar with the close button and the title.
  *
  * Both take an optional toolbar (`[ccOverlayToolbar]`), a scrolling body and optional actions at
  * the end (`[ccOverlayActions]`).
