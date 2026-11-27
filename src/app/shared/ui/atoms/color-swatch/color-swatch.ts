@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { colorOrFallback, paletteColor } from '../../colors/color-palette';
+import { colorOrFallback, paletteColor, paletteForeground } from '../../colors/color-palette';
 import { Icon } from '../icon/icon';
 
 /** Round palette color; a pressable button by default, or a plain dot with `decorative`. */
@@ -10,6 +10,7 @@ import { Icon } from '../icon/icon';
   styleUrl: './color-swatch.scss',
   host: {
     '[style.--cc-swatch-color]': 'background()',
+    '[style.--cc-swatch-on-color]': 'foreground()',
     '[class.decorative]': 'decorative()',
     '[class.small]': 'small()',
   },
@@ -28,5 +29,10 @@ export class ColorSwatch {
   protected readonly background = computed(() => {
     const color = this.color();
     return color === null ? null : paletteColor(colorOrFallback(color));
+  });
+  /** The check of the selected swatch, readable on light colors too. */
+  protected readonly foreground = computed(() => {
+    const color = this.color();
+    return color === null ? null : paletteForeground(colorOrFallback(color));
   });
 }

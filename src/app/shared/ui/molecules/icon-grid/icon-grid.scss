@@ -1,31 +1,40 @@
+@use 'breakpoints';
+
+// The grid scrolls with the sheet or dialog around it; the toolbar sticks to its top.
 :host {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  display: block;
+  container-type: inline-size;
 }
 
+.side {
+  display: none;
+}
+
+// One border above the edge, so no row of icons peeks through a fractional pixel at the top.
 .toolbar {
+  position: sticky;
+  top: calc(-1 * var(--cc-border-width));
+  z-index: var(--cc-z-overlay-control);
   display: flex;
   flex-direction: column;
-  padding-top: var(--cc-space-3);
-}
-
-.shortcuts {
-  display: flex;
-  gap: var(--cc-space-2);
-  overflow-x: auto;
+  gap: var(--cc-space-1);
+  padding-top: calc(var(--cc-space-2) + var(--cc-border-width));
   padding-bottom: var(--cc-space-1);
-  scrollbar-width: thin;
+  background-color: var(--cc-overlay-surface, var(--mat-sys-surface));
 }
 
-.shortcut {
-  flex: 0 0 auto;
+// Narrow container: the visible group, as a button that opens the list of groups.
+.group-button {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--cc-space-2);
   min-height: var(--cc-touch-target-min);
   padding: 0 var(--cc-space-3);
-  border: var(--cc-border-width) solid var(--mat-sys-outline-variant);
-  border-radius: var(--cc-radius-sm);
-  background: none;
-  color: var(--mat-sys-on-surface-variant);
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
   font: var(--mat-sys-label-large);
   cursor: pointer;
 
@@ -34,13 +43,14 @@
   }
 }
 
-.scroller {
-  max-height: var(--cc-appearance-scroll-height);
-  overflow-y: auto;
+.searching .group-button {
+  display: none;
 }
 
-.group {
-  scroll-margin-top: var(--cc-space-2);
+.menu-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cc-space-3);
 }
 
 .group-title {
@@ -76,9 +86,41 @@
   }
 }
 
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  width: 100%;
+  min-height: var(--cc-touch-target-min);
+  padding: 0 var(--cc-space-3);
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+  text-align: start;
+  cursor: pointer;
+
+  &.current {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+.side-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (hover: hover) {
-  .shortcut:hover,
-  .cell:hover {
+  .cell:hover,
+  .side-item:hover:not(.current),
+  .group-button:hover {
     background-color: var(--mat-sys-surface-container-high);
   }
 }
@@ -86,4 +128,36 @@
 .empty {
   margin: var(--cc-space-4) 0;
   text-align: center;
+}
+
+// Wide container: the groups beside the grid, marking the one in view.
+@include breakpoints.container-picker-wide {
+  .layout {
+    display: grid;
+    grid-template-columns: var(--cc-icon-groups-width) minmax(0, 1fr);
+    gap: var(--cc-space-3);
+    align-items: start;
+  }
+
+  .side {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cc-space-0-5);
+    padding-top: var(--cc-space-2);
+  }
+
+  .group-button {
+    display: none;
+  }
+
+  // While searching, the results take the whole width.
+  .searching {
+    grid-template-columns: minmax(0, 1fr);
+
+    .side {
+      display: none;
+    }
+  }
 }

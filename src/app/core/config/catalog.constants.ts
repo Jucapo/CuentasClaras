@@ -23,7 +23,7 @@ export const ACCOUNT_KIND_OPTIONS: Readonly<
   wallet: { label: 'Billetera digital', icon: 'account_balance_wallet', color: 'purple' },
   savings: { label: 'Ahorro', icon: 'savings', color: 'teal' },
   credit_card: { label: 'Tarjeta de crédito', icon: 'credit_card', color: 'red' },
-  loan: { label: 'Préstamo con interés', icon: 'request_quote', color: 'crimson' },
+  loan: { label: 'Préstamo con interés', icon: 'request_quote', color: 'red-dark' },
   simple_debt: { label: 'Deuda sin interés', icon: 'handshake', color: 'orange' },
   receivable: { label: 'Por cobrar', icon: 'move_to_inbox', color: 'lime' },
   asset: { label: 'Bien', icon: 'real_estate_agent', color: 'brown' },

@@ -28,11 +28,6 @@ html {
   );
 }
 
-// Foreground on palette colors (icon badges, swatches): the palette guarantees 3:1 against white.
-:root {
-  --cc-on-palette: #fff;
-}
-
 // cc-tabs: no divider under the tabs, only the indicator of the active one (spec §13.3).
 cc-tabs {
   @include mat.tabs-overrides(
@@ -59,7 +54,16 @@ cc-fab {
   );
 }
 
-// Overlays (OverlayService): dialogs on wide screens, bottom sheets on phones.
+// Overlays (OverlayService): dialogs on wide screens, bottom sheets on phones. Their width comes from
+// the size classes below, not from Material's 560px cap.
+.cdk-overlay-pane.cc-overlay-dialog {
+  @include mat.dialog-overrides(
+    (
+      container-max-width: none,
+    )
+  );
+}
+
 .cdk-overlay-pane.cc-overlay-dialog.cc-overlay-picker {
   width: min(var(--cc-picker-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
 }
@@ -75,6 +79,16 @@ cc-fab {
 .cc-overlay-sheet .mat-bottom-sheet-container {
   max-height: var(--cc-picker-panel-max-height);
   padding: 0;
+}
+
+// Surface of each overlay (Material 3: sheets on surface-container-low, dialogs on -high), for
+// what sticks inside them, e.g. the toolbar of the icon picker.
+.cc-overlay-sheet {
+  --cc-overlay-surface: var(--mat-sys-surface-container-low);
+}
+
+.cc-overlay-dialog {
+  --cc-overlay-surface: var(--mat-sys-surface-container-high);
 }
 
 .cc-overlay-sheet.cc-overlay-entry .mat-bottom-sheet-container {

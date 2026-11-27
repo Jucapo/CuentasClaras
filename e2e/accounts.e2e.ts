@@ -47,6 +47,17 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await page.getByLabel('Nombre', { exact: true }).fill('Tarjeta Master');
   await expect(page.getByRole('button', { name: /^Tipo/ })).toContainText('Tarjeta de crédito');
 
+  // Spec §13.3: "Sugeridos" goes first, from the words of the name and the account context.
+  await page.getByRole('button', { name: /^Cambiar ícono y color/ }).click();
+  const icons = overlay(page, isMobile);
+  const suggested = icons.locator('section[data-group="suggested"]');
+  await expect(suggested.getByRole('heading', { name: 'Sugeridos' })).toBeVisible();
+  await expect(suggested.getByRole('button').first()).toHaveAccessibleName(/^Tarjeta/);
+  await expect(suggested.getByRole('button', { name: 'Banco', exact: true })).toBeVisible();
+  await captureViewport(page, 'cuenta-icono-sugeridos');
+  await icons.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(icons).toBeHidden();
+
   // Spec §13.5: the balance is typed in its row; touching the row focuses it with the numeric keyboard.
   const balanceRow = page.locator('cc-money-row').filter({ hasText: 'Lo que debes' });
   const balance = page.getByRole('textbox', { name: 'Lo que debes' });
@@ -96,9 +107,14 @@ test('an account gets a new color and becomes the default one', async ({ page, i
   const picker = overlay(page, isMobile);
   await expect(picker.getByRole('heading', { name: 'Ícono y color' })).toBeVisible();
   await picker.getByRole('tab', { name: 'Color' }).click();
-  await picker.getByRole('button', { name: 'Morado' }).click();
+  await picker.getByRole('button', { name: 'Morado', exact: true }).click();
   await captureViewport(page, 'cuenta-icono-color');
-  await picker.getByRole('button', { name: 'Listo' }).click();
+  // The ✓ confirms; on a keyboard, Ctrl/⌘+S does too.
+  if (isMobile) {
+    await picker.getByRole('button', { name: 'Listo' }).click();
+  } else {
+    await page.keyboard.press('Control+s');
+  }
   await expect(picker).toBeHidden();
   await expect(page.getByRole('button', { name: /^Cambiar ícono y color/ })).toHaveAccessibleName(
     /Morado/,

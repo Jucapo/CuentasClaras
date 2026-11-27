@@ -25,6 +25,8 @@
       [(icon)]="form.icon().value"
       [(color)]="form.color().value"
       [inheritFrom]="inheritFrom()"
+      [iconContext]="form.kind().value()"
+      [itemName]="form.name().value()"
     />
     @if (colorError(); as message) {
       <cc-message>{{ message }}</cc-message>

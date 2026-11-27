@@ -435,6 +435,7 @@
         name="cc-appearance-editor"
         description="Vista previa y pestañas Ícono | Color, en línea (subcategoría que hereda)"
         layout="column"
+        [framed]="true"
       >
         <ng-template>
           <cc-appearance-editor
@@ -447,17 +448,23 @@
 
       <app-catalog-entry
         name="cc-icon-grid"
-        description="Búsqueda, grupos y grilla"
+        description="Sugeridos (cuenta «Tarjeta Visa»), búsqueda y grilla continua con el grupo visible"
         layout="column"
+        [framed]="true"
       >
         <ng-template>
-          <cc-icon-grid [color]="pickers.color().value()" [(value)]="pickers.icon().value" />
+          <cc-icon-grid
+            context="account"
+            itemName="Tarjeta Visa"
+            [color]="pickers.color().value()"
+            [(value)]="pickers.icon().value"
+          />
         </ng-template>
       </app-catalog-entry>
 
       <app-catalog-entry
         name="cc-color-grid"
-        description="Paleta, con «Igual que la categoría»"
+        description="Tono × intensidad, con «Igual que la categoría»; ícono blanco u oscuro según el contraste"
         layout="column"
       >
         <ng-template>

@@ -4,5 +4,11 @@
   (closed)="close()"
   (confirmed)="done()"
 >
-  <cc-appearance-editor [(icon)]="icon" [(color)]="color" [inheritFrom]="data.inheritFrom" />
+  <cc-appearance-editor
+    [(icon)]="icon"
+    [(color)]="color"
+    [inheritFrom]="data.inheritFrom"
+    [iconContext]="data.iconContext ?? null"
+    [itemName]="data.itemName ?? ''"
+  />
 </cc-overlay-panel>

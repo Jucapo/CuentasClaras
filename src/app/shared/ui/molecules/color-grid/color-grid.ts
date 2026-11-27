@@ -1,11 +1,12 @@
-import { Component, input, model } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 import { ColorSwatch } from '../../atoms/color-swatch/color-swatch';
-import { COLOR_PALETTE } from '../../colors/color-palette';
+import { PALETTE_TONES, resolveColorKey } from '../../colors/color-palette';
 import { UI_TEXT } from '../../ui.constants';
 
 /**
- * The color palette as a grid (spec §13.3). With `inheritFrom` (a subcategory) the first swatch is
- * "same as the category", which sets the value to null.
+ * The palette as a grid of tone × intensity (spec §13.3): a row per tone in a narrow container and
+ * a column per tone in a wide one. With `inheritFrom` (a subcategory) it first offers "same as the
+ * category", which sets the value to null. A key of the first palette marks its equivalent color.
  */
 @Component({
   selector: 'cc-color-grid',
@@ -19,6 +20,7 @@ export class ColorGrid {
   /** Color of the parent; when set, offers to inherit it. */
   readonly inheritFrom = input<string | null>(null);
 
-  protected readonly palette = COLOR_PALETTE;
+  protected readonly tones = PALETTE_TONES;
   protected readonly text = UI_TEXT;
+  protected readonly selected = computed(() => resolveColorKey(this.value()));
 }

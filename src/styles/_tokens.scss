@@ -70,14 +70,12 @@
 
   // Pickers and lists.
   --cc-picker-cell-size: 3rem;
-  --cc-picker-dialog-width: 34rem;
-  --cc-picker-panel-max-height: 70dvh;
+  --cc-picker-dialog-width: 48rem;
+  --cc-picker-panel-max-height: 88dvh;
+  --cc-icon-groups-width: 11rem;
   --cc-list-indent: 3rem;
   --cc-money-row-value-width: 11rem;
   --cc-confirm-dialog-width: 26rem;
-
-  // Scrolling grid of the icon and color picker, under its live preview and tabs.
-  --cc-appearance-scroll-height: 36dvh;
 
   // Quick entry: a tall sheet on phones and a two-column dialog elsewhere, with its keypad.
   --cc-entry-sheet-max-height: 92dvh;

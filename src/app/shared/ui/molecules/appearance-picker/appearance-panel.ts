@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { IconContext } from '../../icons/icon-search';
 import { OVERLAY_DATA, OverlayHandle } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
 import { AppearanceEditor } from '../appearance-editor/appearance-editor';
@@ -15,6 +16,9 @@ export interface Appearance {
 export interface AppearancePanelData extends Appearance {
   readonly title: string;
   readonly inheritFrom: string | null;
+  /** What the icon is for and the name typed, for the suggested icons. */
+  readonly iconContext?: IconContext | null;
+  readonly itemName?: string;
 }
 
 /** Sheet or dialog of `cc-appearance-picker`: ✓ applies icon and color, ✕ discards them. */

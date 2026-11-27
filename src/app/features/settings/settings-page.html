@@ -7,6 +7,8 @@
         <cc-appearance-picker
           label="Ícono y color del espacio"
           size="lg"
+          iconContext="space"
+          [itemName]="spaceForm.space.name().value()"
           [formField]="spaceForm.icon"
           [(color)]="spaceForm.color().value"
         />

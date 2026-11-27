@@ -1,9 +1,12 @@
 import { Component, computed, input } from '@angular/core';
-import { colorOrFallback, paletteColor } from '../../colors/color-palette';
+import { colorOrFallback, paletteColor, paletteForeground } from '../../colors/color-palette';
 import { iconOrFallback } from '../../icons/icon-glyphs';
 import { Icon, IconSize } from '../icon/icon';
 
-/** White filled icon on a palette-colored circle, as 1Money shows categories and accounts. */
+/**
+ * Filled icon on a palette-colored circle, as 1Money shows categories and accounts. The icon is
+ * white, or dark on the light colors where white would not read (spec §13.3).
+ */
 @Component({
   selector: 'cc-icon-badge',
   imports: [Icon],
@@ -12,6 +15,7 @@ import { Icon, IconSize } from '../icon/icon';
   host: {
     '[class]': "'size-' + size()",
     '[style.--cc-badge-color]': 'background()',
+    '[style.--cc-badge-on-color]': 'foreground()',
   },
 })
 export class IconBadge {
@@ -24,5 +28,7 @@ export class IconBadge {
   readonly label = input<string>();
 
   protected readonly iconName = computed(() => iconOrFallback(this.icon()));
-  protected readonly background = computed(() => paletteColor(colorOrFallback(this.color())));
+  private readonly colorKey = computed(() => colorOrFallback(this.color()));
+  protected readonly background = computed(() => paletteColor(this.colorKey()));
+  protected readonly foreground = computed(() => paletteForeground(this.colorKey()));
 }

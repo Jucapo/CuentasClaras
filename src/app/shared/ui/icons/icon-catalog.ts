@@ -15,6 +15,8 @@ export interface CatalogIcon {
 export interface IconGroup {
   readonly id: string;
   readonly label: string;
+  /** Icon of the group in the menus that jump to it; one of its icons. */
+  readonly icon: string;
   readonly icons: readonly CatalogIcon[];
 }
 
@@ -27,6 +29,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'home',
     label: 'Hogar',
+    icon: 'home',
     icons: [
       icon('home', 'Casa', 'hogar vivienda'),
       icon('house', 'Vivienda', 'hogar casa'),
@@ -73,6 +76,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'food',
     label: 'Comida',
+    icon: 'restaurant',
     icons: [
       icon('restaurant', 'Restaurante', 'comer comida'),
       icon('restaurant_menu', 'Menú', 'comida carta'),
@@ -117,6 +121,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'transport',
     label: 'Transporte',
+    icon: 'directions_car',
     icons: [
       icon('directions_car', 'Carro', 'automóvil vehículo'),
       icon('local_taxi', 'Taxi', 'transporte'),
@@ -153,6 +158,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'health',
     label: 'Salud',
+    icon: 'medical_services',
     icons: [
       icon('medical_services', 'Médico', 'salud consulta'),
       icon('local_hospital', 'Hospital', 'urgencias clínica'),
@@ -192,6 +198,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'family',
     label: 'Familia y niños',
+    icon: 'family_restroom',
     icons: [
       icon('family_restroom', 'Familia', 'hijos padres'),
       icon('child_care', 'Bebé', 'niño cuidado'),
@@ -222,6 +229,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'pets',
     label: 'Mascotas',
+    icon: 'pets',
     icons: [
       icon('pets', 'Mascotas', 'perro gato huella'),
       icon('sound_detection_dog_barking', 'Perro', 'ladrido'),
@@ -240,6 +248,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'education',
     label: 'Educación',
+    icon: 'school',
     icons: [
       icon('school', 'Colegio', 'escuela educación'),
       icon('menu_book', 'Libro', 'lectura'),
@@ -278,6 +287,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'leisure',
     label: 'Ocio',
+    icon: 'sports_esports',
     icons: [
       icon('sports_esports', 'Videojuegos', 'consola'),
       icon('videogame_asset', 'Control', 'juegos'),
@@ -326,6 +336,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'shopping',
     label: 'Compras',
+    icon: 'shopping_bag',
     icons: [
       icon('shopping_cart', 'Carrito', 'compras'),
       icon('shopping_bag', 'Bolsa de compras', 'compras'),
@@ -357,6 +368,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'technology',
     label: 'Tecnología',
+    icon: 'devices',
     icons: [
       icon('smartphone', 'Celular', 'teléfono'),
       icon('phone_iphone', 'Teléfono', 'celular'),
@@ -399,6 +411,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'finance',
     label: 'Finanzas',
+    icon: 'account_balance',
     icons: [
       icon('account_balance', 'Banco', 'cuenta'),
       icon('account_balance_wallet', 'Billetera', 'cuenta nequi'),
@@ -440,6 +453,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'travel',
     label: 'Viajes',
+    icon: 'flight',
     icons: [
       icon('flight', 'Vuelo', 'avión'),
       icon('flight_takeoff', 'Despegue', 'viaje'),
@@ -476,6 +490,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'work',
     label: 'Trabajo',
+    icon: 'work',
     icons: [
       icon('work', 'Trabajo', 'maletín empleo salario'),
       icon('work_history', 'Historial laboral', 'empleo'),
@@ -516,6 +531,7 @@ export const ICON_CATALOG: readonly IconGroup[] = [
   {
     id: 'other',
     label: 'Otros',
+    icon: 'category',
     icons: [
       icon('category', 'Categoría', 'general'),
       icon('label', 'Etiqueta', 'marca'),

@@ -5,7 +5,12 @@
 }
 <cc-tabs [label]="text.appearanceTitle" [options]="tabs" [(value)]="tab">
   @if (tab() === 'icon') {
-    <cc-icon-grid [(value)]="icon" [color]="shownColor()" />
+    <cc-icon-grid
+      [(value)]="icon"
+      [color]="shownColor()"
+      [context]="iconContext()"
+      [itemName]="itemName()"
+    />
   } @else {
     <cc-color-grid [(value)]="color" [inheritFrom]="inheritFrom()" />
   }

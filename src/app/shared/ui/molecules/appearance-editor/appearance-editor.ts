@@ -1,6 +1,7 @@
 import { Component, computed, input, model, signal } from '@angular/core';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { TabOption, Tabs } from '../../atoms/tabs/tabs';
+import { IconContext } from '../../icons/icon-search';
 import { UI_TEXT } from '../../ui.constants';
 import { ColorGrid } from '../color-grid/color-grid';
 import { IconGrid } from '../icon-grid/icon-grid';
@@ -26,6 +27,10 @@ export class AppearanceEditor {
   readonly inheritFrom = input<string | null>(null);
   /** Hides the large preview when the surrounding screen already shows one. */
   readonly showPreview = input(true);
+  /** What the icon is for; it decides the groups suggested. */
+  readonly iconContext = input<IconContext | null>(null);
+  /** Name typed for the item; its words suggest icons. */
+  readonly itemName = input('');
 
   protected readonly text = UI_TEXT;
   protected readonly tab = signal<AppearanceTab>('icon');

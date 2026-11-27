@@ -71,7 +71,7 @@ export class AccountEditor {
   protected readonly moreOpen = signal(false);
   protected readonly rowsTitleId = `cc-account-editor-${nextEditorId++}`;
 
-  private readonly value = computed(() => this.fields()().value());
+  protected readonly value = computed(() => this.fields()().value());
   private readonly group = computed(() => ACCOUNT_KIND_GROUP[this.value().kind]);
   protected readonly balanceText = computed(() => BALANCE_TEXT[this.group()]);
   protected readonly kindLabel = computed(() => ACCOUNT_KIND_OPTIONS[this.value().kind].label);
