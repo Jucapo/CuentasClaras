@@ -8,10 +8,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--cc-space-1);
+  gap: var(--cc-bubble-gap);
   width: 100%;
   min-width: 0;
-  padding: var(--cc-space-1);
+  padding: var(--cc-bubble-padding);
   border: none;
   border-radius: var(--cc-radius-md);
   background: none;

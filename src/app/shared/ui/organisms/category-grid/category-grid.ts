@@ -95,6 +95,10 @@ export class CategoryGrid {
           .join('. ')
       : '';
   });
+  /** Whether some bubble shows a remaining amount; only then the others keep its line. */
+  protected readonly anyRemaining = computed(() =>
+    this.items().some((item) => item.remaining !== null && item.remaining !== undefined),
+  );
   protected readonly segments = computed<DonutSegment[]>(() =>
     this.mode() === 'view'
       ? this.items().map((item) => ({ value: item.amount ?? 0, color: item.color }))

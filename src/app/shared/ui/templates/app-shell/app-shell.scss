@@ -38,10 +38,12 @@
   padding-inline: var(--cc-space-4) var(--cc-space-2);
 }
 
+// The total wins over the period (spec §7): it never shrinks, and the period chip takes the rest of
+// the center, cutting its range first when the total is long.
 .total {
   display: flex;
+  flex: none;
   flex-direction: column;
-  min-width: 0;
 }
 
 .total-label {
@@ -51,6 +53,7 @@
 
 .total-value {
   font: var(--mat-sys-title-medium);
+  white-space: nowrap;
 }
 
 .period,
@@ -59,14 +62,24 @@
   align-items: center;
 }
 
+.period {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+}
+
+.actions {
+  flex: none;
+}
+
 .shell-content {
   flex: 1;
   width: 100%;
   max-width: var(--cc-content-max-width);
   margin-inline: auto;
-  padding: var(--cc-space-4);
+  padding: var(--cc-page-padding);
   padding-bottom: calc(
-    var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-4)
+    var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-page-padding)
   );
 
   // A full-screen flow has no bottom navigation to clear.
@@ -76,7 +89,7 @@
 }
 
 :host(.with-rail) .shell-content {
-  padding-bottom: var(--cc-space-4);
+  padding-bottom: var(--cc-page-padding);
 }
 
 :host(.with-rail.wide-content) {

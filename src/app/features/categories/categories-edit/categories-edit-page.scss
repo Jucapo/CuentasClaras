@@ -6,8 +6,8 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: var(--cc-space-3);
-  padding: var(--cc-space-3) var(--cc-space-3) 0;
+  gap: var(--cc-section-gap);
+  padding: var(--cc-section-gap) var(--cc-page-padding) 0;
 }
 
 .help {

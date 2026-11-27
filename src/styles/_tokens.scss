@@ -1,7 +1,10 @@
+@use 'breakpoints';
+
 // App-level design tokens: the only place for sizes, spacing, radii, shadows and motion.
 // Colors and typography come from the Material 3 system tokens (--mat-sys-*) set in _theme.scss.
 :root {
   // Spacing scale.
+  --cc-space-0-5: 0.125rem;
   --cc-space-1: 0.25rem;
   --cc-space-2: 0.5rem;
   --cc-space-3: 0.75rem;
@@ -69,7 +72,6 @@
   --cc-picker-cell-size: 3rem;
   --cc-picker-dialog-width: 34rem;
   --cc-picker-panel-max-height: 70dvh;
-  --cc-list-item-min-height: 3.5rem;
   --cc-list-indent: 3rem;
   --cc-confirm-dialog-width: 26rem;
 
@@ -86,8 +88,22 @@
   // Category bubbles: ring around the badge that fills as the budget is spent.
   --cc-bubble-ring-width: 3px;
 
-  // Period selector in the header.
-  --cc-period-chip-max-width: 14rem;
+  // Period selector in the header; in the compact class it takes the whole center.
+  --cc-period-chip-max-width: none;
+
+  // Density (spec §13.5): compact values here, roomier ones from the medium window class below.
+  // Components read these instead of the spacing scale for page, section, list and bubble spacing.
+  --cc-page-padding: var(--cc-space-3);
+  --cc-page-header-gap: var(--cc-space-3);
+  --cc-stack-gap: var(--cc-space-3);
+  --cc-section-padding: var(--cc-space-3);
+  --cc-section-gap: var(--cc-space-2);
+  --cc-list-item-min-height: 3rem;
+  --cc-list-item-padding: var(--cc-space-1) var(--cc-space-2);
+  --cc-bubble-padding: var(--cc-space-0-5);
+  --cc-bubble-gap: 0;
+  --cc-category-grid-row-gap: var(--cc-space-2);
+  --cc-flow-hero-padding: var(--cc-space-1) var(--cc-space-3) var(--cc-space-4);
 
   // Elevation: aliases of the Material 3 shadow levels.
   --cc-elevation-0: var(--mat-sys-level0);
@@ -107,6 +123,23 @@
   // Device safe areas.
   --cc-safe-area-top: env(safe-area-inset-top, 0px);
   --cc-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@include breakpoints.medium {
+  :root {
+    --cc-period-chip-max-width: 20rem;
+    --cc-page-padding: var(--cc-space-4);
+    --cc-page-header-gap: var(--cc-space-5);
+    --cc-stack-gap: var(--cc-space-4);
+    --cc-section-padding: var(--cc-space-4);
+    --cc-section-gap: var(--cc-space-3);
+    --cc-list-item-min-height: 3.5rem;
+    --cc-list-item-padding: var(--cc-space-2);
+    --cc-bubble-padding: var(--cc-space-1);
+    --cc-bubble-gap: var(--cc-space-1);
+    --cc-category-grid-row-gap: var(--cc-space-3);
+    --cc-flow-hero-padding: var(--cc-space-2) var(--cc-space-4) var(--cc-space-5);
+  }
 }
 
 // Spec §13.4: micro-interactions respect the reduced motion preference.
