@@ -17,4 +17,12 @@
       </div>
     }
   </dl>
+  @if (footnote(); as footnote) {
+    <p class="footnote">
+      @if (footnoteIcon(); as icon) {
+        <cc-icon [name]="icon" size="sm" />
+      }
+      <span>{{ footnote }}</span>
+    </p>
+  }
 </div>

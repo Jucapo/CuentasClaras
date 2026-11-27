@@ -24,7 +24,13 @@
     </div>
 
     @if (statItems().length > 0) {
-      <cc-stat-group class="totals" [label]="text.totals" [items]="statItems()" />
+      <cc-stat-group
+        class="totals"
+        footnoteIcon="lock"
+        [label]="text.totals"
+        [items]="statItems()"
+        [footnote]="outsideSpaceNote()"
+      />
     }
     <cc-missing-rates-notice
       [currencies]="missingRates()"

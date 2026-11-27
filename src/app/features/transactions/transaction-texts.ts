@@ -29,3 +29,15 @@ export const TRANSACTIONS_TEXT = {
   archived: 'Archivadas',
   archivedOne: 'Archivada',
 } as const;
+
+/**
+ * The line under the totals when part of them comes from accounts outside the space (spec §7), with
+ * the amounts already formatted; null when nothing does.
+ */
+export function outsideSpaceNote(expense: string | null, income: string | null): string | null {
+  if (expense && income) {
+    return `Incluye ${expense} en gastos y ${income} en ingresos de cuentas fuera del espacio`;
+  }
+  const amount = expense ?? income;
+  return amount ? `Incluye ${amount} de cuentas fuera del espacio` : null;
+}

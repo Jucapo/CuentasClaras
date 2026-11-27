@@ -1,5 +1,5 @@
 import { expect, Locator, Page, test } from '@playwright/test';
-import { HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
+import { HOUSEHOLD_WITH_BUDGETS, HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
 import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
@@ -41,7 +41,29 @@ test('lists the movements of the period by day with the totals of what is shown'
   await expect(totals).toContainText('+$ 6,500,000.00');
   await expect(totals).toContainText('-$ 2,145,500.00');
   await expect(totals).toContainText('+$ 4,354,500.00');
+  await expect(totals).not.toContainText('fuera del espacio');
   await capture(page, 'transacciones');
+});
+
+test('the totals add up the accounts outside the space and say how much', async ({ page }) => {
+  await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_BUDGETS });
+  await page.goto('/transacciones');
+
+  // Nequi is private and its movement is not included in the space (spec §7).
+  await expect(
+    movements(page)
+      .getByRole('button', { name: /^Mercado/ })
+      .filter({ hasText: 'Nequi' }),
+  ).toContainText('$ 45,000.00');
+  const totals = page.getByRole('group', { name: 'Totales de lo que se ve' });
+  await expect(totals).toContainText('-$ 2,490,500.00');
+  await expect(totals).toContainText('Incluye $ 45,000.00 de cuentas fuera del espacio');
+  await capture(page, 'transacciones-fuera-del-espacio');
+
+  // Without that account, nothing comes from outside the space.
+  await page.getByRole('searchbox', { name: 'Buscar' }).fill('Bancolombia');
+  await expect(totals).toContainText('-$ 2,420,500.00');
+  await expect(totals).not.toContainText('fuera del espacio');
 });
 
 test('searches and filters with chips that say what is on', async ({ page }) => {

@@ -31,6 +31,7 @@ import { SpaceService } from '../../core/spaces/space.service';
 import { TotalsService } from '../../core/totals/totals.service';
 import { TransactionPage, TransactionQuery } from '../../core/transactions/transaction.models';
 import { TransactionsService } from '../../core/transactions/transactions.service';
+import { formatMoney } from '../../domain/money/money';
 import {
   activeFilterCount,
   filterChipText,
@@ -67,7 +68,11 @@ import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/l
 import { QuickEntryFlow, QuickEntrySession } from './quick-entry-flow';
 import { injectTransactionLookups, toTransactionGroups } from './transaction-items';
 import { TransactionFiltersStore } from './transaction-filters.store';
-import { TRANSACTION_FILTER_LABELS, TRANSACTIONS_TEXT } from './transaction-texts';
+import {
+  outsideSpaceNote,
+  TRANSACTION_FILTER_LABELS,
+  TRANSACTIONS_TEXT,
+} from './transaction-texts';
 
 /**
  * Transacciones (spec §7): the movements of the global period that the user sees, by day, with a
@@ -217,6 +222,17 @@ export class TransactionsPage implements HasUnsavedChanges {
         signed: true,
       },
     ];
+  });
+  /** Why the totals may differ from Inicio and Presupuesto (spec §7). */
+  protected readonly outsideSpaceNote = computed(() => {
+    const totals = this.totals();
+    if (!totals) {
+      return null;
+    }
+    const format = this.format();
+    const text = (amount: number) =>
+      amount > 0 ? formatMoney(amount, totals.currency, format) : null;
+    return outsideSpaceNote(text(totals.outsideSpace.expense), text(totals.outsideSpace.income));
   });
   protected readonly missingRates = computed(() => this.totals()?.missingRateCurrencies ?? []);
 

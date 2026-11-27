@@ -692,11 +692,17 @@
 
       <app-catalog-entry
         name="cc-stat-group"
-        description="Filas en un contenedor angosto, columnas en uno ancho"
+        description="Filas en un contenedor angosto, columnas en uno ancho, y una nota opcional con ícono"
         layout="column"
       >
         <ng-template>
           <cc-stat-group label="Totales" [items]="statItems" />
+          <cc-stat-group
+            label="Totales con nota"
+            footnote="Incluye $ 45,000.00 de cuentas fuera del espacio"
+            footnoteIcon="lock"
+            [items]="statItems"
+          />
         </ng-template>
       </app-catalog-entry>
 
