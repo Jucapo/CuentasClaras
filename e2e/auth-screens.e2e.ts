@@ -1,5 +1,4 @@
 import { expect, Page, test } from '@playwright/test';
-import { capture } from './support/screenshots';
 import { blockSupabase, SUPABASE_URL } from './support/supabase';
 
 const RECOVERY_LINK_HASH = new URLSearchParams({
@@ -34,7 +33,7 @@ test.beforeEach(async ({ page }) => {
   await blockSupabase(page);
 });
 
-test('"/" redirects to the login form', async ({ page }) => {
+test('"/" redirects to the login form', { tag: ['@desktop', '@smoke'] }, async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveURL(/\/iniciar-sesion/);
@@ -44,7 +43,6 @@ test('"/" redirects to the login form', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
   await expect(page.getByRole('link', { name: '¿Olvidaste tu contraseña?' })).toBeVisible();
   await expectCardCentered(page);
-  await capture(page, 'iniciar-sesion');
 });
 
 test('forgot password shows its form', async ({ page }) => {
@@ -54,7 +52,6 @@ test('forgot password shows its form', async ({ page }) => {
   await expect(page.getByLabel('Correo')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Enviar enlace' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Volver a iniciar sesión' })).toBeVisible();
-  await capture(page, 'recuperar-contrasena');
 });
 
 test('reset password shows its form when opened from a recovery link', async ({ page }) => {
@@ -67,5 +64,4 @@ test('reset password shows its form when opened from a recovery link', async ({ 
   await expect(page.getByLabel('Nueva contraseña')).toBeVisible();
   await expect(page.getByLabel('Confirmar contraseña')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar contraseña' })).toBeVisible();
-  await capture(page, 'restablecer-contrasena');
 });

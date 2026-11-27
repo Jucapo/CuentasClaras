@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
-import { capture } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
@@ -30,7 +29,6 @@ test('"Mis finanzas" puts the assets against the debts, and the tab stays on rel
   await expect(page.getByRole('region', { name: 'Deudas' })).toContainText('$ 1,850,000.00');
   await expect(page.getByRole('region', { name: 'Por moneda' })).toContainText('USD');
   expect(api.rpcCalls('net_worth').at(-1)).toMatchObject({ on_date: '2026-11-26' });
-  await capture(page, 'cuentas-mis-finanzas');
 
   await page.reload();
   await expect(page.getByRole('group', { name: 'Patrimonio' })).toContainText('$ 6,811,900.50');

@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
-import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
@@ -24,14 +23,12 @@ test('tags are listed with their use and a new one is created in a sheet', async
   await expect(page.getByRole('button', { name: /Fijos/ })).toContainText(
     'Por defecto en 1 categoría',
   );
-  await capture(page, 'etiquetas');
 
   await page.getByRole('button', { name: 'Nueva etiqueta' }).click();
   const sheet = overlay(page, isMobile);
   await expect(sheet.getByRole('heading', { name: 'Nueva etiqueta' })).toBeVisible();
   await expect(sheet.getByLabel('Nombre')).toBeFocused();
   await sheet.getByLabel('Nombre').fill('Viajes');
-  await captureViewport(page, 'etiqueta-nueva');
   await sheet.getByRole('button', { name: 'Listo' }).click();
 
   await expect(sheet).toBeHidden();

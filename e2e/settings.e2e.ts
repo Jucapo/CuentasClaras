@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
-import { capture } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
@@ -34,7 +33,6 @@ test('Configuración saves the profile and the preferences, and opens on the hom
   await space.getByRole('combobox', { name: 'Periodo por defecto' }).click();
   await page.getByRole('option', { name: 'Año' }).click();
   await space.getByRole('switch', { name: 'Mostrar presupuestos' }).click();
-  await capture(page, 'configuracion-completa');
   await space.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByText('Espacio guardado.')).toBeVisible();
   expect(api.settings()).toMatchObject({ default_period: 'year', budgets_enabled: false });

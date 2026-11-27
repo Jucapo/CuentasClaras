@@ -1,6 +1,5 @@
 import { expect, Locator, Page, test } from '@playwright/test';
 import { HOUSEHOLD_WITH_MOVEMENTS } from './support/catalog-fixture';
-import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 /** Every test runs on Thursday 26 November 2026, inside the period of the fixture's movements. */
@@ -35,51 +34,50 @@ function saveKey(sheet: Locator): Locator {
   return sheet.locator('[data-key="submit"]');
 }
 
-test('an expense takes three steps from its bubble and can be undone', async ({
-  page,
-  isMobile,
-}) => {
-  const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
-  await page.goto('/categorias');
+test(
+  'an expense takes three steps from its bubble and can be undone',
+  { tag: ['@desktop', '@smoke'] },
+  async ({ page, isMobile }) => {
+    const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
+    await page.goto('/categorias');
 
-  // What was spent below, what remains of the budget above (spec §7).
-  const market = page.getByRole('button', { name: /^Mercado/ });
-  await expect(market).toHaveAccessibleName('Mercado, $ 320,500.00, quedan $ 879,500.00');
-  await expect(page.locator('cc-donut')).toContainText('$ 2,145,500.00');
-  await capture(page, 'inicio-con-montos');
+    // What was spent below, what remains of the budget above (spec §7).
+    const market = page.getByRole('button', { name: /^Mercado/ });
+    await expect(market).toHaveAccessibleName('Mercado, $ 320,500.00, quedan $ 879,500.00');
+    await expect(page.locator('cc-donut')).toContainText('$ 2,145,500.00');
 
-  // 1 · the bubble, 2 · the amount, 3 · ✓.
-  await market.click();
-  const sheet = overlay(page, isMobile);
-  await expect(sheet.getByRole('heading', { name: 'Mercado' })).toBeVisible();
-  await typeAmount(page, sheet, isMobile, '25000');
-  await expect(sheet.locator('cc-amount-display')).toContainText('$ 25,000.00');
-  await captureViewport(page, 'registro-rapido-gasto');
-  await saveKey(sheet).click();
+    // 1 · the bubble, 2 · the amount, 3 · ✓.
+    await market.click();
+    const sheet = overlay(page, isMobile);
+    await expect(sheet.getByRole('heading', { name: 'Mercado' })).toBeVisible();
+    await typeAmount(page, sheet, isMobile, '25000');
+    await expect(sheet.locator('cc-amount-display')).toContainText('$ 25,000.00');
+    await saveKey(sheet).click();
 
-  await expect(sheet).toBeHidden();
-  expect(api.rpcCalls('save_transaction')).toEqual([
-    expect.objectContaining({
-      entry_type: 'expense',
-      entry_amount: 2_500_000,
-      entry_category_id: 'cat-market',
-      entry_account_id: 'acc-bank',
-      entry_date: '2026-11-26',
-      entry_installments: 1,
-    }),
-  ]);
-  await expect(market).toHaveAccessibleName(/^Mercado, \$ 345,500\.00/);
+    await expect(sheet).toBeHidden();
+    expect(api.rpcCalls('save_transaction')).toEqual([
+      expect.objectContaining({
+        entry_type: 'expense',
+        entry_amount: 2_500_000,
+        entry_category_id: 'cat-market',
+        entry_account_id: 'acc-bank',
+        entry_date: '2026-11-26',
+        entry_installments: 1,
+      }),
+    ]);
+    await expect(market).toHaveAccessibleName(/^Mercado, \$ 345,500\.00/);
 
-  // "Deshacer" in the toast deletes what was just created (spec §4.2).
-  await page.getByRole('button', { name: 'Deshacer' }).click();
-  await expect
-    .poll(() => api.writes().filter((write) => write.table === 'transactions').length)
-    .toBe(1);
-  expect(api.writes().find((write) => write.table === 'transactions')).toMatchObject({
-    method: 'DELETE',
-  });
-  await expect(market).toHaveAccessibleName(/^Mercado, \$ 320,500\.00/);
-});
+    // "Deshacer" in the toast deletes what was just created (spec §4.2).
+    await page.getByRole('button', { name: 'Deshacer' }).click();
+    await expect
+      .poll(() => api.writes().filter((write) => write.table === 'transactions').length)
+      .toBe(1);
+    expect(api.writes().find((write) => write.table === 'transactions')).toMatchObject({
+      method: 'DELETE',
+    });
+    await expect(market).toHaveAccessibleName(/^Mercado, \$ 320,500\.00/);
+  },
+);
 
 test('an expense adds and subtracts on the keypad', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'The keypad is tapped on phones; the keyboard test covers wide screens.');
@@ -99,34 +97,38 @@ test('an expense adds and subtracts on the keypad', async ({ page, isMobile }) =
   ]);
 });
 
-test('an income is recorded from the Ingresos tab', async ({ page, isMobile }) => {
-  const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
-  await page.goto('/categorias');
-  await page.getByRole('button', { name: 'Ver ingresos' }).click();
+test(
+  'an income is recorded from the Ingresos tab',
+  { tag: '@desktop' },
+  async ({ page, isMobile }) => {
+    const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
+    await page.goto('/categorias');
+    await page.getByRole('button', { name: 'Ver ingresos' }).click();
 
-  const salary = page.getByRole('button', { name: /^Salario/ });
-  await expect(salary).toHaveAccessibleName(/^Salario, \$ 6,500,000\.00/);
-  await salary.click();
-  const sheet = overlay(page, isMobile);
-  await typeAmount(page, sheet, isMobile, '1500000');
-  if (isMobile) {
-    await saveKey(sheet).click();
-  } else {
-    // Everything with the keyboard: Enter saves.
-    await page.keyboard.press('Enter');
-  }
+    const salary = page.getByRole('button', { name: /^Salario/ });
+    await expect(salary).toHaveAccessibleName(/^Salario, \$ 6,500,000\.00/);
+    await salary.click();
+    const sheet = overlay(page, isMobile);
+    await typeAmount(page, sheet, isMobile, '1500000');
+    if (isMobile) {
+      await saveKey(sheet).click();
+    } else {
+      // Everything with the keyboard: Enter saves.
+      await page.keyboard.press('Enter');
+    }
 
-  await expect(sheet).toBeHidden();
-  expect(api.rpcCalls('save_transaction')).toEqual([
-    expect.objectContaining({
-      entry_type: 'income',
-      entry_amount: 150_000_000,
-      entry_category_id: 'cat-salary',
-    }),
-  ]);
-  await expect(salary).toHaveAccessibleName(/^Salario, \$ 8,000,000\.00/);
-  await expect(page.getByText('Ingreso guardado.')).toBeVisible();
-});
+    await expect(sheet).toBeHidden();
+    expect(api.rpcCalls('save_transaction')).toEqual([
+      expect.objectContaining({
+        entry_type: 'income',
+        entry_amount: 150_000_000,
+        entry_category_id: 'cat-salary',
+      }),
+    ]);
+    await expect(salary).toHaveAccessibleName(/^Salario, \$ 8,000,000\.00/);
+    await expect(page.getByText('Ingreso guardado.')).toBeVisible();
+  },
+);
 
 test('a transfer to another currency records both amounts', async ({ page, isMobile }) => {
   const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
@@ -134,7 +136,6 @@ test('a transfer to another currency records both amounts', async ({ page, isMob
 
   await expect(page.getByRole('heading', { name: 'Bancolombia', level: 1 })).toBeVisible();
   await expect(page.getByRole('list').getByText('Hogar (Arriendo)')).toBeVisible();
-  await capture(page, 'cuenta-detalle');
 
   await page.getByRole('button', { name: 'Transferir' }).click();
   const sheet = overlay(page, isMobile);
@@ -143,7 +144,6 @@ test('a transfer to another currency records both amounts', async ({ page, isMob
   await expect(sheet.getByRole('button', { name: /^De cuenta Bancolombia/ })).toBeVisible();
   await sheet.getByRole('button', { name: /^A cuenta/ }).click();
   await expect(sheet.getByRole('button', { name: /^Bancolombia/ })).toHaveCount(0);
-  await captureViewport(page, 'registro-rapido-cuenta');
   await sheet.getByRole('button', { name: /^DollarApp/ }).click();
   await expect(sheet.getByRole('button', { name: /^A cuenta DollarApp/ })).toBeVisible();
 
@@ -153,7 +153,6 @@ test('a transfer to another currency records both amounts', async ({ page, isMob
   await sheet.getByRole('button', { name: /^Llega/ }).click();
   await typeAmount(page, sheet, isMobile, '100');
   await expect(sheet.getByRole('button', { name: /^Llega/ })).toContainText('US$ 100.00');
-  await captureViewport(page, 'registro-rapido-transferencia');
   await saveKey(sheet).click();
 
   await expect(sheet).toBeHidden();
@@ -188,7 +187,6 @@ test('a credit card purchase in installments stores them with their rate', async
   await sheet.getByRole('option', { name: 'Arriendo' }).click();
   await sheet.locator('cc-amount-display').first().click();
   await typeAmount(page, sheet, isMobile, '900000');
-  await captureViewport(page, 'registro-rapido-cuotas');
   await saveKey(sheet).click();
 
   await expect(sheet).toBeHidden();
@@ -262,7 +260,6 @@ test('the period moves with the arrows and changes kind in its panel', async ({
   await chip.click();
   const panel = overlay(page, isMobile);
   await expect(panel.getByRole('heading', { name: 'Periodo' })).toBeVisible();
-  await captureViewport(page, 'periodo-opciones');
   await panel.getByRole('button', { name: /^Año/ }).click();
   await expect(panel).toBeHidden();
   await expect(chip).toContainText('2026');
@@ -276,33 +273,32 @@ test('the period moves with the arrows and changes kind in its panel', async ({
   await expect(chip).toContainText('2026');
 });
 
-test('"¿Qué vas a registrar?" opens on Gasto and a transfer starts from the account picked', async ({
-  page,
-  isMobile,
-}) => {
-  await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
-  await page.goto('/transacciones');
-  await page.getByRole('button', { name: 'Nuevo movimiento' }).first().click();
+test(
+  '"¿Qué vas a registrar?" opens on Gasto and a transfer starts from the account picked',
+  { tag: '@desktop' },
+  async ({ page, isMobile }) => {
+    await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
+    await page.goto('/transacciones');
+    await page.getByRole('button', { name: 'Nuevo movimiento' }).first().click();
 
-  const chooser = overlay(page, isMobile);
-  await expect(chooser.getByRole('tab', { name: 'Gasto' })).toHaveAttribute(
-    'aria-selected',
-    'true',
-  );
-  // Each category with what it got in the period, in its color.
-  await expect(chooser.getByRole('button', { name: /^Mercado/ })).toContainText('$ 320,500.00');
-  await captureViewport(page, 'nuevo-movimiento');
+    const chooser = overlay(page, isMobile);
+    await expect(chooser.getByRole('tab', { name: 'Gasto' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    // Each category with what it got in the period, in its color.
+    await expect(chooser.getByRole('button', { name: /^Mercado/ })).toContainText('$ 320,500.00');
 
-  await chooser.getByRole('tab', { name: 'Ingreso' }).click();
-  await expect(chooser.getByRole('button', { name: /^Salario/ })).toBeVisible();
-  await chooser.getByRole('tab', { name: 'Transferencia' }).click();
-  await expect(chooser.getByRole('region', { name: 'Ahorros' })).toBeVisible();
-  await captureViewport(page, 'nuevo-movimiento-transferencia');
-  await chooser.getByRole('button', { name: /^Efectivo/ }).click();
+    await chooser.getByRole('tab', { name: 'Ingreso' }).click();
+    await expect(chooser.getByRole('button', { name: /^Salario/ })).toBeVisible();
+    await chooser.getByRole('tab', { name: 'Transferencia' }).click();
+    await expect(chooser.getByRole('region', { name: 'Ahorros' })).toBeVisible();
+    await chooser.getByRole('button', { name: /^Efectivo/ }).click();
 
-  const entry = isMobile ? overlay(page, isMobile) : page.locator('cc-quick-entry');
-  await expect(entry.getByRole('button', { name: /^De cuenta Efectivo/ })).toBeVisible();
-});
+    const entry = isMobile ? overlay(page, isMobile) : page.locator('cc-quick-entry');
+    await expect(entry.getByRole('button', { name: /^De cuenta Efectivo/ })).toBeVisible();
+  },
+);
 
 test('the date is one line that opens Hoy, Ayer and Elegir día', async ({ page, isMobile }) => {
   const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD_WITH_MOVEMENTS });
@@ -313,7 +309,6 @@ test('the date is one line that opens Hoy, Ayer and Elegir día', async ({ page,
   await typeAmount(page, sheet, isMobile, '15000');
   await sheet.getByRole('button', { name: 'Hoy, 26 nov' }).click();
   await expect(sheet.getByRole('heading', { name: 'Fecha' })).toBeVisible();
-  await captureViewport(page, 'registro-rapido-fecha');
   await sheet.getByRole('button', { name: /^Ayer/ }).click();
 
   await expect(sheet.getByRole('button', { name: 'Ayer, 25 nov' })).toBeVisible();

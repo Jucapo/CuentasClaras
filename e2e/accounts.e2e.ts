@@ -1,6 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
-import { capture, captureViewport } from './support/screenshots';
 import { blockSupabase, mockDataApi, seedSession } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
@@ -31,7 +30,6 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await expect(page.getByRole('link', { name: /Tarjeta Visa/ })).toContainText('-$ 1,850,000.00');
   await expect(page.getByRole('link', { name: /Bancolombia/ })).toContainText('Predeterminada');
   await expect(page.getByRole('link', { name: /Nequi/ })).toContainText('Privada');
-  await capture(page, 'cuentas');
 
   await page.getByRole('button', { name: 'Nueva cuenta' }).first().click();
   const chooser = overlay(page, isMobile);
@@ -39,7 +37,6 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   for (const choice of ['Cuenta', 'Ahorro', 'Deuda', 'Me deben']) {
     await expect(chooser.getByRole('button', { name: new RegExp(`^${choice}`) })).toBeVisible();
   }
-  await captureViewport(page, 'cuenta-que-crear');
   await chooser.getByRole('button', { name: /^Deuda/ }).click();
 
   await expect(page).toHaveURL(/\/cuentas\/nueva\?grupo=deuda$/);
@@ -56,7 +53,6 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await expect(suggested.getByRole('heading', { name: 'Sugeridos' })).toBeVisible();
   await expect(suggested.getByRole('button').first()).toHaveAccessibleName(/^Tarjeta/);
   await expect(suggested.getByRole('button', { name: 'Banco', exact: true })).toBeVisible();
-  await captureViewport(page, 'cuenta-icono-sugeridos');
   await icons.getByRole('button', { name: 'Cerrar' }).click();
   await expect(icons).toBeHidden();
 
@@ -68,12 +64,10 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await expect(balance).toHaveAttribute('inputmode', 'decimal');
   await balance.fill('1250000.5');
   await expect(balanceRow.getByText('Escríbelo en positivo')).toBeVisible();
-  await captureViewport(page, 'cuenta-saldo');
   await balance.press('Enter');
   await expect(balance).not.toBeFocused();
   // Leaving the row shows the amount with its grouping and decimals.
   await expect(balance).toHaveValue('1,250,000.50');
-  await capture(page, 'cuenta-nueva');
 
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page).toHaveURL(/\/cuentas$/);
@@ -91,52 +85,54 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   await expect(page.getByRole('link', { name: /Tarjeta Master/ })).toContainText('-$ 1,250,000.50');
 });
 
-test('an account gets a new color and becomes the default one', async ({ page, isMobile }) => {
-  const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD });
-  await page.goto('/cuentas');
-  await page.getByRole('link', { name: /Efectivo/ }).click();
-  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
-  await page.getByRole('link', { name: 'Editar cuenta' }).click();
+test(
+  'an account gets a new color and becomes the default one',
+  { tag: '@desktop' },
+  async ({ page, isMobile }) => {
+    const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD });
+    await page.goto('/cuentas');
+    await page.getByRole('link', { name: /Efectivo/ }).click();
+    await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+    await page.getByRole('link', { name: 'Editar cuenta' }).click();
 
-  await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
-  // The name is already large in the field: the bar says what the screen does (spec §13.5).
-  await expect(page.getByRole('heading', { name: 'Editar cuenta', level: 1 })).toBeVisible();
-  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Efectivo');
-  // Editing an existing account: back instead of close, and no cursor in the name.
-  await expect(page.getByRole('button', { name: 'Volver' })).toBeVisible();
-  await expect(page.getByLabel('Nombre', { exact: true })).not.toBeFocused();
-  await capture(page, 'cuenta-editar');
+    await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
+    // The name is already large in the field: the bar says what the screen does (spec §13.5).
+    await expect(page.getByRole('heading', { name: 'Editar cuenta', level: 1 })).toBeVisible();
+    await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Efectivo');
+    // Editing an existing account: back instead of close, and no cursor in the name.
+    await expect(page.getByRole('button', { name: 'Volver' })).toBeVisible();
+    await expect(page.getByLabel('Nombre', { exact: true })).not.toBeFocused();
 
-  await page.getByRole('button', { name: /^Cambiar ícono y color/ }).click();
-  const picker = overlay(page, isMobile);
-  await expect(picker.getByRole('heading', { name: 'Ícono y color' })).toBeVisible();
-  await picker.getByRole('tab', { name: 'Color' }).click();
-  await picker.getByRole('button', { name: 'Morado', exact: true }).click();
-  await captureViewport(page, 'cuenta-icono-color');
-  // The ✓ confirms; on a keyboard, Ctrl/⌘+S does too.
-  if (isMobile) {
-    await picker.getByRole('button', { name: 'Listo' }).click();
-  } else {
-    await page.keyboard.press('Control+s');
-  }
-  await expect(picker).toBeHidden();
-  await expect(page.getByRole('button', { name: /^Cambiar ícono y color/ })).toHaveAccessibleName(
-    /Morado/,
-  );
+    await page.getByRole('button', { name: /^Cambiar ícono y color/ }).click();
+    const picker = overlay(page, isMobile);
+    await expect(picker.getByRole('heading', { name: 'Ícono y color' })).toBeVisible();
+    await picker.getByRole('tab', { name: 'Color' }).click();
+    await picker.getByRole('button', { name: 'Morado', exact: true }).click();
+    // The ✓ confirms; on a keyboard, Ctrl/⌘+S does too.
+    if (isMobile) {
+      await picker.getByRole('button', { name: 'Listo' }).click();
+    } else {
+      await page.keyboard.press('Control+s');
+    }
+    await expect(picker).toBeHidden();
+    await expect(page.getByRole('button', { name: /^Cambiar ícono y color/ })).toHaveAccessibleName(
+      /Morado/,
+    );
 
-  await page.getByRole('switch', { name: 'Cuenta predeterminada' }).click();
-  await page.getByRole('button', { name: 'Guardar' }).click();
+    await page.getByRole('switch', { name: 'Cuenta predeterminada' }).click();
+    await page.getByRole('button', { name: 'Guardar' }).click();
 
-  // Saving goes back to the account's detail.
-  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
-  const saved = api.writes().find((write) => write.table === 'accounts');
-  expect(saved).toMatchObject({
-    method: 'PATCH',
-    body: expect.objectContaining({ color: 'purple' }),
-  });
-  expect(api.rpcCalls('set_default_account')).toEqual([
-    { target_space_id: '00000000-0000-4000-8000-00000000005e', target_account_id: 'acc-cash' },
-  ]);
-  await page.goto('/cuentas');
-  await expect(page.getByRole('link', { name: /Efectivo/ })).toContainText('Predeterminada');
-});
+    // Saving goes back to the account's detail.
+    await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+    const saved = api.writes().find((write) => write.table === 'accounts');
+    expect(saved).toMatchObject({
+      method: 'PATCH',
+      body: expect.objectContaining({ color: 'purple' }),
+    });
+    expect(api.rpcCalls('set_default_account')).toEqual([
+      { target_space_id: '00000000-0000-4000-8000-00000000005e', target_account_id: 'acc-cash' },
+    ]);
+    await page.goto('/cuentas');
+    await expect(page.getByRole('link', { name: /Efectivo/ })).toContainText('Predeterminada');
+  },
+);

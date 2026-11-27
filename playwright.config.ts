@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { availableParallelism } from 'node:os';
 
 const BASE_URL = 'http://localhost:4200';
 const isCi = !!process.env['CI'];
@@ -8,6 +9,9 @@ export default defineConfig({
   testMatch: '**/*.e2e.ts',
   outputDir: './e2e/test-results',
   fullyParallel: true,
+  // A third of the logical cores (8 of 24): more browsers at once only wait on each other and on
+  // `ng serve`, and the suite gets slower (measured in chore/e2e-speed).
+  workers: Math.max(1, Math.round(availableParallelism() / 3)),
   forbidOnly: isCi,
   retries: isCi ? 1 : 0,
   reporter: 'list',
@@ -17,22 +21,25 @@ export default defineConfig({
     trace: 'retain-on-failure',
     // Screenshots never catch a dialog or sheet halfway through its animation.
     contextOptions: { reducedMotion: 'reduce' },
+    // The mocks answer every request; a service worker would answer some before them.
+    serviceWorkers: 'block',
   },
-  // Uses the locally installed Google Chrome; no Playwright browser downloads.
-  // Spec §13.4: every screen is checked on mobile and desktop, in light and dark.
+  // Uses the locally installed Google Chrome; no Playwright browser downloads. Light and dark on
+  // mobile and desktop are the screenshots' (`playwright.screenshots.config.ts`, spec §13.4).
   projects: [
+    // Every behavior test, once: the theme does not change it, and the tests where it does set it
+    // themselves.
     {
-      name: 'mobile-light',
+      name: 'mobile',
+      grepInvert: /@desktop-only/,
       use: { ...devices['Pixel 7'], channel: 'chrome', colorScheme: 'light' },
     },
-    { name: 'mobile-dark', use: { ...devices['Pixel 7'], channel: 'chrome', colorScheme: 'dark' } },
+    // What wide screens do differently: the rail, list and detail side by side, dialogs and the
+    // keyboard (`@desktop`), and what only they have (`@desktop-only`).
     {
-      name: 'desktop-light',
+      name: 'desktop',
+      grep: /@desktop/,
       use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'light' },
-    },
-    {
-      name: 'desktop-dark',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'dark' },
     },
     // The invitation email opens in Safari on iPhone (spec §3.3): that flow and the login also run
     // on WebKit, and so does what makes the app feel native (spec §13.4). Needs

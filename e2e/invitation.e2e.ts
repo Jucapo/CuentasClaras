@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { capture } from './support/screenshots';
 import {
   blockSupabase,
   E2E_USER,
@@ -47,7 +46,6 @@ test('a new account opens the email link, picks a name and a password, and accep
   await expect(page.getByText(INVITEE)).toBeVisible();
   // Auth's token is spent only when submitting, so a link scanner cannot use it up.
   expect(auth.verified()).toBe(false);
-  await capture(page, 'invitacion-cuenta-nueva');
 
   await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Laura');
   await page.getByLabel('Contraseña', { exact: true }).fill('una-clave-segura');
@@ -66,7 +64,6 @@ test('a new account opens the email link, picks a name and a password, and accep
   expect(api.writes()).toContainEqual(
     expect.objectContaining({ table: 'profiles', body: { display_name: 'Laura' } }),
   );
-  await capture(page, 'invitacion-lista');
 });
 
 test('an existing account signs in first, then accepts', async ({ page }) => {
@@ -76,7 +73,6 @@ test('an existing account signs in first, then accepts', async ({ page }) => {
   await expect(page.getByText(`Inicia sesión con ${E2E_USER.email}`)).toBeVisible();
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/iniciar-sesion\?redirect=%2Finvitacion%3Ftoken%3D/);
-  await capture(page, 'invitacion-iniciar-sesion');
 });
 
 test('signed in as the invitee, accepts or declines', async ({ page }) => {
@@ -85,7 +81,6 @@ test('signed in as the invitee, accepts or declines', async ({ page }) => {
   await page.goto(`/invitacion?token=${TOKEN}`);
 
   await expect(page.getByRole('button', { name: 'Rechazar' })).toBeVisible();
-  await capture(page, 'invitacion-aceptar');
   await page.getByRole('button', { name: 'Aceptar invitación' }).click();
 
   await expect(page.getByRole('heading', { name: '¡Listo!' })).toBeVisible();
@@ -98,7 +93,6 @@ test('an expired invitation says so', async ({ page }) => {
 
   await expect(page.getByText('Esta invitación venció')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Aceptar invitación' })).toHaveCount(0);
-  await capture(page, 'invitacion-vencida');
 });
 
 test('an unknown or broken link says it is not valid', async ({ page }) => {
