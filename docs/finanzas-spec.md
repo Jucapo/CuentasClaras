@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.11 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.12 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -46,7 +46,7 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 - **Usuario:** una persona con cuenta (email + contraseña) y un perfil (nombre visible, avatar).
 - **Espacio:** unidad que comparte presupuesto. Tiene sus propias categorías, etiquetas, presupuestos y configuración de periodos.
   - Un espacio con un solo miembro es personal.
-  - Un usuario puede pertenecer a varios espacios (p. ej. su espacio personal y el del hogar). Si pertenece a más de uno, cambia de espacio desde el encabezado.
+  - Un usuario puede pertenecer a varios espacios (p. ej. su espacio personal y el del hogar). Si pertenece a más de uno, cambia de espacio desde el encabezado (§7).
 - **Miembro:** relación usuario ↔ espacio, con rol y cuenta predeterminada propia.
 
 | Rol | Puede |
@@ -54,6 +54,13 @@ La interfaz y el comportamiento de 1Money son la referencia visual (ver §7).
 | Propietario | Todo, incluido invitar o quitar miembros, borrar el espacio y cambiar la configuración |
 | Editor | Registrar y editar movimientos, cuentas compartidas, categorías, etiquetas y presupuestos |
 | Lector | Ver lo compartido |
+
+Miembros (F1f):
+
+- **Roles:** el propietario cambia el rol de los demás y los quita. Nadie cambia su propio rol: para dejar de ser propietario, otro propietario lo cambia.
+- **Salir:** cualquiera sale del espacio, menos su último propietario.
+- **Al menos un propietario:** lo garantiza la base, no solo la interfaz. Un trigger bloquea el espacio mientras revisa, así dos cambios simultáneos no lo dejan sin propietario. Borrar el espacio sí borra a todos.
+- **Correos:** los miembros ven el nombre, el correo y el rol de los demás.
 
 ### 3.2 Cuentas privadas y presupuesto conjunto
 
@@ -69,6 +76,14 @@ Resultado: dos personas pueden tener cuentas separadas y llevar un presupuesto c
 
 **Caso inicial (Juan y su esposa):** un espacio "Hogar" con las dos personas y todas las cuentas compartidas, que es el comportamiento actual de 1Money. Las cuentas privadas quedan disponibles cuando las necesiten.
 
+**Quien sale o es removido (F1f):** se borra su membresía y nada más.
+
+- Sus cuentas compartidas y los movimientos en ellas quedan en el espacio, como historia compartida.
+- Sus cuentas privadas quedan ocultas para todos, también para él, porque ya no es miembro. Sus movimientos "incluidos en el espacio" siguen visibles y contando en el presupuesto conjunto.
+- Si vuelve al espacio, recupera todo.
+- Los reportes lo nombran "Otra persona", porque su perfil ya no se ve.
+- Las confirmaciones de salir y de quitar lo explican.
+
 **Fuera de alcance por ahora:** saldar cuentas entre miembros ("quién le debe a quién", estilo Splitwise).
 
 ### 3.3 Registro, sesión e invitaciones
@@ -78,12 +93,37 @@ Resultado: dos personas pueden tener cuentas separadas y llevar un presupuesto c
 - Al registrarse se crea el perfil (trigger en `auth.users`).
 - **Onboarding** al primer inicio de sesión sin espacio:
   - Crear espacio con el asistente de configuración inicial (§7).
-  - Aceptar una invitación pendiente (fase F1f).
-- **Invitaciones** (fase F1f, cuando la app esté madura; hasta entonces el espacio tiene un solo miembro):
-  - Requieren SMTP propio. Recomendado: SMTP de Gmail con contraseña de aplicación, sin dominio propio.
-  - El propietario invita por email con un rol.
-  - Una Edge Function envía la invitación y crea al usuario si no existe. Esto permite invitar aunque el registro público esté cerrado.
-  - El link lleva un token con vencimiento.
+  - Aceptar una invitación pendiente: el paso 1 del asistente la muestra arriba de "Crear espacio".
+- **Invitaciones** (F1f):
+  - **Correo:**
+    - Los correos de Auth (invitación, recuperar contraseña, cambio de correo) salen por el SMTP de Gmail, con contraseña de aplicación y sin dominio propio.
+    - Las plantillas de invitación y de recuperar contraseña están en español y con la marca (`supabase/templates`).
+    - La configuración de producción está en `docs/runbooks/f1f-compartir.md`.
+  - **Invitar:** solo el propietario, por correo y con un rol.
+  - **El token:**
+    - Cada invitación tiene un token propio: 32 bytes al azar, en hex. La base guarda solo su `sha256`.
+    - Vence en 7 días, es de un solo uso y queda ligado al correo invitado.
+    - El link es `/invitacion?token=…`.
+  - **Edge Function `invite-member`** (las Edge Functions no pueden abrir SMTP: el correo lo envía Auth):
+    - Verifica el JWT y que quien llama sea propietario, y crea la invitación por RPC con ese mismo JWT.
+    - **Correo sin cuenta confirmada:** llama `inviteUserByEmail`, que crea al usuario aunque el registro esté cerrado y envía el correo. El link del correo es el de la invitación más el `token_hash` de Auth.
+    - **Correo con cuenta:** no envía correo. Devuelve el link para que el propietario lo copie o lo comparta, y la persona ve la invitación al entrar a la app.
+    - El propietario se entera de si un correo ya tiene cuenta. Se acepta mientras el registro esté cerrado y se revisa en la F4.
+  - **El link del correo** depende del vencimiento de los OTP de Auth: 24 h, el máximo. Si vence o ya se usó, el propietario reenvía.
+  - **Reenviar:**
+    - El token crudo solo existe al crear o al reenviar, así que reenviar rota el token: el link anterior deja de servir y el vencimiento vuelve a 7 días desde hoy.
+    - A una cuenta invitada que todavía no aceptó (existe en Auth pero sin confirmar), Auth le reenvía el correo con un `token_hash` nuevo. No responde `email_exists`: lo comprueba el e2e local, que además verifica que el `token_hash` anterior ya no sirve.
+  - **Revocar** no borra al usuario que creó la invitación: sin contraseña no puede entrar, y una invitación nueva lo reutiliza.
+- **Aceptar** (`/invitacion`, pensado para iOS):
+  - **Dónde abre:** el link abre en Safari, no en la PWA, porque no comparten sesión. Nada depende de que la sesión siga después.
+  - **Cuenta nueva** (llega con `token_hash`):
+    - Elige su nombre visible y su contraseña, y acepta.
+    - El `token_hash` se verifica al enviar el formulario, no al cargar, para que un escáner de links no lo gaste. Si este navegador ya tiene la sesión de esa persona (un reintento), no se verifica de nuevo.
+  - **Cuenta existente:** inicia sesión (con el login de siempre, que vuelve a la invitación) y acepta o rechaza. Con otra cuenta abierta, la página avisa y ofrece cerrar sesión.
+  - **Al aceptar:** queda la membresía con el rol y una cuenta predeterminada, y el espacio queda como el último usado.
+    - La cuenta predeterminada es la de quien invitó si es compartida y activa. Si no, la primera compartida activa del grupo Cuentas. Si no hay, ninguna.
+  - **Al terminar** (fuera de la app instalada): cómo instalarla (iOS: Compartir → Agregar a inicio; Android: "Instalar") y "Entra con tu correo y contraseña".
+  - **Dentro de la app:** con un espacio y una invitación pendiente, un aviso persistente "Te invitaron a «X»" con "Ver" (una vez por visita), que abre la misma página.
 - **Registro público:** cerrado al inicio (solo por invitación). La arquitectura queda lista para abrirlo.
 - **Antes de abrir el registro a terceros:**
   - captcha en el registro (Supabase lo soporta);
@@ -415,7 +455,7 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
 
 ### Encabezado global
 
-- Selector de espacio (solo si el usuario tiene más de uno).
+- Selector de espacio (solo si el usuario tiene más de uno). Desde la F1f es un botón con el ícono del espacio activo, antes de Configuración. Abre la lista de espacios con el rol en cada uno; al elegir otro, la app va a la pantalla de inicio.
 - Total de cuentas: el mismo de la pestaña Cuentas (las cuentas activas que el usuario ve con "incluir en el total", incluidas sus privadas), en la moneda principal. Si falta una tasa, lo avisa.
 - Selector de periodo: flechas + chip con el nombre y el rango; al tocarlo abre las opciones de §4.5 (bottom sheet en compacta, diálogo en los demás tamaños).
   - En compacta el selector ocupa todo el centro, entre el total y Configuración.
@@ -612,13 +652,14 @@ Reportes de §6 para el periodo seleccionado, como el Resumen de 1Money. De arri
 ### Autenticación
 
 - Inicio de sesión, registro (oculto mientras el registro público esté cerrado) y recuperar contraseña.
+- `/invitacion` (F1f): aceptar o rechazar una invitación, también sin sesión. Las reglas están en §3.3.
 
 ### Asistente de configuración inicial
 
 Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configuración del espacio y la situación financiera actual.
 
 - Pasos (rutas bajo `/bienvenida`):
-  1. **Espacio y preferencias** (`espacio`): nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana. Con el espacio ya creado (retomar o revisar), el paso guarda cambios en vez de crear otro.
+  1. **Espacio y preferencias** (`espacio`): nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana. Con el espacio ya creado (retomar o revisar), el paso guarda cambios en vez de crear otro. Sin espacio y con invitaciones pendientes (F1f), arriba muestra cada una con "Aceptar invitación" y "Rechazar".
   2. **Situación financiera actual** (`cuentas`): cuentas, ahorros, deudas y "me deben", cada una con su saldo actual, agrupadas y con sus totales. "Agregar" abre "¿Qué vas a crear?" y la pantalla de cuenta; al guardar vuelve al paso. Al final, la cuenta predeterminada. Moneda por cuenta (p. ej. USD). Las deudas piden solo nombre, tipo y saldo; los datos de tasa, plazo y cuotas se completan en la F2.
   3. **Ingresos** (`ingresos`): categorías de ingreso (fuentes) en la grilla en modo edición y, opcional, el monto mensual esperado de cada una (§4.7), escrito en su fila.
   4. **Categorías de gasto** (`gastos`): la grilla en modo edición, con la pantalla de categoría.
@@ -663,7 +704,19 @@ Detalle (F1e):
 - **Pantalla de inicio:** Cuentas, Categorías, Transacciones, Presupuesto o Resumen. Abrir la app en `/` lleva a ella.
 - **Periodo por defecto:** Día, Semana, Mes, Año o Siempre. Solo se usa en los dispositivos que no recuerdan otro (§4.5).
 - **Presupuesto on/off:** el interruptor "Mostrar presupuestos", que se guarda con el resto del espacio. Solo el propietario.
-- **Miembros e invitaciones:** en la F1f.
+- **Miembros e invitaciones (F1f):** una fila en la sección "Miembros", con cuántos miembros e invitaciones pendientes hay, abre `/configuracion/miembros`.
+  - **Lista:** nombre, correo y rol de cada miembro, con "(tú)" en el propio.
+  - **El propietario:**
+    - Toca a un miembro para elegir su rol. Hacer a alguien propietario pide confirmación.
+    - "Quitar" pide confirmación y explica qué pasa con sus datos (§3.2).
+    - Ve las invitaciones pendientes (correo, rol y "Vence el …", o "Venció: reenvíala"), con Reenviar y Revocar.
+    - Invita con "+" (atajo `N`).
+  - **Invitar** es un sheet con confirmación: correo y rol, con lo que permite cada rol, como las etiquetas y las subcategorías.
+    - A una cuenta nueva le llega el correo y el sheet se cierra.
+    - Con una cuenta existente, el sheet muestra el link con "Copiar link" y "Compartir".
+    - Reenviar a una cuenta existente abre la misma vista.
+  - **Salir:** cualquiera tiene "Salir de {espacio}", con confirmación. Al último propietario el botón le aparece deshabilitado, con la explicación. Después de salir, la app va a otro espacio o al asistente.
+  - **Los demás roles** ven la lista y la salida, sin invitar ni cambiar roles.
 
 ### Nueva versión (F1e)
 
@@ -682,7 +735,10 @@ profiles (user_id, display_name, avatar_url, created_at)
 spaces (id, name, icon, color, created_by, created_at)
 space_members (space_id, user_id, role, default_account_id, joined_at)
   role: owner | editor | viewer
-space_invitations (id, space_id, email, role, token_hash, invited_by, expires_at, accepted_at)
+space_invitations (id, space_id, email, role, token_hash, invited_by, created_at, expires_at,
+                   accepted_at, accepted_by, declined_at, revoked_at)
+  -- F1f: email en minúsculas; token_hash = sha256 del token (único); una sola respuesta
+  -- (aceptada, rechazada o revocada); una abierta por (space_id, email)
 space_settings (space_id, main_currency, month_start_day, week_start, budgets_enabled, default_period,
                 onboarding_step, onboarding_completed_at, onboarding_postponed_at)
   -- onboarding_step: pasos del asistente completados en orden (create_space deja 1)
@@ -745,6 +801,8 @@ recurring_templates (fase 3)
 | `transaction_tags` | Si se ve el movimiento | Si se puede escribir el movimiento |
 | `installment_plans` | Si se ve la cuenta o la compra | Quien puede escribir en la cuenta |
 | `exchange_rates` | Miembros del espacio (y las comunes, F2) | Propietario o editor; no se editan, se reemplazan |
+| `space_members` | Miembros del espacio | Rol: el propietario, a los demás. Borrar: cada quien la suya (salir) o el propietario (quitar). Insertar: solo `create_space` y `accept_invitation` |
+| `space_invitations` | El propietario, sin `token_hash` (grant por columnas) | Solo por RPC |
 
 - Funciones auxiliares: `is_space_member(space_id)`, `space_role(space_id)`, `is_space_editor(space_id)`, `can_see_account(account_id)`.
 - Un editor no puede volver privada la cuenta compartida de otro miembro: la política de escritura se evalúa también sobre la fila nueva.
@@ -774,6 +832,24 @@ recurring_templates (fase 3)
   - `transaction_day_totals(...)`: los argumentos de `search_transactions`; ingresos, gastos y neto por día de lo filtrado, con las reglas de `transaction_totals`.
   - `accounts_balance(space_id, on_date, account_ids)`: el saldo al cierre de `on_date` de las cuentas del total del encabezado o de las elegidas, en la moneda principal con la tasa de esa fecha. Antes de la fecha del saldo inicial, descuenta lo que ese saldo ya traía.
   - **Conversión por movimiento:** `category_totals`, `transaction_totals` y las RPCs de la F1e2 convierten cada movimiento por separado (mismas columnas de antes). Así cualquier reparto suma lo mismo. Las piezas compartidas son `private.space_movements` (alcance Espacio) y `private.filtered_amounts` (lo que suma en Transacciones).
+- RPCs de la F1f (`SECURITY DEFINER`, con `search_path = ''`; los errores de negocio son `P0001` con una clave estable en el mensaje, y los de permiso, `42501`):
+  - **Del propietario:**
+    - `create_invitation(space_id, email, role)` devuelve el token una sola vez, si el correo ya tiene cuenta confirmada y los nombres para el correo. Una invitación abierta pero vencida se revoca y se reemplaza.
+    - `rotate_invitation(id)` reenvía: token nuevo y 7 días más.
+    - `revoke_invitation(id)`.
+  - **Para la página de la invitación:**
+    - `invitation_preview(token)`: también para anon, y es la única excepción. Sin el token no devuelve nada.
+    - `my_invitations()`: las abiertas y vigentes para el correo confirmado de quien llama.
+  - **Para quien recibe la invitación:**
+    - `accept_invitation(token | id)` y `decline_invitation(token | id)`: por token (el link) o por id (dentro de la app, donde la prueba es el correo confirmado).
+    - Validan, en orden: sesión, que exista, revocada, usada, vencida, que el correo coincida (confirmado) y, al aceptar, que no sea ya miembro.
+  - **Para los miembros:** `space_member_list(space_id)` da nombre, correo y rol. El correo de los miembros solo sale por aquí.
+- Trigger de la F1f: `space_members_keep_owner` (después de borrar o de cambiar el rol) exige al menos un propietario y bloquea el espacio (`for update`). No aplica si el espacio se está borrando.
+- Edge Function de la F1f: `invite-member` (§3.3).
+  - Tiene `verify_jwt` apagado y verifica el JWT ella misma con `auth.getUser`.
+  - Usa la service role solo para `auth.admin.inviteUserByEmail`; los datos van por RPC con el JWT de quien llama.
+  - CORS solo para `ALLOWED_ORIGINS`.
+  - Respuestas: `{ invitationId, email, expiresAt, delivery: 'email' | 'link', link? }`, o `{ error: { code } }`.
 - Triggers de la F1d:
   - la moneda e "incluir en el espacio" del movimiento;
   - la clase de la categoría y el monto destino;
@@ -814,7 +890,7 @@ recurring_templates (fase 3)
 | F1d · Movimientos | Movimientos (gasto, ingreso, transferencia, ajuste), registro rápido con cuotas y tasa para TC, selector de periodos, pantalla de inicio Categorías, multimoneda con tasa manual |
 | F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), overlays con confirmación (✕ y ✓ flotantes), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
-| F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
+| F1f · Compartir | SMTP (Gmail) y plantillas, invitaciones con Edge Function, página `/invitacion` pensada para iOS, onboarding por invitación, Miembros (roles, quitar y salir, al menos un propietario en la base), selector de espacio |
 | F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes, metas de ahorro por cuenta |
 | F3 · Automatización | Recurrentes, cuotas automáticas, correo, atajos, bandeja "Por confirmar" |
 | F4 · Abrir a terceros | Registro público con captcha, límites de tasa, política de datos, exportar y borrar cuenta, plantilla genérica de categorías pulida |
@@ -879,6 +955,15 @@ recurring_templates (fase 3)
   - **Transacciones** con el neto de cada día y los saldos inicial y final del periodo.
   - **Sheets:** en compacta salen con el alto de su contenido.
   - Detalle en §6, §7, §8 y §13.5. Plan en `docs/plans/f1e.md` (Parte 2).
+- [x] F1f (Compartir):
+  - **Invitaciones:** token propio guardado como hash, de 7 días, un solo uso y ligado al correo.
+    - La Edge Function crea la invitación y Auth envía el correo (`inviteUserByEmail`). A una cuenta existente no se le envía: ve la invitación al entrar y el propietario comparte el link.
+    - Reenviar rota el token. A una cuenta invitada sin confirmar, Auth le reenvía sin problema (comprobado en el e2e local).
+  - **iOS:** `/invitacion` abre en Safari y no depende de la sesión después. La cuenta nueva verifica el link de Auth al enviar el formulario, y al final la página enseña a instalar la app y a entrar con la contraseña.
+  - **Miembros:** el propietario cambia roles ajenos y quita miembros, y cualquiera sale. La base garantiza al menos un propietario.
+  - **Quien sale:** no se borra nada. Lo compartido queda, sus cuentas privadas quedan ocultas y vuelven si regresa.
+  - **Encabezado:** selector de espacio con más de uno.
+  - Detalle en §3, §7 y §8. Plan en `docs/plans/f1f.md`; configuración de producción en `docs/runbooks/f1f-compartir.md`.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
@@ -893,8 +978,8 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
 | Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar`, `cc-progress-ring`, `cc-bar-chart` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row`, `cc-total-toggle`, `cc-entry-endpoints`, `cc-date-choice` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-entry-chooser` (y su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-breakdown-list`, `cc-net-worth`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row`, `cc-total-toggle`, `cc-entry-endpoints`, `cc-date-choice`, `cc-invitation-card`, `cc-install-steps` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-entry-chooser` (y su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-breakdown-list`, `cc-net-worth`, `cc-missing-rates-notice`, `cc-nav-rail`, `cc-member-list`, `cc-invitation-list`, `cc-invite-sheet` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
