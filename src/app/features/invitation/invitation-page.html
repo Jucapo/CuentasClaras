@@ -155,7 +155,10 @@
 
   @case ('accepted') {
     @if (details(); as invitation) {
-      <cc-page-header title="¡Listo!" [subtitle]="'Ya eres parte de ' + invitation.spaceName + '.'" />
+      <cc-page-header
+        title="¡Listo!"
+        [subtitle]="'Ya eres parte de ' + invitation.spaceName + '.'"
+      />
       <cc-install-steps
         [platform]="install.platform"
         [email]="invitation.email"

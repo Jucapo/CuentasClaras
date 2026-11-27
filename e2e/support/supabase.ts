@@ -123,7 +123,10 @@ function sessionFor(email: string) {
 }
 
 /** Answers Auth for an invitee: the email link (verifyOtp), setting the password and signing in. */
-export async function mockInviteeAuth(page: Page, email: string): Promise<{ verified: () => boolean }> {
+export async function mockInviteeAuth(
+  page: Page,
+  email: string,
+): Promise<{ verified: () => boolean }> {
   let verified = false;
   await page.route(`${SUPABASE_URL}/auth/v1/verify`, (route) => {
     verified = true;
@@ -225,7 +228,9 @@ export async function mockDataApi(
         }
       } else {
         members = members.map((member) =>
-          member.userId === userId ? { ...member, role: body?.['role'] as MemberFixture['role'] } : member,
+          member.userId === userId
+            ? { ...member, role: body?.['role'] as MemberFixture['role'] }
+            : member,
         );
       }
       return route.fulfill({ json: [{ user_id: userId }] });
@@ -271,7 +276,9 @@ export async function mockDataApi(
         email,
         expiresAt,
         delivery: hasAccount ? 'link' : 'email',
-        ...(hasAccount ? { link: `http://localhost:4200/invitacion?token=${'e2'.repeat(32)}` } : {}),
+        ...(hasAccount
+          ? { link: `http://localhost:4200/invitacion?token=${'e2'.repeat(32)}` }
+          : {}),
       },
     });
   });

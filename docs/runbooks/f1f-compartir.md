@@ -5,15 +5,15 @@
 
 ## Valores
 
-| Qué | Valor |
-|---|---|
-| Proyecto Supabase | `ryuknhuvydlwtbgruqdt` (`https://ryuknhuvydlwtbgruqdt.supabase.co`) |
-| App en producción | `https://cuentasclaras-inky.vercel.app` (si cambia el dominio, se actualizan los pasos 4 y 7) |
-| SMTP | `smtp.gmail.com`, puerto `587` (STARTTLS); `465` (SSL) también sirve |
-| Remitente | El mismo Gmail que autentica; nombre `Cuentas Claras` |
-| Vencimiento del link del correo | 24 h (`86400` s, el máximo de Auth) |
-| Vencimiento de la invitación | 7 días (lo pone la base de datos) |
-| Secretos de la función | `APP_URL`, `ALLOWED_ORIGINS` |
+| Qué                             | Valor                                                                                         |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| Proyecto Supabase               | `ryuknhuvydlwtbgruqdt` (`https://ryuknhuvydlwtbgruqdt.supabase.co`)                           |
+| App en producción               | `https://cuentasclaras-inky.vercel.app` (si cambia el dominio, se actualizan los pasos 4 y 7) |
+| SMTP                            | `smtp.gmail.com`, puerto `587` (STARTTLS); `465` (SSL) también sirve                          |
+| Remitente                       | El mismo Gmail que autentica; nombre `Cuentas Claras`                                         |
+| Vencimiento del link del correo | 24 h (`86400` s, el máximo de Auth)                                                           |
+| Vencimiento de la invitación    | 7 días (lo pone la base de datos)                                                             |
+| Secretos de la función          | `APP_URL`, `ALLOWED_ORIGINS`                                                                  |
 
 ## 1. Contraseña de aplicación de Gmail
 
@@ -56,9 +56,9 @@ Sin esta última, el link de invitación (`/invitacion?token=…`) y el de recup
 
 **Authentication** → **Emails** → **Templates**. Se copia el HTML completo de cada archivo:
 
-| Plantilla | Asunto | Cuerpo |
-|---|---|---|
-| Invite user | `Te invitaron a Cuentas Claras` | `supabase/templates/invite.html` |
+| Plantilla      | Asunto                                       | Cuerpo                             |
+| -------------- | -------------------------------------------- | ---------------------------------- |
+| Invite user    | `Te invitaron a Cuentas Claras`              | `supabase/templates/invite.html`   |
 | Reset password | `Restablece tu contraseña de Cuentas Claras` | `supabase/templates/recovery.html` |
 
 El link de la invitación tiene que quedar como está en el archivo: `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite`.

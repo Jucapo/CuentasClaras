@@ -10,7 +10,12 @@ import { corsHeaders, isAllowedOrigin } from '../_shared/cors.ts';
 type MemberRole = 'owner' | 'editor' | 'viewer';
 
 type InviteRequest =
-  | { readonly action: 'invite'; readonly spaceId: string; readonly email: string; readonly role: MemberRole }
+  | {
+      readonly action: 'invite';
+      readonly spaceId: string;
+      readonly email: string;
+      readonly role: MemberRole;
+    }
   | { readonly action: 'resend'; readonly invitationId: string };
 
 /** A row of create_invitation and rotate_invitation. */

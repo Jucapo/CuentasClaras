@@ -48,7 +48,12 @@
 <p class="sign-in">
   <cc-icon name="lock" size="sm" />
   <span>
-    Abre Cuentas Claras desde tu pantalla de inicio y entra con tu correo
-    (<strong>{{ email() }}</strong>) y tu contraseña.
+    {{
+      platform() === 'other'
+        ? 'En la app o en el navegador,'
+        : 'Abre Cuentas Claras desde tu pantalla de inicio y'
+    }}
+    entra con tu correo (<strong>{{ email() }}</strong
+    >) y tu contraseña.
   </span>
 </p>

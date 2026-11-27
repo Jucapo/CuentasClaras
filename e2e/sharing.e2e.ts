@@ -14,8 +14,18 @@ const LAURA: MemberFixture = {
 };
 
 const PENDING = [
-  { id: 'invitation-1', email: 'mama@example.com', role: 'viewer', expires_at: '2026-12-01T12:00:00Z' },
-  { id: 'invitation-2', email: 'hermano@example.com', role: 'editor', expires_at: '2026-11-20T12:00:00Z' },
+  {
+    id: 'invitation-1',
+    email: 'mama@example.com',
+    role: 'viewer',
+    expires_at: '2026-12-01T12:00:00Z',
+  },
+  {
+    id: 'invitation-2',
+    email: 'hermano@example.com',
+    role: 'editor',
+    expires_at: '2026-11-20T12:00:00Z',
+  },
 ];
 
 test.beforeEach(async ({ page }) => {
@@ -36,7 +46,9 @@ test('the owner sees the members and the pending invitations, and invites by ema
   await page.getByRole('link', { name: /Miembros e invitaciones/ }).click();
 
   await expect(page.getByRole('heading', { name: 'Miembros (2)' })).toBeVisible();
-  await expect(page.getByRole('listitem').filter({ hasText: 'E2E (tú)' })).toContainText('Propietario');
+  await expect(page.getByRole('listitem').filter({ hasText: 'E2E (tú)' })).toContainText(
+    'Propietario',
+  );
   await expect(page.getByRole('listitem').filter({ hasText: 'Laura' })).toContainText('Editor');
   await expect(page.getByRole('listitem').filter({ hasText: 'mama@example.com' })).toContainText(
     'Vence el 1 de diciembre',
@@ -185,7 +197,9 @@ test('with more than one space, the header switches between them', async ({ page
   await captureViewport(page, 'selector-de-espacio');
   await page.getByRole('radio', { name: /Personal/ }).click();
 
-  await expect(page.getByRole('button', { name: 'Espacio: Personal. Cambiar de espacio' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Espacio: Personal. Cambiar de espacio' }),
+  ).toBeVisible();
   await expect(page).toHaveURL(/\/categorias$/);
 });
 

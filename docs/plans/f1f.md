@@ -525,7 +525,7 @@ grant execute on function public.invitation_preview(text) to anon;
     - que Auth reenvía y no responde `email_exists`;
     - que llega un correo nuevo;
     - que el link anterior ya no sirve.
-    Si Auth no reenvía, se resuelve en la función y la solución queda en la spec.
+      Si Auth no reenvía, se resuelve en la función y la solución queda en la spec.
   - En un contexto nuevo: nombre, contraseña y aceptar; ve los pasos de iOS.
   - En otro contexto nuevo: inicia sesión con la cuenta nueva y entra al espacio.
 

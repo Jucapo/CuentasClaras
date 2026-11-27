@@ -12,7 +12,10 @@ import {
 } from '../../../shared/ui/organisms/period-panel/period-panel';
 import { OverlayService } from '../../../shared/ui/services/overlay.service';
 import { ToastService } from '../../../shared/ui/services/toast.service';
-import { OptionPanel, OptionPanelData } from '../../../shared/ui/molecules/option-panel/option-panel';
+import {
+  OptionPanel,
+  OptionPanelData,
+} from '../../../shared/ui/molecules/option-panel/option-panel';
 import { iconOrFallback } from '../../../shared/ui/icons/icon-glyphs';
 import { MEMBER_ROLE_LABELS } from '../../config/member.constants';
 import { ReceivedInvitation } from '../../invitations/invitation.models';
@@ -147,11 +150,9 @@ export class Shell {
 
   /** Once per visit, the invitations for the user to other spaces (spec §3.3). */
   private async announceInvitation(invitation: ReceivedInvitation): Promise<void> {
-    const open = await this.toast.showWithAction(
-      `Te invitaron a ${invitation.spaceName}.`,
-      'Ver',
-      { persistent: true },
-    );
+    const open = await this.toast.showWithAction(`Te invitaron a ${invitation.spaceName}.`, 'Ver', {
+      persistent: true,
+    });
     if (open) {
       await this.router.navigate(['/', APP_PATHS.invitation], {
         queryParams: { [INVITATION_QUERY_PARAMS.id]: invitation.id },

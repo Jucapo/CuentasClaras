@@ -13,9 +13,9 @@ describe('parseInvitationLink', () => {
 
   it('treats a token without the Auth hash as a copied link', () => {
     expect(parseInvitationLink({ ...NONE, token: TOKEN })).toEqual({ kind: 'link', token: TOKEN });
-    expect(parseInvitationLink({ ...NONE, token: TOKEN, tokenHash: 'x', type: 'recovery' })).toEqual(
-      { kind: 'link', token: TOKEN },
-    );
+    expect(
+      parseInvitationLink({ ...NONE, token: TOKEN, tokenHash: 'x', type: 'recovery' }),
+    ).toEqual({ kind: 'link', token: TOKEN });
   });
 
   it('reads the in-app notice by id', () => {

@@ -8,7 +8,10 @@ const API_KEY = environment.supabase.publishableKey;
 /** Mailpit's web API (`npm run db:start` prints it as MAILPIT_URL). */
 const MAILPIT_URL = 'http://127.0.0.1:54324';
 /** Seed account without a space (supabase/seed.sql). */
-export const SEED_EXISTING_ACCOUNT = { email: 'ana@cuentasclaras.test', password: 'cuentas-claras-dev' };
+export const SEED_EXISTING_ACCOUNT = {
+  email: 'ana@cuentasclaras.test',
+  password: 'cuentas-claras-dev',
+};
 
 /** A unique email per run, so runs never collide in the database or Mailpit. */
 export function uniqueEmail(prefix: string): string {

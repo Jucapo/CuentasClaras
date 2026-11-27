@@ -219,7 +219,10 @@ export class InvitationPage {
       required(path.confirmPassword, {
         message: AUTH_VALIDATION_MESSAGES.confirmPasswordRequired,
       });
-      validate(path.confirmPassword, matchesPassword(() => this.model().password));
+      validate(
+        path.confirmPassword,
+        matchesPassword(() => this.model().password),
+      );
     },
     { submission: { action: () => this.acceptAsNewAccount() } },
   );

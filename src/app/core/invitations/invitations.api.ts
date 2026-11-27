@@ -61,7 +61,11 @@ export class InvitationsApi {
   }
 
   /** Invites an email to a space (Edge Function: emails a new account, links an existing one). */
-  invite(spaceId: string, email: string, role: MemberRole): Promise<DataResult<InvitationDelivery>> {
+  invite(
+    spaceId: string,
+    email: string,
+    role: MemberRole,
+  ): Promise<DataResult<InvitationDelivery>> {
     return this.callInviteMember({ action: 'invite', spaceId, email, role });
   }
 
@@ -80,7 +84,11 @@ export class InvitationsApi {
 
   /** What the invitation page shows, also before signing in; null for an unknown token. */
   async preview(token: string): Promise<DataResult<InvitationPreview | null>> {
-    const { data: rows, error, status } = await this.client.rpc('invitation_preview', {
+    const {
+      data: rows,
+      error,
+      status,
+    } = await this.client.rpc('invitation_preview', {
       invitation_token: token,
     });
     if (error) {
@@ -162,7 +170,9 @@ export class InvitationsApi {
 }
 
 function refArgs(ref: InvitationRef): { invitation_token?: string; target_invitation_id?: string } {
-  return 'token' in ref ? { invitation_token: ref.token } : { target_invitation_id: ref.invitationId };
+  return 'token' in ref
+    ? { invitation_token: ref.token }
+    : { target_invitation_id: ref.invitationId };
 }
 
 /** The function's `{ error: { code } }`, 'unexpected' for an answer without it, null offline. */

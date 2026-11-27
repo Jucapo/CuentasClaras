@@ -11,16 +11,22 @@
         A {{ shown.email }} no le llega correo: verá la invitación cuando entre a la app.
       </p>
       <p class="help">
-        También puedes enviarle este link. Sirve una vez, durante 7 días; si lo reenvías, el anterior
-        deja de servir.
+        También puedes enviarle este link. Sirve una vez, durante 7 días; si lo reenvías, el
+        anterior deja de servir.
       </p>
       <p class="link" data-testid="invitation-link">{{ shown.link }}</p>
       <div class="actions">
-        <cc-button variant="tonal" [icon]="copied() ? 'check' : 'content_copy'" (click)="copy(shown.link)">
+        <cc-button
+          variant="tonal"
+          [icon]="copied() ? 'check' : 'content_copy'"
+          (click)="copy(shown.link)"
+        >
           {{ copied() ? 'Link copiado' : 'Copiar link' }}
         </cc-button>
         @if (share.canShare) {
-          <cc-button variant="outlined" icon="share" (click)="shareLink(shown)">Compartir</cc-button>
+          <cc-button variant="outlined" icon="share" (click)="shareLink(shown)"
+            >Compartir</cc-button
+          >
         }
       </div>
     </div>

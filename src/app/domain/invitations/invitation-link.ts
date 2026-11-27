@@ -38,5 +38,7 @@ export function parseInvitationLink(params: InvitationLinkParams): InvitationLin
     return { kind: 'invalid' };
   }
   const id = params.id?.trim() ?? '';
-  return UUID_PATTERN.test(id) ? { kind: 'app', invitationId: id.toLowerCase() } : { kind: 'invalid' };
+  return UUID_PATTERN.test(id)
+    ? { kind: 'app', invitationId: id.toLowerCase() }
+    : { kind: 'invalid' };
 }

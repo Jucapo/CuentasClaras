@@ -10,7 +10,8 @@ export const MEMBER_ROLE_LABELS: Readonly<Record<MemberRole, string>> = {
 /** What each role can do (spec §3.1), for the role choices. */
 export const MEMBER_ROLE_DESCRIPTIONS: Readonly<Record<MemberRole, string>> = {
   owner: 'Todo, incluido invitar o quitar miembros y cambiar la configuración del espacio.',
-  editor: 'Registra y edita movimientos, cuentas compartidas, categorías, etiquetas y presupuestos.',
+  editor:
+    'Registra y edita movimientos, cuentas compartidas, categorías, etiquetas y presupuestos.',
   viewer: 'Ve lo compartido, sin cambiar nada.',
 };
 

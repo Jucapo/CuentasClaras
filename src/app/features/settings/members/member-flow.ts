@@ -12,7 +12,10 @@ import { APP_PATHS } from '../../../core/routing/app-paths';
 import { SpaceMembersService } from '../../../core/spaces/space-members.service';
 import { MemberRole, SpaceMember } from '../../../core/spaces/space.models';
 import { SpaceService } from '../../../core/spaces/space.service';
-import { OptionPanel, OptionPanelData } from '../../../shared/ui/molecules/option-panel/option-panel';
+import {
+  OptionPanel,
+  OptionPanelData,
+} from '../../../shared/ui/molecules/option-panel/option-panel';
 import {
   InviteRoleOption,
   InviteSheet,
