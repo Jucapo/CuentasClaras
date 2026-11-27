@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import type { EChartsCoreOption } from 'echarts/core';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+import { resolveLightDark } from '../../../../domain/color/css-color';
 import { formatMoney } from '../../../../domain/money/money';
 import { colorOrFallback, paletteColor } from '../../colors/color-palette';
 import { MONEY_FORMAT } from '../../money/money-format';
@@ -44,28 +45,6 @@ const HTML_ESCAPES: Readonly<Record<string, string>> = {
 // Names come from the user and the tooltip is HTML.
 function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]);
-}
-
-// Computed styles keep `light-dark(a, b)` as written, and the canvas cannot read it: this picks the
-// side of the scheme in use.
-function resolveLightDark(value: string, dark: boolean): string {
-  const match = /^light-dark\((.*)\)$/.exec(value.trim());
-  if (!match) {
-    return value;
-  }
-  const inner = match[1];
-  let depth = 0;
-  for (let index = 0; index < inner.length; index++) {
-    const character = inner[index];
-    if (character === '(') {
-      depth++;
-    } else if (character === ')') {
-      depth--;
-    } else if (character === ',' && depth === 0) {
-      return (dark ? inner.slice(index + 1) : inner.slice(0, index)).trim();
-    }
-  }
-  return value;
 }
 
 /**

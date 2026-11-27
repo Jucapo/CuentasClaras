@@ -3,6 +3,7 @@
 import {
   contrastRatio,
   MIN_GRAPHIC_CONTRAST,
+  MIN_LARGE_TEXT_CONTRAST,
   MIN_TEXT_CONTRAST,
 } from '../../../domain/color/contrast';
 
@@ -123,6 +124,7 @@ export type ColorKey = ToneKey | `${ToneKey}-${IntensitySuffix}`;
 /** Icon color over a palette color when white does not reach 3:1 (neutral 10 of the theme). */
 export const PALETTE_DARK_FOREGROUND = '#1a1c20';
 const WHITE = '#ffffff';
+const BLACK = '#000000';
 
 /** A color users can pick for categories, accounts, spaces and tags. */
 export interface PaletteColor {
@@ -155,6 +157,19 @@ function stepColor(scale: readonly string[], step: number): string {
 /** White over a color when it keeps 3:1 (WCAG 1.4.11); otherwise the dark foreground. */
 export function readableForeground(background: string): string {
   return contrastRatio(WHITE, background) >= MIN_GRAPHIC_CONTRAST ? WHITE : PALETTE_DARK_FOREGROUND;
+}
+
+/**
+ * Text over a color with AA (4.5:1): white, else the dark foreground, else black. When white falls
+ * short, black always reaches it, so some mid tones that take white icons take black text.
+ */
+export function readableTextForeground(background: string): string {
+  if (contrastRatio(WHITE, background) >= MIN_TEXT_CONTRAST) {
+    return WHITE;
+  }
+  return contrastRatio(PALETTE_DARK_FOREGROUND, background) >= MIN_TEXT_CONTRAST
+    ? PALETTE_DARK_FOREGROUND
+    : BLACK;
 }
 
 /** The palette as tones of five intensities, in display order. */
@@ -247,6 +262,17 @@ export function paletteForeground(key: ColorKey): string {
 }
 
 /**
+ * CSS value of text over a palette color with AA (4.5:1), e.g. the names in the blocks of the quick
+ * entry or a selected chip (spec §7). Icons keep `paletteForeground`, which asks 3:1.
+ */
+export function paletteOnColorText(key: ColorKey): string {
+  const color = paletteEntry(key);
+  return color
+    ? `light-dark(${readableTextForeground(color.light)}, ${readableTextForeground(color.dark)})`
+    : '';
+}
+
+/**
  * Surfaces text in a palette color sits on, per theme: the lightest and the darkest one of each
  * (neutral 98 and 94 in light; 6 and 17 in dark), from src/styles/_theme-colors.scss.
  */
@@ -258,7 +284,11 @@ export const PALETTE_TEXT_SURFACES = {
 /** Text when no intensity of the tone reads: the theme's on-surface (neutral 10 and 90). */
 const TEXT_FALLBACK = { light: '#1a1c20', dark: '#e2e2e8' } as const;
 
-function readableText(color: PaletteColor, theme: 'light' | 'dark'): string {
+function readableText(
+  color: PaletteColor,
+  theme: 'light' | 'dark',
+  minContrast: number = MIN_TEXT_CONTRAST,
+): string {
   const colors = PALETTE_TONES.find((tone) => tone.key === color.tone)?.colors ?? [];
   const index = colors.findIndex((candidate) => candidate.key === color.key);
   // Lightest first: darker intensities read on light surfaces, lighter ones on dark surfaces.
@@ -267,20 +297,61 @@ function readableText(color: PaletteColor, theme: 'light' | 'dark'): string {
   return (
     candidates
       .map((candidate) => candidate[theme])
-      .find((hex) =>
-        surfaces.every((surface) => contrastRatio(hex, surface) >= MIN_TEXT_CONTRAST),
-      ) ?? TEXT_FALLBACK[theme]
+      .find((hex) => surfaces.every((surface) => contrastRatio(hex, surface) >= minContrast)) ??
+    TEXT_FALLBACK[theme]
   );
 }
 
 /**
- * CSS value of text in a palette color, e.g. an amount in the color of its category (spec §7): the
- * color itself where it reaches AA on the surfaces, else the nearest intensity of its tone that
- * does (deeper in light, paler in dark).
+ * CSS value of text in a palette color, e.g. the label of an amount in the color of its category
+ * (spec §7): the color itself where it reaches AA on the surfaces, else the nearest intensity of
+ * its tone that does (deeper in light, paler in dark).
  */
 export function paletteTextColor(key: ColorKey): string {
   const color = paletteEntry(key);
   return color ? `light-dark(${readableText(color, 'light')}, ${readableText(color, 'dark')})` : '';
+}
+
+/**
+ * CSS value of large text in a palette color, e.g. the amount of the quick entry (spec §7): large
+ * text needs 3:1, so most colors read as they are and only the lightest take a deeper intensity.
+ */
+export function paletteLargeTextColor(key: ColorKey): string {
+  const color = paletteEntry(key);
+  return color
+    ? `light-dark(${readableText(color, 'light', MIN_LARGE_TEXT_CONTRAST)}, ${readableText(color, 'dark', MIN_LARGE_TEXT_CONTRAST)})`
+    : '';
+}
+
+/** CSS values that tint a component with a palette color instead of the brand color. */
+export interface PaletteAccent {
+  /** Fill, e.g. the ✓ key or a selected chip. */
+  readonly color: string;
+  /** Icons over the fill (3:1). */
+  readonly onColor: string;
+  /** Text over the fill (4.5:1). */
+  readonly onColorText: string;
+  /** Text and outlines on the surface (4.5:1); it stands in for `--mat-sys-primary`. */
+  readonly text: string;
+  /** Text over a fill of `text`; it stands in for `--mat-sys-on-primary`. */
+  readonly onText: string;
+  /** Large text on the surface (3:1), e.g. the amount. */
+  readonly largeText: string;
+}
+
+/** Everything a component needs to take a palette color as its accent (spec §7, quick entry). */
+export function paletteAccent(key: ColorKey): PaletteAccent {
+  const color = paletteEntry(key);
+  const light = color ? readableText(color, 'light') : TEXT_FALLBACK.light;
+  const dark = color ? readableText(color, 'dark') : TEXT_FALLBACK.dark;
+  return {
+    color: paletteColor(key),
+    onColor: paletteForeground(key),
+    onColorText: paletteOnColorText(key),
+    text: `light-dark(${light}, ${dark})`,
+    onText: `light-dark(${readableTextForeground(light)}, ${readableTextForeground(dark)})`,
+    largeText: paletteLargeTextColor(key),
+  };
 }
 
 /** Spanish name of a palette color. */
