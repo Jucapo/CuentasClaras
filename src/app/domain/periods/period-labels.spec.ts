@@ -115,6 +115,12 @@ describe('entryDateText and longDateText', () => {
     expect(entryDateText('2025-12-31', '2026-01-01')).toBe('Ayer, 31 dic 2025');
   });
 
+  // The line under the keypad of the quick entry always says the year (spec §7).
+  it('say the year when asked to', () => {
+    expect(entryDateText('2026-11-27', '2026-11-27', true)).toBe('Hoy, 27 nov 2026');
+    expect(entryDateText('2026-11-19', '2026-11-27', true)).toBe('Jueves, 19 nov 2026');
+  });
+
   it('spell a date out, with its year when it is another one', () => {
     expect(longDateText('2026-11-27', '2026-11-27')).toBe('27 de noviembre');
     expect(longDateText('2025-06-10', '2026-11-27')).toBe('10 de junio de 2025');

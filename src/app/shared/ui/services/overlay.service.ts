@@ -1,12 +1,26 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable, InjectionToken, Injector, Type } from '@angular/core';
+import {
+  computed,
+  inject,
+  Injectable,
+  InjectionToken,
+  Injector,
+  signal,
+  Type,
+} from '@angular/core';
 import { NavigationStart, Router } from '@angular/router';
 import { filter, firstValueFrom, Observable, take } from 'rxjs';
-import { OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS } from '../ui.constants';
+import { DRAWER_ANIMATION_MS, OVERLAY_HISTORY_CLEANUP_TIMEOUT_MS } from '../ui.constants';
 import { LayoutService } from './layout.service';
 
 /** Data handed to the component shown in an overlay. */
 export const OVERLAY_DATA = new InjectionToken<unknown>('OVERLAY_DATA');
+
+/** What holds an overlay: a bottom sheet, a centered dialog or the side drawer. */
+export type OverlayContainer = 'sheet' | 'dialog' | 'drawer';
+
+/** The container of the overlay a component is shown in; absent outside overlays. */
+export const OVERLAY_CONTAINER = new InjectionToken<OverlayContainer>('OVERLAY_CONTAINER');
 
 /** Leaves a view entered with `OverlayHandle.enterView` from the interface (its ←). */
 export type LeaveView = () => void;
@@ -37,11 +51,13 @@ export class OverlayHandle<R> {
     return this.guard?.() ?? true;
   }
 
-  /** Dismisses the overlay unless its guard keeps it open. */
-  requestClose(): void {
-    if (this.mayDismiss()) {
-      this.close();
+  /** Dismisses the overlay unless its guard keeps it open; true if it closed. */
+  requestClose(): boolean {
+    if (!this.mayDismiss()) {
+      return false;
     }
+    this.close();
+    return true;
   }
 
   /**
@@ -67,14 +83,22 @@ export interface OverlayOptions<D> {
   readonly label: string;
   /**
    * `picker` is wide enough for grids; `confirm` is a short question; `entry` is the quick entry,
-   * a tall sheet on phones and a two-column dialog elsewhere.
+   * a tall sheet on phones and a two-column dialog elsewhere; `drawer` is the side menu, from the
+   * start edge in every window class (spec §13.5).
    */
-  readonly size?: 'picker' | 'confirm' | 'entry' | 'calculator';
+  readonly size?: 'picker' | 'confirm' | 'entry' | 'calculator' | 'drawer';
   /** What gets the focus: the title by default, or a CSS selector, e.g. `input` for a new item. */
   readonly autoFocus?: string;
 }
 
-const PANEL_CLASS = { dialog: 'cc-overlay-dialog', sheet: 'cc-overlay-sheet' } as const;
+const PANEL_CLASS = {
+  dialog: 'cc-overlay-dialog',
+  sheet: 'cc-overlay-sheet',
+  drawer: 'cc-overlay-drawer',
+} as const;
+
+/** Backdrop of every overlay, painted with the scrim tokens the status bar color also reads. */
+const BACKDROP_CLASS = 'cc-overlay-backdrop';
 
 /** Key of the history entry an open overlay adds, so "back" closes it instead of navigating. */
 const HISTORY_KEY = 'ccOverlay';
@@ -86,9 +110,9 @@ let nextOverlayId = 1;
 let nextViewId = 1;
 
 /**
- * Shows a component as a bottom sheet in the compact window class and as a dialog in the others
- * (spec §13.3, §13.5). The system back button closes the overlay without leaving the page.
- * Pages and molecules use this instead of Material directly.
+ * Shows a component as a bottom sheet in the compact window class and as a dialog in the others,
+ * or as the side drawer (spec §13.3, §13.5). The system back button closes the overlay without
+ * leaving the page. Pages and molecules use this instead of Material directly.
  */
 @Injectable({ providedIn: 'root' })
 export class OverlayService {
@@ -96,6 +120,15 @@ export class OverlayService {
   private readonly layout = inject(LayoutService);
   private readonly router = inject(Router);
   private readonly window = inject(DOCUMENT).defaultView;
+  private readonly openCount = signal(0);
+
+  /**
+   * How many overlays are open (dialogs, sheets, confirmations, the drawer). The count drops as one
+   * starts closing, not when its exit animation ends, so the status bar color follows the scrim.
+   */
+  readonly openOverlays = this.openCount.asReadonly();
+  /** Whether any overlay is open. */
+  readonly anyOpen = computed(() => this.openCount() > 0);
 
   /**
    * Opens `component`; resolves with what it passes to `OverlayHandle.close`, or undefined.
@@ -105,11 +138,15 @@ export class OverlayService {
     component: Type<unknown>,
     options: OverlayOptions<D>,
   ): Promise<R | undefined> {
+    const size = options.size ?? 'picker';
+    const container: OverlayContainer =
+      size === 'drawer' ? 'drawer' : this.layout.isCompact() ? 'sheet' : 'dialog';
     const handle = new OverlayHandle<R>();
     const injector = Injector.create({
       parent: this.injector,
       providers: [
         { provide: OVERLAY_DATA, useValue: options.data },
+        { provide: OVERLAY_CONTAINER, useValue: container },
         { provide: OverlayHandle, useValue: handle },
       ],
     });
@@ -118,44 +155,73 @@ export class OverlayService {
       data: options.data,
       ariaLabel: options.label,
       autoFocus: options.autoFocus ?? 'first-heading',
+      backdropClass: BACKDROP_CLASS,
       // Back and navigation are handled below: back closes only the top overlay.
       closeOnNavigation: false,
       // The backdrop and Esc go through the handle's guard (see dismissOn).
       disableClose: true,
     };
-    const sizeClass = `cc-overlay-${options.size ?? 'picker'}`;
+    const panelClass = [PANEL_CLASS[container], `cc-overlay-${size}`];
+
+    // Counted until it starts closing, whichever way it closes.
+    let counted = true;
+    const uncount = () => {
+      if (counted) {
+        counted = false;
+        this.openCount.update((count) => count - 1);
+      }
+    };
 
     // Loaded on demand to keep dialogs and sheets out of the initial bundle.
     let closed: Observable<R | undefined>;
-    if (this.layout.isCompact()) {
+    if (container === 'sheet') {
       const { MatBottomSheet } = await import('@angular/material/bottom-sheet');
       const ref = this.injector.get(MatBottomSheet).open<unknown, D, R>(component, {
         ...config,
-        panelClass: [PANEL_CLASS.sheet, sizeClass],
+        panelClass,
       });
       handle.attach(
-        (result) => ref.dismiss(result),
+        (result) => {
+          uncount();
+          ref.dismiss(result);
+        },
         (onBack) => history.enterView(onBack),
       );
       dismissOn(ref.backdropClick(), ref.keydownEvents(), handle);
       closed = ref.afterDismissed();
     } else {
       const { MatDialog } = await import('@angular/material/dialog');
+      const drawer = container === 'drawer';
       const ref = this.injector.get(MatDialog).open<unknown, D, R>(component, {
         ...config,
-        panelClass: [PANEL_CLASS.dialog, sizeClass],
+        panelClass,
+        // The drawer slides in from the start edge, full height (its CSS draws the motion).
+        ...(drawer
+          ? {
+              position: { left: '0', top: '0' },
+              height: '100%',
+              maxHeight: '100%',
+              enterAnimationDuration: DRAWER_ANIMATION_MS,
+              exitAnimationDuration: DRAWER_ANIMATION_MS,
+            }
+          : {}),
       });
       handle.attach(
-        (result) => ref.close(result),
+        (result) => {
+          uncount();
+          ref.close(result);
+        },
         (onBack) => history.enterView(onBack),
       );
       dismissOn(ref.backdropClick(), ref.keydownEvents(), handle);
       closed = ref.afterClosed();
     }
+    this.openCount.update((count) => count + 1);
 
     // Views are entered once the overlay is open, after this.
     const history = this.trackHistory(handle);
     const result = await firstValueFrom(closed);
+    uncount();
     await history.release();
     return result;
   }

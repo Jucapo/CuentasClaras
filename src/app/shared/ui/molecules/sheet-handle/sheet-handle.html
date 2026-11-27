@@ -1,0 +1,15 @@
+@if (label(); as label) {
+  <button
+    type="button"
+    class="handle"
+    ccDragDismiss="down"
+    [attr.aria-label]="label"
+    (click)="activate.emit()"
+  >
+    <span class="pill"></span>
+  </button>
+} @else {
+  <div class="handle" ccDragDismiss="down" aria-hidden="true">
+    <span class="pill"></span>
+  </div>
+}

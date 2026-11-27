@@ -1,0 +1,36 @@
+:host {
+  display: flex;
+  justify-content: center;
+}
+
+// A 48px target around a small pill; the pill is what shows over the scrim.
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-sheet-handle-target);
+  height: var(--cc-sheet-gutter);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: grab;
+
+  // The finger drags the sheet instead of scrolling the page.
+  touch-action: none;
+
+  &:focus-visible {
+    outline: none;
+
+    .pill {
+      outline: var(--cc-swatch-ring-width) solid var(--cc-sheet-handle-color);
+      outline-offset: var(--cc-swatch-ring-width);
+    }
+  }
+}
+
+.pill {
+  width: var(--cc-sheet-handle-width);
+  height: var(--cc-sheet-handle-height);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--cc-sheet-handle-color);
+}

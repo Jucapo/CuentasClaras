@@ -33,6 +33,20 @@ html {
   --cc-on-tone-expense: var(--mat-sys-on-error);
   --cc-tone-income: var(--mat-sys-tertiary);
   --cc-on-tone-income: var(--mat-sys-on-tertiary);
+
+  // Surface of the app bars: the header, the bottom navigation and the rail share it, and the status
+  // and navigation bars of the system take it (theme-color, spec §13.2). Frames whose top edge is
+  // another surface (the compact wizard) set their own.
+  --cc-bar-surface: var(--mat-sys-surface-container);
+
+  // Scrim behind overlays: Material 3's scrim at 32%, as CDK's default backdrop.
+  --cc-scrim-opacity: 0.32;
+
+  // The drag handle floats over the scrim, so it is light in both themes.
+  --cc-sheet-handle-color: light-dark(
+    var(--mat-sys-surface-container-lowest),
+    var(--mat-sys-on-surface-variant)
+  );
 }
 
 // cc-tabs: no divider under the tabs, only the indicator of the active one (spec §13.3).
@@ -79,17 +93,89 @@ cc-fab {
   width: min(var(--cc-confirm-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
 }
 
+// The quick entry's dialog (spec §7): transparent, with a gutter on top where the icons of its
+// blocks and its ✕ float over the edge; its panels paint the surface.
 .cdk-overlay-pane.cc-overlay-dialog.cc-overlay-entry {
   width: min(var(--cc-entry-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
+
+  @include mat.dialog-overrides(
+    (
+      container-color: transparent,
+      container-elevation-shadow: none,
+    )
+  );
+
+  .mat-mdc-dialog-surface {
+    padding-top: var(--cc-sheet-gutter);
+    overflow: visible;
+  }
 }
 
 .cdk-overlay-pane.cc-overlay-dialog.cc-overlay-calculator {
   width: min(var(--cc-calculator-dialog-width), calc(100vw - 2 * var(--cc-space-4)));
 }
 
+// Bottom sheets (spec §13.5): the container is transparent, with a gutter on top where the drag
+// handle floats over the backdrop; the panel inside (cc-overlay-panel) paints the sheet. Only the
+// panel takes touches, so a tap on the gutter reaches the backdrop and closes the sheet as before.
+.cdk-overlay-pane.cc-overlay-sheet {
+  pointer-events: none;
+}
+
 .cc-overlay-sheet .mat-bottom-sheet-container {
   max-height: var(--cc-picker-panel-max-height);
-  padding: 0;
+  padding: var(--cc-sheet-gutter) 0 0;
+  background-color: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+// A sheet dragged short of closing slides back to its place.
+.cdk-overlay-pane.cc-drag-return {
+  transition: transform var(--cc-duration-medium) var(--cc-easing-standard);
+}
+
+// The backdrop of every overlay, from the scrim tokens the status bar color also reads (§13.2).
+.cdk-overlay-backdrop.cc-overlay-backdrop {
+  background-color: color-mix(
+    in srgb,
+    var(--mat-sys-scrim) calc(var(--cc-scrim-opacity) * 100%),
+    transparent
+  );
+}
+
+// The side drawer (spec §13.5): full height from the start edge, sliding in and out instead of the
+// dialog's zoom. Material closes it once its exit duration ends.
+.cdk-overlay-pane.cc-overlay-drawer {
+  width: min(var(--cc-drawer-width), calc(100vw - var(--cc-drawer-gap)));
+
+  @include mat.dialog-overrides(
+    (
+      container-max-width: none,
+      container-small-max-width: none,
+      container-min-width: 0,
+      container-shape: 0 var(--cc-radius-lg) var(--cc-radius-lg) 0,
+      container-color: var(--mat-sys-surface-container-low),
+    )
+  );
+
+  .mat-mdc-dialog-inner-container {
+    opacity: 1;
+    transition: none;
+  }
+
+  .mat-mdc-dialog-surface {
+    transform: translateX(-100%);
+    transition: transform var(--mat-dialog-transition-duration, 0ms) var(--cc-easing-standard);
+  }
+
+  .mdc-dialog--open .mat-mdc-dialog-surface {
+    transform: none;
+  }
+
+  .mdc-dialog--closing .mat-mdc-dialog-surface {
+    transform: translateX(-100%);
+  }
 }
 
 // Surface of each overlay, as Angular Material paints it (sheets on surface-container-low, dialogs

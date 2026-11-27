@@ -1,16 +1,22 @@
 <div class="endpoints" role="group" [attr.aria-label]="label()">
-  @for (endpoint of endpoints(); track $index; let index = $index) {
+  @for (endpoint of endpoints(); track $index; let index = $index, first = $first) {
     <button
       type="button"
       class="endpoint"
-      [style.--cc-endpoint-color]="tint(endpoint.color)"
+      [style.--cc-endpoint-color]="fill(endpoint.color)"
+      [style.--cc-endpoint-on-color]="onFill(endpoint.color)"
       (click)="picked.emit(index)"
     >
-      <cc-icon-badge class="badge" [icon]="endpoint.icon" [color]="endpoint.color" />
-      <span class="texts">
-        <span class="role">{{ endpoint.role }}</span>
-        <span class="name">{{ endpoint.name }}</span>
+      <span
+        class="badge"
+        [class.circle]="endpoint.kind === 'category'"
+        [class.at-end]="!first"
+        [style.--cc-endpoint-icon-color]="iconColor(endpoint.color)"
+      >
+        <cc-icon [name]="iconName(endpoint.icon)" />
       </span>
+      <span class="role">{{ endpoint.role }}</span>
+      <span class="name">{{ endpoint.name }}</span>
     </button>
   }
 </div>

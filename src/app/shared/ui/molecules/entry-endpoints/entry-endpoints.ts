@@ -1,6 +1,12 @@
 import { Component, input, output } from '@angular/core';
-import { IconBadge } from '../../atoms/icon-badge/icon-badge';
-import { colorOrFallback, paletteColor } from '../../colors/color-palette';
+import { Icon } from '../../atoms/icon/icon';
+import {
+  colorOrFallback,
+  paletteColor,
+  paletteLargeTextColor,
+  paletteOnColorText,
+} from '../../colors/color-palette';
+import { iconOrFallback } from '../../icons/icon-glyphs';
 
 /** One block of `cc-entry-endpoints`, e.g. "De cuenta · Efectivo". */
 export interface EntryEndpoint {
@@ -9,19 +15,22 @@ export interface EntryEndpoint {
   /** What is picked, or what to pick, e.g. "Elige la cuenta". */
   readonly name: string;
   readonly icon: string;
-  /** Palette key; the block takes a soft tone of it and the badge the color itself. */
+  /** Palette key; the block is filled with it. */
   readonly color: string | null;
+  /** Accounts float in a rounded square, categories in a circle, as in 1Money. */
+  readonly kind: 'account' | 'category';
 }
 
 /**
- * Where a movement comes from and where it goes (spec §7), as blocks in a row: "De cuenta → A
- * categoría" for an expense, "De categoría → A cuenta" for an income, "De cuenta → A cuenta" for a
- * transfer. Each block has its color and icon; touching it emits its index, to pick another one.
- * The soft tone keeps the text at AA, as the rows of Presupuesto do.
+ * Where a movement comes from and where it goes (spec §7), as 1Money's blocks: edge to edge on top
+ * of the quick entry, each filled with its color, the text in the color that reads on it (AA). The
+ * icon of the first block floats over its top edge at the start, the one of the last block at the
+ * end, so the middle stays free for the sheet's handle. Touching a block emits its index, to pick
+ * another one; the icons belong to their block.
  */
 @Component({
   selector: 'cc-entry-endpoints',
-  imports: [IconBadge],
+  imports: [Icon],
   templateUrl: './entry-endpoints.html',
   styleUrl: './entry-endpoints.scss',
 })
@@ -31,7 +40,18 @@ export class EntryEndpoints {
   readonly label = input.required<string>();
   readonly picked = output<number>();
 
-  protected tint(color: string | null): string {
+  protected readonly iconName = iconOrFallback;
+
+  protected fill(color: string | null): string {
     return paletteColor(colorOrFallback(color));
+  }
+
+  protected onFill(color: string | null): string {
+    return paletteOnColorText(colorOrFallback(color));
+  }
+
+  /** The icon on its floating badge, a surface: the color at 3:1, as an icon needs. */
+  protected iconColor(color: string | null): string {
+    return paletteLargeTextColor(colorOrFallback(color));
   }
 }

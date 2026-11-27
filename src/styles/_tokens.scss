@@ -72,6 +72,18 @@
   --cc-picker-cell-size: 3rem;
   --cc-picker-dialog-width: 48rem;
   --cc-picker-panel-max-height: 88dvh;
+
+  // Bottom sheets (spec §13.5): the transparent gutter above the sheet where the drag handle
+  // floats (a full touch target), the handle's pill and the sheet's top corners.
+  --cc-sheet-gutter: var(--cc-touch-target-min);
+  --cc-sheet-handle-target: 3rem;
+  --cc-sheet-handle-width: 2rem;
+  --cc-sheet-handle-height: 0.25rem;
+  --cc-sheet-radius: 1.75rem;
+
+  // Side drawer (spec §13.5): its width, and the strip of the screen it always leaves visible.
+  --cc-drawer-width: 22.5rem;
+  --cc-drawer-gap: 3.5rem;
   --cc-icon-groups-width: 11rem;
 
   // Height of the icon or color grid inside a longer sheet (subcategory, tag), which scrolls.
@@ -80,12 +92,17 @@
   --cc-money-row-value-width: 11rem;
   --cc-confirm-dialog-width: 26rem;
 
-  // Quick entry: a tall sheet on phones and a two-column dialog elsewhere, with its keypad.
+  // Quick entry: a tall sheet on phones and a two-column dialog elsewhere, with its keypad. The icons
+  // of its blocks float half over their top edge (spec §7).
   --cc-entry-sheet-max-height: 92dvh;
   --cc-entry-dialog-width: 48rem;
   --cc-entry-column-min-width: 18rem;
+  --cc-entry-badge-size: 2.5rem;
   --cc-keypad-key-height: 3.25rem;
   --cc-amount-display-min-height: 4.5rem;
+
+  // A text field without its floating label (the note of the quick entry).
+  --cc-field-compact-height: 3rem;
 
   // Category bubbles: ring around the badge that fills as the budget is spent.
   --cc-bubble-ring-width: 3px;

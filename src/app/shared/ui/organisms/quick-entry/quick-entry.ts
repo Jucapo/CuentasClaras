@@ -35,22 +35,21 @@ import { formatMoney } from '../../../../domain/money/money';
 import { NUMBER_FORMAT_SEPARATORS } from '../../../../domain/money/number-format';
 import { entryDateText } from '../../../../domain/periods/period-labels';
 import { Button } from '../../atoms/button/button';
+import { ColorSwatch } from '../../atoms/color-swatch/color-swatch';
 import { DecimalField } from '../../atoms/decimal-field/decimal-field';
-import { Icon } from '../../atoms/icon/icon';
 import { Message } from '../../atoms/message/message';
 import { SegmentedControl, SegmentOption } from '../../atoms/segmented-control/segmented-control';
 import { Select, SelectOption } from '../../atoms/select/select';
 import { Switch } from '../../atoms/switch/switch';
 import { TextField } from '../../atoms/text-field/text-field';
+import { ColorKey, colorOrFallback, paletteAccent } from '../../colors/color-palette';
 import { AmountDisplay } from '../../molecules/amount-display/amount-display';
 import { ChipChoice } from '../../molecules/chip-choice/chip-choice';
 import { ChipOption, ChipSelect } from '../../molecules/chip-select/chip-select';
 import { ConfirmOptions, ConfirmPanel } from '../../molecules/confirm-panel/confirm-panel';
 import { DateChoice } from '../../molecules/date-choice/date-choice';
-import { Disclosure } from '../../molecules/disclosure/disclosure';
 import { EntryEndpoint, EntryEndpoints } from '../../molecules/entry-endpoints/entry-endpoints';
 import { Keypad, keypadKeyOf } from '../../molecules/keypad/keypad';
-import { ListItem } from '../../molecules/list-item/list-item';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
 import { MONEY_FORMAT } from '../../money/money-format';
 import { OverlayViews } from '../../services/overlay-views';
@@ -109,12 +108,13 @@ export interface QuickEntryData {
   readonly save: (value: QuickEntryValue) => Promise<ActionResult>;
 }
 
-/** What covers the form: a picker, the date, or a question (spec §13.5). */
+/** What covers the form: a picker, the date, the tags, or a question (spec §13.5). */
 type EntryView =
   | { readonly kind: 'form' }
   | { readonly kind: 'account'; readonly target: 'source' | 'destination' }
   | { readonly kind: 'category' }
   | { readonly kind: 'date' }
+  | { readonly kind: 'tags' }
   | { readonly kind: 'delete' }
   | { readonly kind: 'discard'; readonly then: 'cancel' | 'duplicate' };
 
@@ -140,8 +140,8 @@ const QUICK_ENTRY_TEXT = {
   tags: 'Etiquetas',
   noTags: 'No hay etiquetas. Créalas en Configuración.',
   note: 'Nota',
+  notePlaceholder: 'Notas…',
   includeInSpace: 'Incluir en el espacio',
-  includeHint: 'Lo verán los demás miembros y contará en el presupuesto conjunto.',
   direction: 'El ajuste',
   actions: 'Acciones del movimiento',
   delete: 'Borrar',
@@ -177,17 +177,20 @@ function contextOf(data: Signal<QuickEntryData>): QuickEntryContext {
 }
 
 /**
- * The quick entry (spec §7), like 1Money's: on top, where the money comes from and where it goes,
- * each in its color; the subcategory chips; the amount, large and in the color of the category; the
- * note; the date in one line; installments for credit cards and "incluir en el espacio" for
- * private accounts, and the tags. A new movement shows the keypad; an edited one shows it when the
- * amount is touched, with Borrar, Fecha and Duplicar below.
+ * The quick entry (spec §7), like 1Money's: on top, edge to edge, where the money comes from and
+ * where it goes, each filled with its color and its icon floating over the edge; the subcategory
+ * chips; the amount, large and in the color of the category; the note, with the tags at its end;
+ * installments for credit cards and "incluir en el espacio" for private accounts; the keypad, with
+ * the date under it. A new movement shows the keypad; an edited one shows it when the amount is
+ * touched, with Borrar and Duplicar below. Nothing in it takes the brand color: its accent is the
+ * category's (the source account's in transfers and adjustments).
  *
- * The pickers, the date and the questions are views over the form, with ← (spec §13.5): Esc and the
- * system back button return to the form, which keeps its scroll. With unsaved changes, closing asks
- * first. One organism for expenses, incomes, transfers and adjustments, new or edited, in a sheet,
- * a dialog (`cc-quick-entry-sheet`) or the detail pane of a list. The physical keyboard types the
- * amount. The host renders one instance per movement: the values start from `data`.
+ * The pickers, the date, the tags and the questions are views over the form, with ← (spec §13.5):
+ * Esc and the system back button return to the form, which keeps its scroll. With unsaved changes,
+ * closing asks first. In a sheet the handle closes it; elsewhere a ✕ in the same place. One
+ * organism for expenses, incomes, transfers and adjustments, new or edited, in a sheet, a dialog
+ * (`cc-quick-entry-sheet`) or the detail pane of a list. The physical keyboard types the amount.
+ * The host renders one instance per movement: the values start from `data`.
  */
 @Component({
   selector: 'cc-quick-entry',
@@ -199,16 +202,14 @@ function contextOf(data: Signal<QuickEntryData>): QuickEntryContext {
     Keypad,
     ChipChoice,
     ChipSelect,
+    ColorSwatch,
     Select,
     SegmentedControl,
     DecimalField,
     TextField,
     Switch,
-    Disclosure,
     Button,
-    Icon,
     Message,
-    ListItem,
     EntryEndpoints,
     DateChoice,
     ConfirmPanel,
@@ -217,7 +218,13 @@ function contextOf(data: Signal<QuickEntryData>): QuickEntryContext {
   ],
   templateUrl: './quick-entry.html',
   styleUrl: './quick-entry.scss',
-  host: { '(keydown)': 'onKeydown($event)', '[class]': 'layout()' },
+  host: {
+    '(keydown)': 'onKeydown($event)',
+    '[class]': 'layout()',
+    // Material reads the primary color of the system: inside the entry it is the accent.
+    '[style.--mat-sys-primary]': 'accent().text',
+    '[style.--mat-sys-on-primary]': 'accent().onText',
+  },
 })
 export class QuickEntry {
   readonly data = input.required<QuickEntryData>();
@@ -287,6 +294,12 @@ export class QuickEntry {
   protected readonly isTransfer = computed(() => this.model().type === 'transfer');
   protected readonly isAdjustment = computed(() => this.model().type === 'adjustment');
   protected readonly isCategorized = computed(() => !this.isTransfer() && !this.isAdjustment());
+
+  /** The color of the entry: the category's, or the source account's in transfers and adjustments. */
+  protected readonly accentKey = computed<ColorKey>(() =>
+    colorOrFallback(this.isCategorized() ? this.category()?.color : this.source()?.color),
+  );
+  protected readonly accent = computed(() => paletteAccent(this.accentKey()));
   protected readonly twoAmounts = computed(() => needsToAmount(this.model(), this.context));
   protected readonly showInstallments = computed(() =>
     asksInstallments(this.model(), this.context),
@@ -303,6 +316,7 @@ export class QuickEntry {
       name: chosen?.name ?? QUICK_ENTRY_TEXT.pickAccount,
       icon: chosen?.icon ?? 'account_balance_wallet',
       color: chosen?.color ?? null,
+      kind: 'account',
     });
     const category = this.category();
     const categoryEnd = (role: string): EntryEndpoint => ({
@@ -310,6 +324,7 @@ export class QuickEntry {
       name: category?.name ?? QUICK_ENTRY_TEXT.pickCategory,
       icon: category?.icon ?? 'category',
       color: category?.color ?? null,
+      kind: 'category',
     });
     switch (this.model().type) {
       case 'expense':
@@ -374,14 +389,19 @@ export class QuickEntry {
     { value: 'increase', label: 'Sube el saldo' },
     { value: 'decrease', label: 'Baja el saldo' },
   ];
-  protected readonly dateText = computed(() => entryDateText(this.model().date, this.data().today));
+  /** Under the keypad, with the year (spec §7). */
+  protected readonly dateText = computed(() =>
+    entryDateText(this.model().date, this.data().today, true),
+  );
 
-  protected readonly tagsLabel = computed(() => {
+  /** The tags of the movement, as small chips under the note. */
+  protected readonly chosenTags = computed(() => {
     const { tagIds } = this.model();
-    const names = this.data()
-      .tags.filter((tag) => tagIds.includes(tag.value))
-      .map((tag) => tag.label);
-    return names.length ? `${QUICK_ENTRY_TEXT.tags} · ${names.join(' · ')}` : QUICK_ENTRY_TEXT.tags;
+    return this.data().tags.filter((tag) => tagIds.includes(tag.value));
+  });
+  protected readonly tagsLabel = computed(() => {
+    const names = this.chosenTags().map((tag) => tag.label);
+    return names.length ? `${QUICK_ENTRY_TEXT.tags}: ${names.join(', ')}` : QUICK_ENTRY_TEXT.tags;
   });
 
   // ── Views ──────────────────────────────────────────────────────────────────
@@ -398,6 +418,8 @@ export class QuickEntry {
         return QUICK_ENTRY_TEXT.categories;
       case 'date':
         return QUICK_ENTRY_TEXT.date;
+      case 'tags':
+        return QUICK_ENTRY_TEXT.tags;
       default:
         return this.data().title;
     }
@@ -530,6 +552,10 @@ export class QuickEntry {
 
   protected openDate(): void {
     this.views.enter({ kind: 'date' });
+  }
+
+  protected openTags(): void {
+    this.views.enter({ kind: 'tags' });
   }
 
   protected askDelete(): void {

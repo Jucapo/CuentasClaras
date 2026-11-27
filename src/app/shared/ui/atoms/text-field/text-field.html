@@ -1,5 +1,15 @@
-<mat-form-field class="field">
-  <mat-label>{{ label() }}</mat-label>
+<mat-form-field
+  class="field"
+  [appearance]="appearance()"
+  [subscriptSizing]="appearance() === 'outline' ? 'dynamic' : 'fixed'"
+>
+  @if (!hideLabel()) {
+    <mat-label>{{ label() }}</mat-label>
+  }
+  @if (actionIcon() && align() === 'center') {
+    <!-- Balances the action, so the centered text sits in the middle of the field. -->
+    <span matPrefix class="spacer" aria-hidden="true"></span>
+  }
   <input
     #input
     matInput
@@ -10,6 +20,7 @@
     [required]="required()"
     [placeholder]="placeholder()"
     [errorStateMatcher]="errorStateMatcher"
+    [attr.aria-label]="hideLabel() ? label() : null"
     [attr.name]="name() || null"
     [attr.autocomplete]="autocomplete()"
     [attr.inputmode]="inputMode() ?? null"
@@ -17,6 +28,15 @@
     (input)="onInput($event)"
     (blur)="touch.emit()"
   />
+  @if (actionIcon(); as icon) {
+    <cc-icon-button
+      matSuffix
+      class="action"
+      [icon]="icon"
+      [label]="actionLabel() ?? label()"
+      (click)="action.emit()"
+    />
+  }
   @if (errorMessage(); as message) {
     <mat-error>{{ message }}</mat-error>
   } @else if (hint(); as hint) {

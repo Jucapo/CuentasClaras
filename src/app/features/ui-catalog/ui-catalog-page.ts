@@ -517,12 +517,30 @@ export class UiCatalogPage {
     { value: 'c3', label: 'Servicios públicos', icon: 'bolt' },
   ];
   protected readonly expenseEndpoints: readonly EntryEndpoint[] = [
-    { role: 'De cuenta', name: 'Efectivo', icon: 'payments', color: 'teal' },
-    { role: 'A categoría', name: 'Mercado', icon: 'shopping_cart', color: 'lime' },
+    { role: 'De cuenta', name: 'Efectivo', icon: 'payments', color: 'teal', kind: 'account' },
+    {
+      role: 'A categoría',
+      name: 'Mercado',
+      icon: 'shopping_cart',
+      color: 'lime',
+      kind: 'category',
+    },
   ];
   protected readonly transferEndpoints: readonly EntryEndpoint[] = [
-    { role: 'De cuenta', name: 'Bancolombia', icon: 'account_balance', color: 'amber' },
-    { role: 'A cuenta', name: 'Elige la cuenta', icon: 'account_balance_wallet', color: null },
+    {
+      role: 'De cuenta',
+      name: 'Bancolombia',
+      icon: 'account_balance',
+      color: 'amber',
+      kind: 'account',
+    },
+    {
+      role: 'A cuenta',
+      name: 'Elige la cuenta',
+      icon: 'account_balance_wallet',
+      color: null,
+      kind: 'account',
+    },
   ];
   protected readonly transactionGroups: readonly TransactionListGroup[] = [
     {

@@ -1,8 +1,10 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { Fab } from '../../atoms/fab/fab';
 import { IconButton } from '../../atoms/icon-button/icon-button';
 import { matchesShortcut } from '../../services/keyboard-shortcuts';
+import { OVERLAY_CONTAINER } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
+import { SheetHandle } from '../sheet-handle/sheet-handle';
 
 let nextPanelId = 0;
 
@@ -36,17 +38,22 @@ const OWN_ENTER_SELECTOR = [
  *
  * Without it (one choice, confirmations, the period): a bar with the close button and the title.
  *
- * Both take an optional toolbar (`[ccOverlayToolbar]`), a scrolling body and optional actions at
- * the end (`[ccOverlayActions]`).
+ * Both take an optional block that runs edge to edge on top (`[ccOverlayHero]`), an optional
+ * toolbar (`[ccOverlayToolbar]`), a scrolling body and optional actions at the end
+ * (`[ccOverlayActions]`).
+ *
+ * In a bottom sheet the panel paints the sheet: the container around it is transparent, so the drag
+ * handle (and, in the quick entry, the icons of its blocks) float above its top edge (spec §13.5).
  */
 @Component({
   selector: 'cc-overlay-panel',
-  imports: [IconButton, Fab],
+  imports: [IconButton, Fab, SheetHandle],
   templateUrl: './overlay-panel.html',
   styleUrl: './overlay-panel.scss',
   host: {
     '[class.floating]': 'floating()',
     '[class.with-confirm]': 'confirmLabel() !== null',
+    '[class.in-sheet]': 'inSheet',
     '(keydown)': 'onKeydown($event)',
   },
 })
@@ -55,6 +62,13 @@ export class OverlayPanel {
   readonly title = input.required<string>();
   /** Hides the close button, e.g. when the actions already offer a way out. */
   readonly hideClose = input(false);
+  /**
+   * In a sheet, the handle becomes the close button with this name (e.g. "Cerrar") and there is no
+   * ✕: the quick entry, whose blocks take the whole width (spec §13.5).
+   */
+  readonly handleLabel = input<string | null>(null);
+  /** The floating ✕ sits centered on the top edge instead of the corner (the quick entry). */
+  readonly closeAtTop = input(false);
   /**
    * A view inside an overlay (spec §13.5), e.g. the calculator within a detail: ← ("Volver")
    * instead of ✕, emitting `back`.
@@ -78,8 +92,13 @@ export class OverlayPanel {
   protected readonly titleId = `cc-overlay-title-${nextPanelId++}`;
   protected readonly closeLabel = UI_TEXT.close;
   protected readonly backLabel = UI_TEXT.back;
+  /** Inside a bottom sheet: it paints the sheet and shows the drag handle. */
+  protected readonly inSheet = inject(OVERLAY_CONTAINER, { optional: true }) === 'sheet';
   protected readonly floating = computed(
     () => this.confirmLabel() !== null || this.floatingClose(),
+  );
+  protected readonly closesWithHandle = computed(
+    () => this.inSheet && this.handleLabel() !== null,
   );
 
   protected confirm(): void {
