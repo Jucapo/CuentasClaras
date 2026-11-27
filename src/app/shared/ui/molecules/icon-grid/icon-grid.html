@@ -1,37 +1,67 @@
-<div class="toolbar">
-  <cc-text-field type="search" [label]="text.searchIcons" [(value)]="query" />
-  @if (!query()) {
-    <nav class="shortcuts" aria-label="Grupos de íconos">
-      @for (group of groups(); track group.id) {
-        <button type="button" class="shortcut" (click)="jumpTo(group.id)">
-          {{ group.label }}
+<div class="layout" [class.searching]="searching()">
+  <nav class="side" [attr.aria-label]="text.iconGroups">
+    @for (section of sections(); track section.id) {
+      <button
+        type="button"
+        class="side-item"
+        [class.current]="section.id === current()?.id"
+        [attr.aria-current]="section.id === current()?.id ? 'true' : null"
+        (click)="jumpTo(section.id)"
+      >
+        <cc-icon [name]="section.icon" size="sm" />
+        <span class="side-label">{{ section.label }}</span>
+      </button>
+    }
+  </nav>
+
+  <div class="main">
+    <div #toolbar class="toolbar">
+      <cc-text-field type="search" [label]="text.searchIcons" [(value)]="query" />
+      @if (current(); as group) {
+        <button
+          type="button"
+          class="group-button"
+          [matMenuTriggerFor]="groupMenu"
+          [attr.aria-label]="text.jumpToGroup + ': ' + group.label"
+        >
+          <cc-icon [name]="group.icon" size="sm" />
+          <span class="group-label">{{ group.label }}</span>
+          <cc-icon name="expand_more" size="sm" />
         </button>
       }
-    </nav>
-  }
-</div>
+    </div>
+    <mat-menu #groupMenu="matMenu" class="cc-icon-group-menu">
+      @for (section of sections(); track section.id) {
+        <button mat-menu-item type="button" (click)="jumpTo(section.id)">
+          <span class="menu-item">
+            <cc-icon [name]="section.icon" size="sm" />
+            {{ section.label }}
+          </span>
+        </button>
+      }
+    </mat-menu>
 
-<div class="scroller">
-  @for (group of groups(); track group.id) {
-    <section #section class="group" [attr.data-group]="group.id">
-      <h3 class="group-title">{{ group.label }}</h3>
-      <div class="grid">
-        @for (icon of group.icons; track icon.name) {
-          <button
-            type="button"
-            class="cell"
-            [class.selected]="icon.name === value()"
-            [attr.aria-label]="icon.label"
-            [attr.aria-pressed]="icon.name === value()"
-            [attr.data-icon]="icon.name"
-            (click)="value.set(icon.name)"
-          >
-            <cc-icon-badge [icon]="icon.name" [color]="color()" />
-          </button>
-        }
-      </div>
-    </section>
-  } @empty {
-    <p class="empty">{{ text.noIconsFound }}</p>
-  }
+    @for (section of sections(); track section.id) {
+      <section #section class="group" [attr.data-group]="section.id">
+        <h3 class="group-title">{{ section.label }}</h3>
+        <div class="grid">
+          @for (icon of section.icons; track icon.name) {
+            <button
+              type="button"
+              class="cell"
+              [class.selected]="icon.name === value()"
+              [attr.aria-label]="icon.label"
+              [attr.aria-pressed]="icon.name === value()"
+              [attr.data-icon]="icon.name"
+              (click)="value.set(icon.name)"
+            >
+              <cc-icon-badge [icon]="icon.name" [color]="color()" />
+            </button>
+          }
+        </div>
+      </section>
+    } @empty {
+      <p class="empty">{{ text.noIconsFound }}</p>
+    }
+  </div>
 </div>

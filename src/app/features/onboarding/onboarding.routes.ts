@@ -8,6 +8,7 @@ import {
   ROUTE_DATA_KEYS,
   TEMPLATE_PATH,
 } from '../../core/routing/app-paths';
+import { pendingSavesGuard } from '../../core/routing/pending-saves.guard';
 import { unsavedChangesGuard } from '../../core/routing/unsaved-changes.guard';
 
 const accountScreen = () =>
@@ -48,6 +49,8 @@ function categoryStep(id: 'income' | 'expenses', kind: CategoryKind): Route {
       {
         path: '',
         title: step.title,
+        // The expected incomes are typed in rows that save on their own (spec §13.5).
+        canDeactivate: [pendingSavesGuard],
         loadComponent: () =>
           import('./steps/categories-step/categories-step').then((m) => m.CategoriesStep),
       },
@@ -104,6 +107,7 @@ export const ONBOARDING_ROUTES: Routes = [
     path: stepOf('budget').path,
     title: stepOf('budget').title,
     data: stepData('budget'),
+    canDeactivate: [pendingSavesGuard],
     loadComponent: () => import('./steps/budget-step/budget-step').then((m) => m.BudgetStep),
   },
   {

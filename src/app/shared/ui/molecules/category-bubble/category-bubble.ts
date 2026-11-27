@@ -35,6 +35,11 @@ export class CategoryBubble {
   readonly amount = input<number | null>(null);
   /** What remains of the budget; hidden when null (no budget). */
   readonly remaining = input<number | null>(null);
+  /**
+   * Keeps the line of the remaining amount even without a budget, so the bubbles of a grid where
+   * some have one line up; without it the name sits right on the badge.
+   */
+  readonly reserveRemaining = input(true);
   readonly currency = input<string | null>(null);
   /** Share of the budget used, 0–1 or more; no ring when null. */
   readonly progress = input<number | null>(null);

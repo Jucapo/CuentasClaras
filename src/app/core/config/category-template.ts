@@ -79,7 +79,7 @@ export const CATEGORY_TEMPLATE: Readonly<Record<CategoryKind, readonly TypedTemp
     {
       name: 'Restaurantes y domicilios',
       icon: 'restaurant',
-      color: 'tangerine',
+      color: 'orange-dark',
       children: [
         { name: 'Restaurantes', icon: 'restaurant_menu' },
         { name: 'Domicilios', icon: 'delivery_dining' },
@@ -109,17 +109,17 @@ export const CATEGORY_TEMPLATE: Readonly<Record<CategoryKind, readonly TypedTemp
     {
       name: 'Mascotas',
       icon: 'pets',
-      color: 'mocha',
+      color: 'brown-light',
       children: [
         { name: 'Comida', icon: 'pet_supplies' },
         { name: 'Veterinario', icon: 'local_hospital' },
       ],
     },
-    { name: 'Regalos', icon: 'card_giftcard', color: 'rose', children: [] },
+    { name: 'Regalos', icon: 'card_giftcard', color: 'pink', children: [] },
     {
       name: 'Financieros',
       icon: 'account_balance',
-      color: 'slate',
+      color: 'gray-deep',
       children: [
         { name: 'Intereses', icon: 'percent' },
         { name: 'Cuota de manejo', icon: 'credit_card' },
@@ -130,7 +130,7 @@ export const CATEGORY_TEMPLATE: Readonly<Record<CategoryKind, readonly TypedTemp
     { name: 'Otros', icon: 'more_horiz', color: 'gray', children: [] },
   ],
   income: [
-    { name: 'Salario', icon: 'work', color: 'emerald', children: [] },
+    { name: 'Salario', icon: 'work', color: 'green-deep', children: [] },
     { name: 'Trabajo independiente', icon: 'business_center', color: 'teal', children: [] },
     { name: 'Intereses', icon: 'savings', color: 'cyan', children: [] },
     { name: 'Otros', icon: 'paid', color: 'lime', children: [] },

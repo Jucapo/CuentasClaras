@@ -5,11 +5,13 @@
   background-color: var(--mat-sys-surface);
 }
 
+// Close or back, the title centered, and Guardar (spec §13.5), like cc-page-header.
 .top-bar {
   position: sticky;
   top: 0;
   z-index: var(--cc-z-app-bar);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   gap: var(--cc-space-2);
   min-height: var(--cc-header-height);
@@ -29,24 +31,24 @@
   border-radius: var(--cc-radius-lg) var(--cc-radius-lg) 0 0;
 }
 
+.close {
+  justify-self: start;
+}
+
 .title {
-  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   overflow: hidden;
   font: var(--mat-sys-title-large);
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .action {
   display: flex;
-  flex-shrink: 0;
+  justify-self: end;
   gap: var(--cc-space-2);
-}
-
-.action:empty {
-  display: none;
 }
 
 // The organisms inside bring their own header band and paddings.

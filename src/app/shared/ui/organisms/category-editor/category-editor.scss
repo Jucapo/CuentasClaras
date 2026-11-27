@@ -4,14 +4,14 @@
 }
 
 .rows {
-  padding: var(--cc-space-3) var(--cc-space-2) 0;
+  padding: var(--cc-section-gap) var(--cc-space-2) 0;
 }
 
 .subcategories {
   display: flex;
   flex-direction: column;
   gap: var(--cc-space-1);
-  margin-top: var(--cc-space-3);
+  margin-top: var(--cc-section-gap);
   padding: var(--cc-space-2) var(--cc-space-2) 0;
   border-top: var(--cc-border-width) solid var(--mat-sys-outline-variant);
 }

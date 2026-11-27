@@ -13,6 +13,48 @@ function overlay(page: Page, isMobile: boolean) {
   return page.locator(isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container');
 }
 
+test('a color of the first palette keeps showing as its equivalent of the grid', async ({
+  page,
+}, testInfo) => {
+  // Spec §13.3: "navy" is no longer a palette key; it shows as indigo-dark, never the fallback.
+  const catalog = {
+    ...HOUSEHOLD,
+    categories: HOUSEHOLD.categories.map((category) =>
+      category['id'] === 'cat-transport' ? { ...category, color: 'navy' } : category,
+    ),
+  };
+  await mockDataApi(page, { withSpace: true, catalog });
+  await page.goto('/categorias');
+
+  const badge = page
+    .locator('cc-category-bubble')
+    .filter({ hasText: 'Transporte' })
+    .locator('cc-icon-badge');
+  const dark = testInfo.project.use.colorScheme === 'dark';
+  await expect(badge).toHaveCSS('background-color', dark ? 'rgb(40, 53, 147)' : 'rgb(26, 35, 126)');
+});
+
+test('a long total keeps its full width in the header and the period chip gives way', async ({
+  page,
+}) => {
+  // Spec §7: the total wins over the period chip. The accounts in the total add up to
+  // $ 123,456,789.00: cash 350,000.00 + Nequi 48,900.50 + the bank.
+  const catalog = {
+    ...HOUSEHOLD,
+    accounts: HOUSEHOLD.accounts.map((account) =>
+      account['id'] === 'acc-bank' ? { ...account, initial_balance: 12305788850 } : account,
+    ),
+  };
+  await mockDataApi(page, { withSpace: true, catalog });
+  await page.goto('/categorias');
+
+  const total = page.locator('.total-value');
+  await expect(total).toHaveText('$ 123,456,789.00');
+  expect(await total.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await expect(page.getByRole('button', { name: /^Elegir periodo/ })).toBeVisible();
+  await captureViewport(page, 'encabezado-total-largo');
+});
+
 test('the categories tab shows the grid and the pencil opens the edit mode', async ({
   page,
   isMobile,

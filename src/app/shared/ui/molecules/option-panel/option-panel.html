@@ -1,10 +1,11 @@
-<cc-overlay-panel [title]="data.title" (closed)="close()">
-  @if (data.mode === 'multiple') {
-    <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
-  }
-
+<cc-overlay-panel
+  [title]="data.title"
+  [confirmLabel]="data.mode === 'multiple' ? text.done : null"
+  (closed)="close()"
+  (confirmed)="done()"
+>
   @for (group of groups(); track group.label) {
-    <section class="group">
+    <section class="group" [class.below-close]="data.mode === 'multiple' && $first">
       @if (group.label; as label) {
         <h3 class="group-title">{{ label }}</h3>
       }

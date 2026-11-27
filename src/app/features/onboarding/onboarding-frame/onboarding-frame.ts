@@ -11,6 +11,7 @@ import {
 } from '../../../core/onboarding/onboarding-steps';
 import { APP_PATHS, ROUTE_DATA_KEYS } from '../../../core/routing/app-paths';
 import { activeRouteData } from '../../../core/routing/route-chain';
+import { PendingSaves } from '../../../core/saving/pending-saves';
 import { Button } from '../../../shared/ui/atoms/button/button';
 import { WizardStepItem } from '../../../shared/ui/molecules/wizard-steps/wizard-steps';
 import { ToastService } from '../../../shared/ui/services/toast.service';
@@ -31,6 +32,7 @@ type ExitAction = 'signOut' | 'postpone' | 'leave';
 export class OnboardingFrame {
   private readonly auth = inject(AuthService);
   private readonly onboarding = inject(OnboardingService);
+  private readonly pendingSaves = inject(PendingSaves);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
@@ -74,6 +76,12 @@ export class OnboardingFrame {
   protected async leave(): Promise<void> {
     this.leaving.set(true);
     try {
+      // Amounts still saving in the step's rows go first (spec §13.5); if one fails, stay.
+      const rows = await this.pendingSaves.settle();
+      if (!rows.ok) {
+        void this.toast.show(rows.message);
+        return;
+      }
       switch (this.exit()) {
         case 'signOut':
           await this.auth.signOut();

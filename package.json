@@ -20,6 +20,7 @@
     "db:backup": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-backup.ts",
     "db:restore-local": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-restore-local.ts",
     "supabase:types": "supabase gen types typescript --schema public > src/app/core/supabase/database.types.ts && prettier --write src/app/core/supabase/database.types.ts",
+    "brand:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-brand-icons.ts",
     "icons:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-icon-font.ts && prettier --write src/app/shared/ui/icons/icon-codepoints.generated.ts"
   },
   "private": true,
@@ -45,6 +46,7 @@
     "@angular/compiler-cli": "^22.3.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "^26.6.11",
     "angular-eslint": "22.8.0",
     "eslint": "^10.14.0",

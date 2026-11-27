@@ -1,10 +1,12 @@
-@if (backLink(); as commands) {
-  <cc-icon-button class="back" icon="arrow_back" [label]="backLabel()" [link]="commands" />
-}
+<div class="start">
+  @if (backLink(); as commands) {
+    <cc-icon-button icon="arrow_back" [label]="backLabel()" [link]="commands" />
+  }
+</div>
 <div class="titles">
   <h1 class="title">{{ title() }}</h1>
   @if (subtitle(); as subtitle) {
     <p class="subtitle">{{ subtitle }}</p>
   }
 </div>
-<ng-content />
+<div class="end"><ng-content /></div>

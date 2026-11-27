@@ -1,7 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: var(--cc-space-4);
+  gap: var(--cc-stack-gap);
 }
 
 .summary {

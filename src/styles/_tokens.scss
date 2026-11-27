@@ -1,7 +1,10 @@
+@use 'breakpoints';
+
 // App-level design tokens: the only place for sizes, spacing, radii, shadows and motion.
 // Colors and typography come from the Material 3 system tokens (--mat-sys-*) set in _theme.scss.
 :root {
   // Spacing scale.
+  --cc-space-0-5: 0.125rem;
   --cc-space-1: 0.25rem;
   --cc-space-2: 0.5rem;
   --cc-space-3: 0.75rem;
@@ -29,6 +32,7 @@
   --cc-catalog-frame-height: 32rem;
 
   // App chrome.
+  --cc-brand-logo-size: 2.5rem;
   --cc-header-height: 4rem;
   --cc-bottom-nav-height: 4.5rem;
   --cc-nav-indicator-width: 4rem;
@@ -66,14 +70,12 @@
 
   // Pickers and lists.
   --cc-picker-cell-size: 3rem;
-  --cc-picker-dialog-width: 34rem;
-  --cc-picker-panel-max-height: 70dvh;
-  --cc-list-item-min-height: 3.5rem;
+  --cc-picker-dialog-width: 48rem;
+  --cc-picker-panel-max-height: 88dvh;
+  --cc-icon-groups-width: 11rem;
   --cc-list-indent: 3rem;
+  --cc-money-row-value-width: 11rem;
   --cc-confirm-dialog-width: 26rem;
-
-  // Scrolling grid of the icon and color picker, under its live preview and tabs.
-  --cc-appearance-scroll-height: 36dvh;
 
   // Quick entry: a tall sheet on phones and a two-column dialog elsewhere, with its keypad.
   --cc-entry-sheet-max-height: 92dvh;
@@ -85,8 +87,22 @@
   // Category bubbles: ring around the badge that fills as the budget is spent.
   --cc-bubble-ring-width: 3px;
 
-  // Period selector in the header.
-  --cc-period-chip-max-width: 14rem;
+  // Period selector in the header; in the compact class it takes the whole center.
+  --cc-period-chip-max-width: none;
+
+  // Density (spec §13.5): compact values here, roomier ones from the medium window class below.
+  // Components read these instead of the spacing scale for page, section, list and bubble spacing.
+  --cc-page-padding: var(--cc-space-3);
+  --cc-page-header-gap: var(--cc-space-3);
+  --cc-stack-gap: var(--cc-space-3);
+  --cc-section-padding: var(--cc-space-3);
+  --cc-section-gap: var(--cc-space-2);
+  --cc-list-item-min-height: 3rem;
+  --cc-list-item-padding: var(--cc-space-1) var(--cc-space-2);
+  --cc-bubble-padding: var(--cc-space-0-5);
+  --cc-bubble-gap: 0;
+  --cc-category-grid-row-gap: var(--cc-space-2);
+  --cc-flow-hero-padding: var(--cc-space-1) var(--cc-space-3) var(--cc-space-4);
 
   // Elevation: aliases of the Material 3 shadow levels.
   --cc-elevation-0: var(--mat-sys-level0);
@@ -102,10 +118,33 @@
 
   // Stacking.
   --cc-z-app-bar: 2;
+  --cc-z-overlay-control: 1;
+
+  // Overlays with a confirmation (spec §13.5): room the content leaves for the floating ✕ (beside
+  // the first row) and ✓ (under the last one, a 56px FAB plus its margin).
+  --cc-overlay-close-clearance: calc(var(--cc-touch-target-min) + var(--cc-space-2));
+  --cc-overlay-confirm-clearance: calc(3.5rem + var(--cc-space-5));
 
   // Device safe areas.
   --cc-safe-area-top: env(safe-area-inset-top, 0px);
   --cc-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@include breakpoints.medium {
+  :root {
+    --cc-period-chip-max-width: 20rem;
+    --cc-page-padding: var(--cc-space-4);
+    --cc-page-header-gap: var(--cc-space-5);
+    --cc-stack-gap: var(--cc-space-4);
+    --cc-section-padding: var(--cc-space-4);
+    --cc-section-gap: var(--cc-space-3);
+    --cc-list-item-min-height: 3.5rem;
+    --cc-list-item-padding: var(--cc-space-2);
+    --cc-bubble-padding: var(--cc-space-1);
+    --cc-bubble-gap: var(--cc-space-1);
+    --cc-category-grid-row-gap: var(--cc-space-3);
+    --cc-flow-hero-padding: var(--cc-space-2) var(--cc-space-4) var(--cc-space-5);
+  }
 }
 
 // Spec §13.4: micro-interactions respect the reduced motion preference.

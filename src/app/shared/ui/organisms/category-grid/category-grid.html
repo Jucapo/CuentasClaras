@@ -44,6 +44,7 @@
         [variant]="mode()"
         [amount]="item.amount ?? null"
         [remaining]="item.remaining ?? null"
+        [reserveRemaining]="anyRemaining()"
         [progress]="item.progress ?? null"
         [currency]="mode() === 'view' ? currency() : null"
         [selected]="item.id === selectedId()"

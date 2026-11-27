@@ -9,7 +9,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--cc-space-3) var(--cc-space-1);
+  gap: var(--cc-category-grid-row-gap) var(--cc-space-1);
   align-items: start;
 }
 

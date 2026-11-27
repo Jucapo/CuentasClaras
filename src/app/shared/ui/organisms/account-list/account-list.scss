@@ -1,7 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: var(--cc-space-4);
+  gap: var(--cc-stack-gap);
 }
 
 .summary {
@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--cc-space-3);
-  padding: var(--cc-space-4);
+  padding: var(--cc-section-padding);
   border-radius: var(--cc-radius-md);
   background-color: var(--mat-sys-primary-container);
   color: var(--mat-sys-on-primary-container);

@@ -1,7 +1,13 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
 import { capture, captureViewport } from './support/screenshots';
-import { blockSupabase, E2E_USER, mockDataApi, seedSession } from './support/supabase';
+import {
+  blockSupabase,
+  E2E_USER,
+  mockDataApi,
+  seedSession,
+  SUPABASE_URL,
+} from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
   await blockSupabase(page);
@@ -63,11 +69,7 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
   await expect(page).toHaveURL(/\/bienvenida\/cuentas\/nueva\?grupo=cuenta$/);
   await expect(page.getByRole('heading', { name: 'Nueva cuenta', level: 1 })).toBeVisible();
   await page.getByLabel('Nombre', { exact: true }).fill('Bancolombia');
-  await page.getByRole('button', { name: /^Saldo/ }).click();
-  const balance = overlay(page, isMobile);
-  await balance.getByRole('textbox', { name: 'Saldo' }).fill('2,543,000');
-  await balance.getByRole('button', { name: 'Listo' }).click();
-  await expect(balance).toBeHidden();
+  await page.getByRole('textbox', { name: 'Saldo' }).fill('2,543,000');
   await capture(page, 'bienvenida-cuenta-nueva');
   await page.getByRole('button', { name: 'Guardar' }).click();
 
@@ -117,18 +119,22 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
     page.getByRole('list', { name: 'Categorías de ingreso' }).getByRole('listitem'),
   ).toHaveText([/Salario/, /Trabajo independiente/, /Otros/, /Nueva/]);
 
+  // Spec §13.5: each amount is typed in its row, and Enter moves to the next one.
   const expected = page.getByRole('list', { name: 'Ingreso mensual esperado por categoría' });
-  await expected.getByRole('button', { name: /^Salario/ }).click();
-  const income = overlay(page, isMobile);
-  await expect(income.getByRole('combobox', { name: 'Moneda' })).toContainText('COP');
-  await income.getByRole('textbox', { name: 'Ingreso mensual esperado' }).fill('6,000,000');
+  const salary = expected.getByRole('textbox', { name: 'Salario' });
+  await salary.click();
+  await expect(salary).toHaveAttribute('inputmode', 'decimal');
+  await expect(
+    expected.getByRole('button', { name: 'Moneda: Peso colombiano (COP)' }).first(),
+  ).toBeVisible();
+  await salary.fill('6,000,000');
   await captureViewport(page, 'bienvenida-ingreso-esperado');
-  await income.getByRole('button', { name: 'Listo' }).click();
-  await expect(income).toBeHidden();
+  await salary.press('Enter');
+  await expect(expected.getByRole('textbox', { name: 'Trabajo independiente' })).toBeFocused();
   await expect
     .poll(() => api.writes().find((write) => write.table === 'budgets')?.body)
     .toMatchObject({ amount: 600000000, currency: 'COP', effective_from: expect.any(String) });
-  await expect(expected.getByRole('button', { name: /^Salario/ })).toContainText('$ 6,000,000.00');
+  await expect(salary).toHaveValue('6,000,000');
   await capture(page, 'bienvenida-ingresos');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
@@ -199,15 +205,10 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
   await expectStep(page, isMobile, 'Presupuesto', 6);
   await expect(page.getByRole('button', { name: 'Saltar' })).toBeVisible();
   const budget = page.getByRole('list', { name: 'Presupuesto mensual por categoría' });
-  await budget.getByRole('button', { name: /^Hogar/ }).click();
-  const amount = overlay(page, isMobile);
-  await amount.getByRole('textbox', { name: 'Presupuesto mensual' }).fill('1,500,000');
-  await amount.getByRole('button', { name: 'Listo' }).click();
-  await expect(amount).toBeHidden();
-  await expect(budget.getByRole('button', { name: /^Hogar/ })).toContainText('$ 1,500,000.00');
-  await expect(page.getByText('Ingreso esperado: $ 6,000,000.00')).toBeVisible();
+  await budget.getByRole('textbox', { name: 'Hogar' }).fill('1,500,000');
   await capture(page, 'bienvenida-presupuesto');
-  await page.getByRole('button', { name: 'Continuar' }).click();
+  // Straight to the main button, without Enter: leaving the row saves it and the step waits.
+  await page.getByRole('button', { name: 'Saltar' }).click();
 
   // 7 · Resumen
   await expect(page).toHaveURL(/\/bienvenida\/resumen$/);
@@ -231,6 +232,67 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
     onboarding_completed_at: expect.any(String),
   });
   await expect(page.getByRole('region', { name: 'Completa tu configuración' })).toBeHidden();
+});
+
+test('the budget step waits for its rows and stays when one fails to save', async ({
+  page,
+  isMobile,
+}) => {
+  const api = await mockDataApi(page, {
+    withSpace: true,
+    catalog: HOUSEHOLD,
+    onboarding: { step: 5 },
+  });
+  // The first budget insert fails; the rest reach the mocked API.
+  let failNext = true;
+  await page.route(`${SUPABASE_URL}/rest/v1/budgets*`, (route) => {
+    if (route.request().method() === 'POST' && failNext) {
+      failNext = false;
+      return route.fulfill({ status: 500, json: { message: 'boom' } });
+    }
+    return route.fallback();
+  });
+  await page.goto('/bienvenida/presupuesto');
+
+  const budget = page.getByRole('list', { name: 'Presupuesto mensual por categoría' });
+  const home = budget.getByRole('textbox', { name: 'Hogar' });
+  await home.fill('1,500,000');
+  await page.getByRole('button', { name: 'Saltar' }).click();
+
+  // The save failed: the step stays, says why and the row goes back to what it had.
+  await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.').first()).toBeVisible();
+  await expect(page).toHaveURL(/\/bienvenida\/presupuesto$/);
+  await expect(home).toHaveValue('');
+  expect(api.settings()['onboarding_step']).toBe(5);
+
+  // The symbol picks the currency of a row, and Enter moves to the next one.
+  await budget
+    .getByRole('listitem')
+    .filter({ hasText: 'Mercado' })
+    .getByRole('button', { name: /^Moneda/ })
+    .click();
+  await overlay(page, isMobile).getByRole('radio', { name: /USD/ }).click();
+  const market = budget.getByRole('textbox', { name: 'Mercado' });
+  await market.fill('300');
+  await market.press('Enter');
+  await expect(budget.getByRole('textbox', { name: 'Transporte' })).toBeFocused();
+  await expect
+    .poll(
+      () =>
+        api
+          .writes()
+          .filter((write) => write.table === 'budgets')
+          .at(-1)?.body,
+    )
+    .toMatchObject({ category_id: 'cat-market', amount: 30000, currency: 'USD' });
+  await expect(market).toHaveValue('300');
+  await expect(
+    budget.getByRole('button', { name: 'Moneda: Dólar estadounidense (USD)' }),
+  ).toContainText('US$');
+  await captureViewport(page, 'bienvenida-presupuesto-filas');
+
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page).toHaveURL(/\/bienvenida\/resumen$/);
 });
 
 test('the wizard resumes where it was left until it is postponed', async ({ page }) => {

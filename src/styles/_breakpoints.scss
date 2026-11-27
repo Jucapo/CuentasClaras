@@ -6,6 +6,10 @@ $bp-expanded: 840px;
 // Container width from which the category grid uses six columns instead of four.
 $cq-grid-wide: 36rem;
 
+// Container width from which the icon and color picker lists the groups beside the icons and
+// lays the color tones out as columns (spec §13.3).
+$cq-picker-wide: 32rem;
+
 @mixin medium {
   @media (min-width: $bp-medium) {
     @content;
@@ -20,6 +24,21 @@ $cq-grid-wide: 36rem;
 
 @mixin container-wide {
   @container (min-width: #{$cq-grid-wide}) {
+    @content;
+  }
+}
+
+// Container width where the sixteen color tones fit as columns of 44px.
+$cq-palette-columns: 45rem;
+
+@mixin container-palette-columns {
+  @container (min-width: #{$cq-palette-columns}) {
+    @content;
+  }
+}
+
+@mixin container-picker-wide {
+  @container (min-width: #{$cq-picker-wide}) {
     @content;
   }
 }

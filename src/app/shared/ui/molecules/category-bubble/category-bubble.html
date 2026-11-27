@@ -8,11 +8,13 @@
     >
       <span class="name">{{ name() }}</span>
       @if (currency(); as currency) {
-        <span class="remaining" [class.over]="over()">
-          @if (remaining() !== null) {
-            <cc-amount [amount]="remaining() ?? 0" [currency]="currency" tone="neutral" />
-          }
-        </span>
+        @if (reserveRemaining() || remaining() !== null) {
+          <span class="remaining" [class.over]="over()">
+            @if (remaining() !== null) {
+              <cc-amount [amount]="remaining() ?? 0" [currency]="currency" tone="neutral" />
+            }
+          </span>
+        }
       }
       <span
         class="ring"

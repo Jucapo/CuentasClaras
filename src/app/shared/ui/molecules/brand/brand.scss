@@ -1,8 +1,14 @@
 :host {
   display: inline-flex;
   align-items: center;
-  gap: var(--cc-space-2);
+  gap: var(--cc-space-3);
   color: var(--mat-sys-primary);
+}
+
+.logo {
+  flex: none;
+  width: var(--cc-brand-logo-size);
+  height: var(--cc-brand-logo-size);
 }
 
 .name {

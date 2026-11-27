@@ -1,12 +1,22 @@
+@use 'breakpoints';
+
+// Fills the center of the header (spec §7); the arrows keep their size and the chip shrinks.
 :host {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 auto;
   align-items: center;
+  justify-content: center;
   gap: var(--cc-space-1);
   min-width: 0;
 }
 
+cc-icon-button {
+  flex: none;
+}
+
 .chip {
   display: inline-flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -24,6 +34,11 @@
 
   &:focus-visible {
     outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+
+  // Wider screens have room: the chip takes its content's width, up to its maximum.
+  @include breakpoints.medium {
+    flex: 0 1 auto;
   }
 }
 

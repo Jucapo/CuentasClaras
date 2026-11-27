@@ -1,0 +1,167 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-4);
+  min-height: var(--cc-list-item-min-height);
+  padding: var(--cc-list-item-padding);
+  border-radius: var(--cc-radius-sm);
+  color: var(--mat-sys-on-surface);
+  cursor: text;
+  transition: background-color var(--cc-transition-fast);
+
+  &:focus-within {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+
+  &.disabled {
+    cursor: default;
+    opacity: var(--cc-disabled-opacity);
+  }
+}
+
+@media (hover: hover) {
+  .row:hover:not(.disabled) {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+}
+
+.leading {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.leading:empty {
+  display: none;
+}
+
+.icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.texts {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  overflow: hidden;
+  font: var(--mat-sys-body-large);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: inherit;
+}
+
+.value {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-1);
+  min-width: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-primary);
+}
+
+.currency {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+// The currency symbol as a button keeps a 44px touch target around the small text.
+.picker {
+  min-height: var(--cc-touch-target-min);
+  padding: 0 var(--cc-space-1);
+  border: none;
+  border-radius: var(--cc-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+@media (hover: hover) {
+  .picker:hover:not(:disabled) {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+}
+
+.input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  padding: var(--cc-space-1) 0;
+  border: none;
+  border-bottom: var(--cc-swatch-ring-width) solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--mat-sys-primary);
+
+  &::placeholder {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:focus {
+    border-bottom-color: var(--mat-sys-primary);
+    outline: none;
+  }
+}
+
+.invalid .value {
+  color: var(--mat-sys-error);
+}
+
+.invalid .input {
+  border-bottom-color: var(--mat-sys-error);
+}
+
+// Lists of amounts: the label on the left and the amount on the right of the same line.
+:host(.end) {
+  .texts {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--cc-space-3);
+  }
+
+  .label {
+    flex: 1 1 auto;
+  }
+
+  // The symbol sits right before the amount, both at the end of the row.
+  .value {
+    flex: 0 1 var(--cc-money-row-value-width);
+    justify-content: flex-end;
+    font: var(--mat-sys-title-small);
+  }
+
+  .input {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: var(--cc-touch-target-min);
+    field-sizing: content;
+    text-align: end;
+  }
+}
+
+.support {
+  margin: 0;
+  padding-inline: calc(var(--cc-space-2) + var(--cc-icon-size-md) + var(--cc-space-4))
+    var(--cc-space-2);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

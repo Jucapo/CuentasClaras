@@ -14,6 +14,7 @@ import {
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
+import { provideRecentIcons } from './core/catalogs/recent-icons.provider';
 import { AppTitleStrategy } from './core/routing/app-title-strategy';
 import { ThemeService } from './core/theme/theme.service';
 import { provideMoneyFormat } from './core/user-settings/money-format.provider';
@@ -34,6 +35,7 @@ export const appConfig: ApplicationConfig = {
     ),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideMoneyFormat(),
+    provideRecentIcons(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

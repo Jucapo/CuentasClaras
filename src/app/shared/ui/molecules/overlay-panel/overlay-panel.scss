@@ -1,4 +1,5 @@
 :host {
+  position: relative;
   display: flex;
   flex-direction: column;
   max-height: var(--cc-picker-panel-max-height);
@@ -22,14 +23,8 @@
 }
 
 .toolbar:empty,
-.header-action:empty,
 .actions:empty {
   display: none;
-}
-
-.header-action {
-  display: flex;
-  flex-shrink: 0;
 }
 
 .body {
@@ -44,4 +39,30 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--cc-space-2);
+}
+
+// Overlay with a confirmation (spec §13.5): the content starts at the top edge, the ✕ floats in the
+// top corner and the ✓ in the bottom one; the body leaves room so the ✓ never covers its last row.
+:host(.floating) {
+  padding-top: var(--cc-space-2);
+
+  .body {
+    padding-bottom: var(--cc-overlay-confirm-clearance);
+  }
+}
+
+.floating-close {
+  position: absolute;
+  top: var(--cc-space-1);
+  right: var(--cc-space-1);
+  z-index: var(--cc-z-overlay-control);
+  border-radius: var(--cc-radius-full);
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.floating-confirm {
+  position: absolute;
+  right: var(--cc-space-4);
+  bottom: calc(var(--cc-space-4) + var(--cc-safe-area-bottom));
+  z-index: var(--cc-z-overlay-control);
 }

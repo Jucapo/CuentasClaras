@@ -12,8 +12,8 @@ import { MonthlyAmounts } from '../../../budget/monthly-amounts';
 import { StepActions } from '../../step-actions/step-actions';
 
 /**
- * Wizard step 6 (optional), the budget: a monthly amount per expense category, typed in the
- * amount sheet, with the total next to the expected income. The full budget screens are F1e.
+ * Wizard step 6 (optional), the budget: a monthly amount per expense category, typed in its row,
+ * with the total next to the expected income. The full budget screens are F1e.
  */
 @Component({
   selector: 'app-budget-step',

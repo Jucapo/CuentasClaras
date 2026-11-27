@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Cuentas Claras">
+  <rect width="512" height="512" rx="0" fill="#1E4E8C"/>
+  <circle cx="256" cy="256" r="162" fill="none" stroke="#9BDDF7" stroke-width="43"/>
+  <circle cx="256" cy="256" r="162" fill="none" stroke="#3FB6E8" stroke-width="43" stroke-dasharray="600.5 1017.9" transform="rotate(-90 256 256)"/>
+  <circle cx="256" cy="256" r="162" fill="none" stroke="#FFFFFF" stroke-width="43" stroke-dasharray="264.6 1017.9" transform="rotate(-90 256 256)"/>
+  <path d="M272.25 301.25 A64 64 0 1 1 272.25 210.75" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round"/>
+  <path d="M349.05 301.25 A64 64 0 1 1 349.05 210.75" fill="none" stroke="#3FB6E8" stroke-width="30" stroke-linecap="round"/>
+</svg>

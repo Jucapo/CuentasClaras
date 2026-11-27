@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.8 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.9 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -347,6 +347,8 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
 - Selector de espacio (solo si el usuario tiene más de uno).
 - Total de cuentas: el mismo de la pestaña Cuentas (las cuentas activas que el usuario ve con "incluir en el total", incluidas sus privadas), en la moneda principal. Si falta una tasa, lo avisa.
 - Selector de periodo: flechas + chip con el nombre y el rango; al tocarlo abre las opciones de §4.5 (bottom sheet en compacta, diálogo en los demás tamaños).
+  - En compacta el selector ocupa todo el centro, entre el total y Configuración.
+  - El total tiene prioridad: aunque sea largo se ve completo, y el chip se achica (recorta primero el rango).
 
 ### Categorías (inicio)
 
@@ -357,6 +359,7 @@ Destinos como en 1Money: **Cuentas · Categorías · Transacciones · Presupuest
   - gastado abajo;
   - relleno según el presupuesto consumido;
   - una marca si se pasó del presupuesto.
+  - La línea del restante solo se reserva si alguna burbuja de la grilla tiene presupuesto; si no, el nombre va pegado al ícono.
 - En el centro del donut: total de gastos y total de ingresos del periodo.
 - El donut se segmenta por categoría, con el color de cada una.
 - Tocar una categoría abre el registro rápido.
@@ -416,7 +419,7 @@ Desde la F1b la pestaña Cuentas lista los grupos Cuentas, Ahorros, Deudas y Me 
 **Crear una cuenta:** el "+" abre "¿Qué vas a crear?" (Cuenta, Ahorro, Deuda o Me deben). Después viene un formulario corto:
 
 - el nombre grande en el encabezado, con el badge de ícono y color al lado;
-- filas para el tipo, la moneda y el saldo (cada una abre un sheet enfocado), e interruptores para "Incluir en el total" y la cuenta predeterminada;
+- filas para el tipo y la moneda (abren la lista de opciones) y el saldo, que se escribe en la misma fila (§13.5, "Menos modales"), e interruptores para "Incluir en el total" y la cuenta predeterminada;
 - en "Más opciones": fecha del saldo, cuenta privada e "incluir en el espacio".
 
 Lo mínimo para guardar es el nombre; el saldo arranca en 0 y lo demás viene precargado por tipo. Crear y editar usan la misma pantalla.
@@ -465,10 +468,12 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
 - Pasos (rutas bajo `/bienvenida`):
   1. **Espacio y preferencias** (`espacio`): nombre del espacio, moneda principal, formato de moneda, primer día del mes y de la semana. Con el espacio ya creado (retomar o revisar), el paso guarda cambios en vez de crear otro.
   2. **Situación financiera actual** (`cuentas`): cuentas, ahorros, deudas y "me deben", cada una con su saldo actual, agrupadas y con sus totales. "Agregar" abre "¿Qué vas a crear?" y la pantalla de cuenta; al guardar vuelve al paso. Al final, la cuenta predeterminada. Moneda por cuenta (p. ej. USD). Las deudas piden solo nombre, tipo y saldo; los datos de tasa, plazo y cuotas se completan en la F2.
-  3. **Ingresos** (`ingresos`): categorías de ingreso (fuentes) en la grilla en modo edición y, opcional, el monto mensual esperado de cada una (§4.7).
+  3. **Ingresos** (`ingresos`): categorías de ingreso (fuentes) en la grilla en modo edición y, opcional, el monto mensual esperado de cada una (§4.7), escrito en su fila.
   4. **Categorías de gasto** (`gastos`): la grilla en modo edición, con la pantalla de categoría.
   5. **Etiquetas** (`etiquetas`, opcional): crear etiquetas con su sheet, que también dice en qué categorías se pone sola cada una (§4.3). Sugiere `Fijos` mientras no exista.
   6. **Presupuesto** (`presupuesto`, opcional): monto mensual por categoría de gasto, con el total por moneda junto al ingreso esperado.
+     - Cada monto se escribe en su fila, en la moneda principal; el símbolo de la moneda es un botón que abre la lista de monedas. Enter pasa a la fila siguiente, para llenar el presupuesto de corrido.
+     - Cada fila guarda al confirmar (Enter o al salir del campo). Vacío no cambia nada y 0 quita el monto.
   7. **Resumen** (`resumen`): una fila por paso con lo configurado y un enlace para volver a él; "Terminar" marca el asistente como completo.
 - Ingresos y gastos, sin categorías de esa clase, ofrecen empezar desde cero o partir de la plantilla sugerida (Anexo A). La plantilla es una lista para marcar, con todo marcado: desmarcar una categoría desmarca sus subcategorías y marcar una subcategoría marca su categoría. Lo marcado se crea en una sola transacción (`create_category_tree`) y el paso sigue en la grilla para ajustarlo.
 - Comportamiento:
@@ -477,6 +482,7 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
   - Mientras el asistente no esté completo y nunca se haya pospuesto, entrar a la app lo retoma en el paso pendiente (también si se cerró la app a mitad de camino).
   - "Terminar más tarde" lleva a la app y guarda `onboarding_postponed_at`: desde ahí la app no vuelve a abrirlo sola, en ningún dispositivo. Mientras no esté completo, la pantalla de inicio muestra la tarjeta "Completa tu configuración · Faltan N pasos · Continuar" y Configuración, "Completar configuración inicial".
   - Los pasos opcionales dicen "Saltar" mientras no tienen nada y "Continuar" cuando sí.
+  - "Continuar", "Atrás" y "Terminar más tarde" esperan a que terminen los guardados pendientes de las filas del paso. Si alguno falla, no navegan y muestran el error.
   - Terminar el paso 7 guarda `onboarding_completed_at`. Configuración → "Revisar configuración inicial" lo vuelve a abrir en el resumen; terminar otra vez conserva la primera fecha.
   - Solo el propietario ve el asistente, la tarjeta y la fila de Configuración, porque la configuración del espacio es suya.
   - Layout (§13.5): en compacta y mediana, un paso por pantalla con el progreso arriba ("Paso 3 de 7" y una barra por pasos) y las acciones abajo; en expandida, los pasos en una columna lateral y el paso al lado. Los flujos que se abren desde un paso ocupan la pantalla completa en compacta y mediana, y el panel del paso en expandida.
@@ -620,6 +626,7 @@ recurring_templates (fase 3)
 | F1b2 · Flujos móviles y diseño adaptativo | Layouts por clase de tamaño (navegación inferior o rail, lista y detalle lado a lado) y flujos cortos pensados primero para móvil (§13.5): crear cuenta por tipo, selector único de ícono y color, grilla de categorías con modo edición, pantalla de categoría, subcategorías y etiquetas en sheet. Reemplaza los formularios largos de la F1b. Sin cambios en la base de datos |
 | F1c · Asistente | Asistente de configuración inicial completo (§7), reutilizando los flujos de la F1b2; plantilla sugerida (Anexo A) |
 | F1d · Movimientos | Movimientos (gasto, ingreso, transferencia, ajuste), registro rápido con cuotas y tasa para TC, selector de periodos, pantalla de inicio Categorías, multimoneda con tasa manual |
+| F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), overlays con confirmación (✕ y ✓ flotantes), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
 | F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
 | F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes |
@@ -661,6 +668,7 @@ recurring_templates (fase 3)
 - [x] F1b: el detalle de las reglas de cuentas, categorías, etiquetas, montos e íconos está en §4.1, §4.3, §4.4, §4.6, §8 y §13.3.
 - [x] F1d: ajuste con dirección y monto positivo; saldos desde la fecha del saldo inicial; tasas manuales por espacio con su regla de fecha; guardado idempotente con "Deshacer"; periodo recordado por tipo; montos formateados mientras se escribe. Detalle en §4.1, §4.2, §4.5, §4.6, §5.1 c, §7 y §8.
 - [x] Datos reales desde la F1d: respaldo de producción (`npm run db:backup`) antes de cada `db push`, y prueba de migraciones con esos datos en local (`npm run db:restore-local`). Las reglas viven en `CLAUDE.md`.
+- [x] F1d2: tema azul generado desde las semillas de marca; menos modales (un solo texto o monto se edita en la fila); paleta de 16 tonos × 5 intensidades con el color del ícono elegido por contraste; las claves de color anteriores se mapean a su equivalente sin tocar lo guardado. Detalle en §7, §13.2, §13.3 y §13.5.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
@@ -674,8 +682,8 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
 | Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
@@ -693,9 +701,20 @@ Reglas:
 ### 13.2 Tema
 
 - Un solo lugar para el tema: paleta Material 3 en `_theme.scss` y tokens `--cc-*` en `_tokens.scss`.
+- Colores de marca (F1d2): primario azul oscuro `#1E4E8C` y acento azul claro `#3FB6E8`.
+  - Son las semillas de las paletas Material 3 (primaria y terciaria), generadas con HCT por el schematic `@angular/material:theme-color` en `_theme-colors.scss`. No se ajustan a ojo: si cambia una semilla, se regenera.
+  - Los pares de texto del tema (on-surface, primary, on-*-container…) cumplen contraste AA en claro y oscuro; un e2e lo verifica con los colores computados.
 - Nada de colores, tamaños, radios ni sombras sueltos en los componentes: todo sale de tokens.
 - Modo claro, oscuro o según el sistema, como preferencia de cada usuario.
 - Más adelante: que cada usuario elija el color principal de la app (paleta Material 3 generada en tiempo de ejecución).
+
+**Marca (F1d2)**
+
+- Dos versiones del logo en `public/brand/`:
+  - con esquinas redondeadas: favicon (`.ico` y `.svg`) y logo del login y del asistente (`cc-brand`);
+  - a sangre completa: íconos de la PWA (192, 512 y maskable) y `apple-touch-icon`. Android e iOS recortan las esquinas, y el símbolo ya está dentro de la zona segura del maskable.
+- Los PNG y el `.ico` salen de los SVG con `npm run brand:build` (reproducible) y se commitean.
+- `theme_color` y `background_color` del manifest en `#1E4E8C`: la pantalla de carga de la app instalada sale con el color de la marca.
 
 ### 13.3 Íconos y colores personalizables
 
@@ -704,9 +723,11 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 **Íconos**
 
 - Material Symbols Rounded, self-hosted para que funcionen sin conexión.
-- Catálogo curado de varios cientos de íconos, agrupados (Hogar, Comida, Transporte, Salud, Familia y niños, Mascotas, Educación, Ocio, Compras, Tecnología, Finanzas, Viajes, Trabajo, Otros), con palabras clave en español para buscar.
+  - La fuente se precarga (`preload` con `crossorigin`) y usa `font-display: block`, para no mostrar cuadros vacíos mientras carga.
+- Catálogo curado de unos 900 íconos (desde la F1d2), agrupados (Hogar, Comida, Transporte, Salud, Familia y niños, Mascotas, Educación, Ocio, Compras, Tecnología, Finanzas, Viajes, Trabajo, Otros), con palabras clave en español para buscar. Cada grupo tiene su propio ícono para el menú de grupos.
+- Los íconos del catálogo no se quitan ni se renombran: la clave guardada es el nombre del ícono.
 - Si la fuente completa pesa mucho, se genera un subset con los íconos del catálogo y los de la interfaz.
-- **Implementación (F1b):**
+- **Implementación (F1b, ampliada en la F1d2):**
   - `npm run icons:build` genera el subset de forma reproducible:
     - descarga la fuente variable y sus codepoints de `google/material-design-icons`, con commit fijo y SHA-256 verificado;
     - fija peso 400, grado 0 y tamaño óptico 24, y conserva el eje de relleno (FILL) para los badges.
@@ -715,18 +736,24 @@ Llevan ícono y color: categorías, subcategorías, cuentas y espacios. Las etiq
 
 **Colores**
 
-- Paleta curada de unos 30 colores, cada uno con variante para tema claro y oscuro, y con contraste suficiente para un ícono blanco encima.
+- Paleta en grilla de 16 tonos × 5 intensidades (desde la F1d2), cada color con variante para tema claro y oscuro.
+  - Tonos: rojo, naranja, ámbar, amarillo, lima, verde, verde azulado, cian, celeste, azul, índigo, violeta, morado, rosado, café y gris.
+  - Intensidades: pálido, claro, base, intenso y oscuro.
+  - Claves: el tono solo para la intensidad base (`blue`) y `tono-intensidad` para las demás (`blue-pale`, `blue-light`, `blue-deep`, `blue-dark`). Solo letras y guiones, como exige el dominio `color_key`.
 - Se guarda la clave del color (p. ej. `teal`), no el hex: si cambia la paleta o el tema, todo se actualiza solo.
 - Las subcategorías heredan por defecto el color de su categoría y pueden cambiarlo.
-- Contraste mínimo de 3:1 de un ícono blanco sobre cada color, en claro y en oscuro (WCAG 1.4.11, gráfico no textual). Una prueba unitaria lo verifica.
+- El ícono sobre un color se elige solo: blanco si alcanza 3:1 sobre ese color; si no, oscuro. Así entran colores claros sin perder legibilidad (WCAG 1.4.11, gráfico no textual). Una prueba unitaria lo verifica para cada color, en claro y en oscuro.
+- **Claves anteriores:** las 30 claves de la paleta de la F1b siguen funcionando. Las que siguen siendo un tono (`red`, `blue`, `teal`…) no cambian. Las demás (`navy`, `crimson`, `graphite`…) son alias de su color más cercano en la grilla. Lo guardado no se reescribe: cambia solo si el usuario elige otro color.
 - La paleta vive en un archivo TypeScript y cada color se aplica como `light-dark(claro, oscuro)` en una variable CSS, así que cambia sola con el tema.
 
 **Selector**
 
-- Un solo selector de ícono y color (`cc-appearance-picker`) con vista previa en vivo y pestañas Ícono | Color.
-  - Ícono: búsqueda, atajos por grupo y grilla.
-  - Color: grilla de la paleta; en subcategorías, la primera opción es "Igual que la categoría".
-- Se abre tocando el badge grande del encabezado de cada flujo. "Listo" aplica los dos valores; cerrar los descarta.
+- Un solo selector de ícono y color (`cc-appearance-picker`) con vista previa en vivo y pestañas Ícono | Color. Las pestañas no llevan bordes, solo el indicador inferior.
+  - Ícono: búsqueda y una grilla continua que empieza con **Sugeridos** y sigue con los grupos del catálogo.
+    - Sugeridos, en orden y sin repetir: los íconos cuyas palabras clave coinciden con el nombre escrito; los usados recientemente en el espacio (íconos de las cuentas y categorías más nuevas); y los del contexto (cuenta → Finanzas; categoría de ingreso → Trabajo y Finanzas).
+    - Sin scroll horizontal. En un contenedor angosto (móvil), arriba de la grilla queda fijo un botón con el grupo visible ("Hogar ▾", 44 px de alto) que abre el menú de grupos para saltar a cada sección. En uno ancho (escritorio), un menú lateral de grupos marca la sección visible.
+  - Color: grilla de tono × intensidad (en angosto, una fila por tono; en ancho, una columna por tono); en subcategorías, la primera opción es "Igual que la categoría".
+- Se abre tocando el badge grande del encabezado de cada flujo. El ✓ ("Listo") aplica los dos valores; la ✕ los descarta (overlay con confirmación, §13.5).
 - En móvil se abre como bottom sheet; en pantallas medianas y grandes, como diálogo.
 - Dentro de un sheet (p. ej. el de subcategoría) va en línea (`cc-appearance-editor`), porque un sheet no abre otro.
 
@@ -752,20 +779,40 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 
 - `LayoutService` expone la clase como signal. Las plantillas cambian según la clase; los organismos son los mismos en todas.
 - Los cortes viven en `_breakpoints.scss` y en `WINDOW_BREAKPOINTS`, y deben coincidir.
+- **Densidad (F1d2):** en compacta, los encabezados de página, las secciones, las listas y las burbujas usan márgenes y paddings más chicos. Son tokens semánticos (`--cc-page-padding`, `--cc-section-padding`, `--cc-list-item-padding`…) con el valor compacto por defecto y otro desde la clase mediana; los componentes solo leen el token. Las áreas táctiles siguen siendo de al menos 44 px.
+
+**Encabezados**
+
+- Título de página centrado; el botón atrás a la izquierda cuando aplica y las acciones a la derecha (p. ej. el lápiz de Categorías).
+- La barra de los flujos sigue el mismo orden: cerrar o atrás, título centrado y Guardar.
 
 **Flujos** (crear o editar algo)
 
 - Barra superior con cerrar, título y Guardar. Al crear, cerrar es "✕" (descarta); al editar algo que ya existe, "←".
 - Encabezado con el nombre grande y, al lado, el badge de ícono y color que abre el selector (§13.3). El foco automático en el nombre va solo al crear.
-- Debajo, filas tipo lista: cada fila abre un sheet enfocado en un solo dato, salvo los interruptores, que cambian en la misma fila.
+- Debajo, filas tipo lista. Las de opciones abren un sheet con la lista; los interruptores y los campos de un solo dato cambian en la misma fila (ver "Menos modales").
 - Lo poco usado va plegado en "Más opciones".
 - Si hay cambios sin guardar, salir (cerrar, volver, Esc o el atrás del sistema) pide confirmación: "¿Descartar los cambios?".
 - En compacta el flujo ocupa la pantalla completa (sin encabezado ni navegación); en expandida va en el panel de detalle.
+
+**Menos modales (F1d2)**
+
+- Una fila con un solo campo de texto o monto se edita en la misma fila: al tocarla, el campo se enfoca con el teclado adecuado (p. ej. el numérico para un monto). Ej.: Saldo en la cuenta, monto del presupuesto y del ingreso esperado.
+- En una lista de filas con monto, Enter pasa a la fila siguiente, para llenarlas de corrido.
+- Una fila que guarda al confirmar (Enter o salir del campo) deja su guardado pendiente; los botones que salen de la pantalla (Continuar, Atrás, Terminar más tarde) lo esperan. Si alguno falla, no navegan y muestran el error.
+- Los sheets quedan para listas de opciones, varios campos o el teclado del registro rápido.
 
 **Sheets y diálogos**
 
 - Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
 - El atrás del sistema (Android o el navegador) cierra solo el overlay abierto, sin navegar.
+- **Overlays con confirmación (F1d2):** los sheets y diálogos que se confirman (ícono y color, subcategoría, etiqueta, opciones de selección múltiple, tasa de cambio y monto) siguen un mismo patrón, igual en sheet y en diálogo:
+  - Sin barra superior ni título visible: el contenido sube hasta el borde superior (en el selector, la vista previa del ícono).
+  - Una ✕ flotante en la esquina superior derecha descarta, como siempre.
+  - La acción principal es un botón flotante circular con ✓ en la esquina inferior derecha, siempre visible. El contenido con scroll deja espacio abajo para que el ✓ no tape la última fila.
+  - Mientras guarda, el ✓ muestra la carga y queda deshabilitado; un error se muestra dentro del overlay.
+  - Accesibilidad: el overlay conserva su nombre accesible (el título de antes); la ✕ y el ✓ tienen nombre y tooltip ("Cerrar", "Listo"). Enter y Ctrl/⌘+S confirman (Enter conserva su efecto sobre botones, casillas y listas).
+  - Los overlays sin confirmación (una opción, "¿Qué vas a crear?", periodo, confirmaciones) y las pantallas de flujo mantienen su barra.
 
 **Teclado y puntero** (mediana y expandida)
 

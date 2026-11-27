@@ -8,6 +8,8 @@
   />
   <cc-appearance-picker
     ccHeroBadge
+    [iconContext]="fields().kind().value()"
+    [itemName]="fields().name().value()"
     [label]="text.changeAppearance"
     [formField]="fields().icon"
     [(color)]="fields().color().value"

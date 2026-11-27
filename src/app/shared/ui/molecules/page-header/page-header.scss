@@ -1,28 +1,50 @@
+@use 'breakpoints';
+
+// Title centered between the back button and the actions (spec §13.5). The side columns share the
+// free space, so the title stays centered even when only one side has a button.
 :host {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  align-items: center;
+  gap: var(--cc-space-2);
+  margin-bottom: var(--cc-page-header-gap);
+}
+
+.start,
+.end {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--cc-space-2);
-  margin-bottom: var(--cc-space-5);
+  gap: var(--cc-space-1);
+}
+
+.start {
+  justify-content: flex-start;
+  margin-inline-start: calc(-1 * var(--cc-space-2));
+}
+
+.end {
+  justify-content: flex-end;
 }
 
 .titles {
   display: flex;
-  flex: 1 1 auto;
   flex-direction: column;
   gap: var(--cc-space-2);
   min-width: 0;
-}
-
-.back {
-  flex-shrink: 0;
-  margin-inline-start: calc(-1 * var(--cc-space-2));
+  text-align: center;
 }
 
 .title {
   margin: 0;
-  font: var(--mat-sys-headline-small);
+  overflow: hidden;
+  font: var(--mat-sys-title-large);
   color: var(--mat-sys-on-surface);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include breakpoints.medium {
+    font: var(--mat-sys-headline-small);
+  }
 }
 
 .subtitle {

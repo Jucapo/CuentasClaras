@@ -1,19 +1,24 @@
-<div class="grid" role="group" [attr.aria-label]="text.colorGrid">
-  @if (inheritFrom() !== null) {
+@if (inheritFrom() !== null) {
+  <div class="inherit">
     <cc-color-swatch
       [color]="null"
       [label]="text.inheritColor"
       [selected]="value() === null"
       (click)="value.set(null)"
     />
-  }
-  @for (color of palette; track color.key) {
-    <cc-color-swatch
-      [color]="color.key"
-      [label]="color.label"
-      [selected]="color.key === value()"
-      [attr.data-color]="color.key"
-      (click)="value.set(color.key)"
-    />
+    <span class="inherit-label" aria-hidden="true">{{ text.inheritColor }}</span>
+  </div>
+}
+<div class="grid" role="group" [attr.aria-label]="text.colorGrid">
+  @for (tone of tones; track tone.key) {
+    @for (color of tone.colors; track color.key) {
+      <cc-color-swatch
+        [color]="color.key"
+        [label]="color.label"
+        [selected]="color.key === selected()"
+        [attr.data-color]="color.key"
+        (click)="value.set(color.key)"
+      />
+    }
   }
 </div>

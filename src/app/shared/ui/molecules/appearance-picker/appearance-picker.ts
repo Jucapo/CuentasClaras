@@ -4,7 +4,7 @@ import { FormControlBase } from '../../atoms/form-control-base';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { Icon } from '../../atoms/icon/icon';
 import { colorLabel, colorOrFallback } from '../../colors/color-palette';
-import { iconLabel } from '../../icons/icon-search';
+import { IconContext, iconLabel } from '../../icons/icon-search';
 import { OverlayService } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
 import { Appearance, AppearancePanel, AppearancePanelData } from './appearance-panel';
@@ -28,6 +28,10 @@ export class AppearancePicker extends FormControlBase implements FormValueContro
   /** Color of the parent; when set, the color may be null to inherit it. */
   readonly inheritFrom = input<string | null>(null);
   readonly size = input<'lg' | 'xl'>('xl');
+  /** What the icon is for; it decides the groups suggested first (spec §13.3). */
+  readonly iconContext = input<IconContext | null>(null);
+  /** Name typed for the item; its words suggest icons. */
+  readonly itemName = input('');
 
   private readonly overlay = inject(OverlayService);
 
@@ -50,6 +54,8 @@ export class AppearancePicker extends FormControlBase implements FormValueContro
         icon: this.value(),
         color: this.color(),
         inheritFrom: this.inheritFrom(),
+        iconContext: this.iconContext(),
+        itemName: this.itemName(),
       },
     });
     if (picked) {
