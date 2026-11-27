@@ -44,25 +44,36 @@ Propias (se pasan a la spec en la parte 1):
 - **Crear desde Transacciones (§7):**
   - "+" (atajo `N`) abre "¿Qué vas a registrar?": Transferencia y las categorías agrupadas en Gastos e Ingresos.
   - Después abre el registro rápido: en el panel en expandida, y como overlay en compacta y mediana.
-- **Presupuesto:**
-  - **Mes:** editable desde ese mes (vigencia = el mes que nombra el periodo).
-    - En el mes actual (o uno futuro), la nota dice "Los cambios rigen desde {mes}".
-    - En un mes pasado, la nota lo dice explícito: "Rige desde octubre: también cambia noviembre y diciembre". Nombra los meses siguientes hasta el actual.
-    - Si una categoría tiene monto propio en alguno de esos meses, su fila lo aclara en el hint, porque ese mes y los que le siguen no cambian: "Solo cambia octubre: noviembre tiene monto propio", o "También cambia noviembre; diciembre tiene monto propio".
-  - **Año:** suma los 12 meses, solo lectura, con la nota "Para cambiar montos, elige un mes".
-  - **Día, Semana, Siempre y Rango:** un aviso y "Ver este mes".
-  - **Todas las categorías:** se muestran las principales activas en su orden. Las que no tienen presupuesto muestran solo lo gastado y el campo vacío ("Sin presupuesto").
-  - **Total de arriba:** presupuesto total contra todo lo gastado del periodo, con la línea "Sin presupuesto: $X" cuando hay gasto en categorías sin monto.
-  - **Excedido:** barra y texto en color de error, con ícono de advertencia y "Te pasaste por $X".
-  - **Ingresos esperados:** "Recibido $X · Faltan $Y". Si se superan, "Recibiste $Z de más", en tono positivo y no de error.
-  - **`budgets_enabled` apagado:** el destino sigue en la navegación y muestra "Los presupuestos están apagados". El propietario ve un interruptor para encenderlos; los demás ven el texto.
-  - **Lector:** ve los montos sin poder editarlos.
+- **Presupuesto** (cambios consolidados del usuario; reemplazan la nota de meses pasados; el detalle está en la spec, §4.7):
+  - **Por subcategoría:**
+    - Cada subcategoría puede tener su monto.
+    - El de la categoría es el suyo propio (la fila "General", que cubre lo registrado directo en ella) más la suma de los de sus subcategorías.
+    - Lo que ya existe queda como "General", sin migrar datos.
+    - Gastado, restante y excedido van por fila y se suman en la categoría.
+    - Si la categoría tiene algún presupuesto, una fila sin monto pero con gasto es excedida por lo gastado.
+  - **Alcance de cada edición** (vista Mes): un selector arriba de la lista, "Solo {mes}" (por defecto) o "{mes} y los siguientes".
+    - "Solo" guarda el mes y, si el siguiente no tiene monto propio, le guarda el que regía antes (o 0). El siguiente se guarda primero.
+    - "Y los siguientes" guarda desde el mes; los posteriores con monto propio lo conservan, y la fila dice desde cuál.
+    - La marca discreta "Solo {mes}" aparece cuando el monto del mes es propio y distinto del siguiente.
+    - El asistente no cambia.
+  - **Pantalla:**
+    - Lista por categoría, con secciones "Gastos" e "Ingresos esperados", cada una con su fila de total.
+    - Filas como en 1Money: el fondo es la barra de avance en un tono suave del color de la categoría (`role="progressbar"`, AA), y la pastilla con el restante o el excedido (resaltado).
+    - Tocar una categoría abre su detalle: sheet en compacta, panel en expandida.
+      - Encabezado con periodo, gastado, restante y presupuestado.
+      - Filas General y subcategorías, editables en la fila, con lo gastado y lo restante.
+      - "Ver transacciones" y "Quitar presupuesto" (con confirmación y el alcance).
+  - **Calculadora:** cada fila editable tiene un botón que abre `cc-keypad` y `cc-amount-display` en un sheet o diálogo, con contexto ("Categoría › Subcategoría", periodo, gastado, restante, presupuesto). El resultado vuelve a la fila y se guarda con el alcance.
+  - **Teclado:** `×` y `÷` con precedencia normal, el resultado redondeado a la unidad menor y la división por cero como error claro. También en el registro rápido.
+  - **Un sheet no abre otro:** en compacta, el detalle se cierra devolviendo la intención (calculadora, quitar, ver transacciones), y la página la atiende y lo reabre si corresponde.
+  - **Periodos:** Año suma los 12 meses en solo lectura. Día, Semana, Siempre y Rango muestran un aviso y "Ver este mes".
+  - **Apagado y lector:** con `budgets_enabled` apagado, el destino sigue y muestra el aviso, con un interruptor para el propietario. El lector ve sin editar.
 - **Aviso de nueva versión:**
   - Toast persistente "Nueva versión disponible" con "Recargar", que llama a `activateUpdate()` y recarga.
   - Se revisa al volver a la app (`visibilitychange`) y cada `APP_UPDATE_CHECK_INTERVAL_MS`.
   - Si el SW queda irrecuperable, avisa y recarga.
   - Si otro toast lo reemplaza, no se repite: la versión nueva entra igual en la próxima carga.
-- **Sin RPC nueva para Presupuesto:** `category_totals` ya da gastado, presupuesto (convertido) y restante por categoría de gasto y de ingreso.
+- **Presupuesto sin RPC nueva:** `category_totals` se reemplaza con las mismas columnas (1.1) para que las subcategorías traigan presupuesto y restante, y la categoría la suma.
 
 ---
 
@@ -254,7 +265,104 @@ grant execute on function public.transaction_totals(
 ) to authenticated;
 ```
 
-**pgTAP**
+**Presupuesto por subcategoría** (misma migración, renombrada a `search_and_subcategory_budgets`; no estaba en producción). Se reemplaza `category_totals` con las mismas columnas y los mismos grants (`create or replace` los conserva). Lo que cambia, sobre la función de la F1d:
+
+```sql
+create or replace function public.category_totals(
+  target_space_id uuid,
+  from_date date,
+  to_date date,
+  budget_months date[] default '{}'
+)
+returns table (
+  category_id uuid,
+  parent_id uuid,
+  kind public.category_kind,
+  amount bigint,
+  budget bigint,
+  remaining bigint,
+  missing_rate_currencies text[]
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with settings as (...),          -- igual que en la F1d
+  scoped as (...),                 -- igual
+  movements as (...),              -- igual
+  own as (...),                    -- igual: lo de cada categoría o subcategoría
+  rolled as (...),                 -- igual: cada categoría con sus subcategorías
+  budgets_in_force as (...),       -- igual: el monto en vigor de cada categoría en cada mes
+  -- Cada monto en vigor, convertido, con la categoría principal a la que suma (§4.7).
+  budget_rows as (
+    select
+      bif.category_id,
+      coalesce(c.parent_id, c.id) as top_id,
+      bif.currency,
+      private.convert_minor(
+        bif.amount, bif.currency, st.main_currency, target_space_id, coalesce(to_date, bif.month)
+      ) as converted
+    from budgets_in_force bif
+    join public.categories c on c.id = bif.category_id
+    cross join settings st
+    where bif.amount > 0
+  ),
+  -- El propio: el "General" de una categoría o el de una subcategoría.
+  budget_own as (
+    select
+      br.category_id,
+      sum(br.converted) as amount,
+      array_agg(distinct br.currency) filter (where br.converted is null) as missing
+    from budget_rows br
+    group by br.category_id
+  ),
+  -- El de una categoría: su General más los de sus subcategorías.
+  budget_rolled as (
+    select
+      br.top_id,
+      sum(br.converted) as amount,
+      array_agg(distinct br.currency) filter (where br.converted is null) as missing
+    from budget_rows br
+    group by br.top_id
+  )
+  select
+    c.id,
+    c.parent_id,
+    c.kind,
+    coalesce(case when c.parent_id is null then r.amount else o.amount end, 0)::bigint,
+    (case when c.parent_id is null then bro.amount else bow.amount end)::bigint,
+    (
+      case
+        when c.parent_id is null then bro.amount - coalesce(r.amount, 0)
+        else bow.amount - coalesce(o.amount, 0)
+      end
+    )::bigint,
+    array(
+      select distinct missing.currency
+      from unnest(
+        coalesce(case when c.parent_id is null then r.missing else o.missing end, '{}')
+        || coalesce(case when c.parent_id is null then bro.missing else bow.missing end, '{}')
+      ) as missing (currency)
+      order by missing.currency
+    )
+  from public.categories c
+  left join own o on o.category_id = c.id
+  left join rolled r on r.top_id = c.id and c.parent_id is null
+  left join budget_own bow on bow.category_id = c.id
+  left join budget_rolled bro on bro.top_id = c.id and c.parent_id is null
+  where c.space_id = target_space_id;
+$$;
+```
+
+- **pgTAP** (`supabase/tests/database/subcategory_budgets.test.sql`):
+  - La categoría suma su General y sus subcategorías.
+  - Una subcategoría con monto en USD se convierte con la tasa, y una en EUR sin tasa no suma y sale en `missing_rate_currencies` (de la subcategoría y de la categoría).
+  - Una subcategoría sin monto pero con gasto trae presupuesto y restante en null, y su gasto entra en el restante de la categoría.
+  - Varios meses suman el monto en vigor de cada subcategoría en cada mes, y un 0 la quita desde su mes.
+  - `transaction_totals.test.sql` sigue igual: sus montos eran por categoría.
+
+**pgTAP de la búsqueda**
 
 Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura de `transaction_totals.test.sql`.
 
@@ -355,32 +463,66 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
 
 ## 1.3 Presupuesto
 
-- **`BudgetsService`:**
-  - `amountFor(categoryId, month = currentMonth())` y `setMonthly(categoryId, amount, currency, month = currentMonth())`.
-  - Expone `revision`. `TotalsService` lo agrega a los parámetros de su recurso, para que la barra se actualice al editar (hoy no se recarga).
-- **`domain/budgets/budgets.ts`** (+ spec):
-  - `followingMonths(month, untilMonth)`: los meses después de `month` hasta `untilMonth`, inclusive.
-  - `inheritingMonths(entries, categoryId, month, untilMonth)`: los meses siguientes que heredan el monto de `month`. Se corta en el primero con monto propio de esa categoría.
-  - Los textos de la nota y del hint salen de las dos funciones, en `features/budget/budget-texts.ts`, con los nombres de mes de `period-labels`.
-- **`MonthlyAmounts`:** `entries(kind, month?)` y `save(change, month?)`. Agrega `progressEntries(kind, totals)`: cada categoría principal activa con su monto en vigor (en su moneda, para editar) y `{ spent, budget }` convertidos, de `category_totals`.
-- **`budget-page`:**
-  - Arriba, el total con `cc-budget-progress emphasis="summary"`.
-  - La sección "Gastos": `cc-budget-list` con `progress`, la nota de vigencia (actual o pasada, ver Decisiones) y el hint por fila de los meses con monto propio (`hint` en `BudgetListEntry`, que pasa al `cc-money-row`).
-  - La sección "Ingresos esperados": `cc-budget-list` de clase ingreso.
-  - El aviso de tasa faltante, y los estados de periodo, `budgets_enabled` y lector descritos en Decisiones.
-  - Ruta con `canDeactivate: [pendingSavesGuard]`. Enter pasa a la fila siguiente; ya lo hace `cc-budget-list`.
-- **UI:**
-  - `cc-progress-bar` (átomo nuevo):
-    - `value` (0…1+, se recorta en 1) y `tone` (`primary` | `error` | `positive`).
-    - `role="progressbar"` con `aria-valuenow`.
-    - Token nuevo `--cc-progress-height`.
-  - `cc-budget-progress` (molécula nueva):
-    - Inputs: `spent`, `budget`, `currency`, `kind`, y `emphasis` (`row` | `summary`).
-    - La barra y los textos de las Decisiones, con `UI_TEXT` (reutiliza `overBudget` y `remaining`).
-  - `cc-budget-list` (extender):
-    - En la entrada, `progress?: { spent; budget; currency; kind }`, que dibuja `cc-budget-progress` bajo la fila.
-    - Input `readonly`, que deshabilita los `cc-money-row`.
-    - El asistente queda igual, porque no pasa `progress`.
+- **Dominio:**
+  - **`domain/budgets/budget-scope.ts`** (+ spec, con los dos alcances y un mes pasado):
+    - `BudgetEditScope = 'month' | 'onward'`.
+    - `budgetWrites(entries, categoryId, month, amount, currency, scope)`: las filas a guardar.
+      - `onward`: solo la del mes.
+      - `month`: primero la del mes siguiente (si no tiene monto propio y lo que regía era distinto, con ese monto o 0), y luego la del mes.
+    - `isMonthOnly(entries, categoryId, month)`: si el mes tiene monto propio y el siguiente también, con otro monto (para la marca).
+    - `nextOwnMonth(entries, categoryId, month)`: el primer mes posterior con monto propio (para el aviso de "y los siguientes").
+  - **`domain/budgets/budget-lines.ts`** (+ spec): con las filas de `category_totals` de una categoría y sus subcategorías, arma su vista.
+    - La línea "General": lo gastado = total − subcategorías; el presupuesto = total − subcategorías, o null si no tiene monto propio en vigor.
+    - Una línea por subcategoría.
+    - El estado de cada línea (sin presupuesto, a medias, completo o excedido) y la regla de "excedida por lo gastado".
+    - Los totales de la categoría.
+  - **`domain/money/amount-expression.ts`** (+ spec):
+    - Teclas `times` y `divide` (`*` y `/` en la expresión; `×` y `÷` al mostrarla), con precedencia normal.
+    - `evaluateAmount(expression, exponent)` devuelve `{ ok: true, value } | { ok: false, error: 'division_by_zero' }`. Calcula exacto con `bigint` y redondea a la unidad menor, alejándose de cero.
+    - `evaluateExpression` la usa y da 0 cuando hay error.
+    - El registro rápido valida la división por cero con su propio mensaje.
+- **Datos:**
+  - **`BudgetsService`:**
+    - `amountFor(categoryId, month = currentMonth())`.
+    - `setAmount(categoryId, amount, currency, month, scope)`: aplica `budgetWrites` en orden. `setMonthly` (el del asistente) queda como `onward` desde el mes actual.
+    - `revision`: `TotalsService` la agrega a su recurso, para que las barras se actualicen al guardar.
+  - **`MonthlyAmounts`:**
+    - `save(change, month?, scope?)`, que pasa por `PendingSaves`.
+    - `categoryViews(kind, month | null)`: las filas de la lista y el detalle de cada categoría, desde `category_totals` y `budgetsService`.
+- **`budget-page`** (list-detail, como Cuentas):
+  - **Lista:**
+    - El selector de alcance (`cc-segmented-control`, solo en Mes y para quien edita).
+    - El aviso de tasa faltante.
+    - La sección "Gastos": su fila de total (`cc-budget-row`, con "Sin presupuesto: $X" debajo) y una `cc-budget-row` por categoría.
+    - La sección "Ingresos esperados", igual.
+  - **Detalle:**
+    - En expandida va en el panel: `cc-budget-detail`.
+    - En compacta, `cc-budget-detail-sheet`, que se cierra con la intención (`calculate`, `remove` o `transactions`): la página la atiende y lo reabre después de la calculadora o la confirmación.
+    - Los guardados de las filas van por `MonthlyAmounts.save` con el mes y el alcance.
+  - **"Ver transacciones":** pone el filtro de categoría en `TransactionFiltersStore` y navega a Transacciones; el periodo es el global.
+  - **"Quitar presupuesto":** confirma ("¿Quitar el presupuesto de {categoría}?", diciendo el alcance) y guarda 0 en el General y en cada subcategoría con monto en vigor.
+  - **Calculadora:** `cc-amount-calculator` por `OverlayService` (sheet o diálogo). Devuelve el monto y la página lo guarda.
+  - Rutas: `data: LIST_DETAIL` y `canDeactivate: [pendingSavesGuard]`. Estados de periodo, `budgets_enabled` y lector, como en Decisiones.
+- **UI** (al catálogo `/ui`; `cc-budget-progress` se elimina, porque lo reemplazan las piezas de abajo):
+  - `cc-progress-bar` (átomo):
+    - Variante `backdrop`: llena el fondo de su contenedor en un tono suave de una clave de paleta (`color`, con su intensidad `pale`), y sigue con `role="progressbar"`.
+    - Variante `bar`: la de siempre.
+  - `cc-budget-pill` (molécula): el restante, el faltante o el excedido en una pastilla. El excedido va en color de error y lo recibido de más en tono positivo, con contraste AA.
+  - `cc-budget-row` (molécula), la fila de 1Money:
+    - El fondo es la barra (`backdrop`), con el badge, el nombre y lo gastado.
+    - A la derecha, la pastilla y "presupuestado $X".
+    - Puede ser accionable (abre el detalle), estar seleccionada (panel) y llevar una nota (la línea "Sin presupuesto").
+  - `cc-budget-list` (organismo, se extiende):
+    - En modo avance (las entradas con `progress`), cada fila editable lleva el fondo de barra, el `cc-money-row`, lo gastado, la pastilla y un botón de calculadora (`calculate(entryId)`).
+    - Suma la marca "Solo {mes}" y el hint de "y los siguientes".
+    - El asistente sigue igual.
+  - `cc-budget-detail` (organismo): el encabezado (`cc-budget-row` no accionable con el periodo), el `cc-budget-list` de la categoría y las acciones "Ver transacciones" y "Quitar presupuesto".
+  - `cc-budget-detail-sheet` (organismo): la envoltura de overlay del anterior. Lee sus datos como signals, para seguir los guardados.
+  - `cc-amount-calculator` (organismo, overlay):
+    - El encabezado de contexto, `cc-amount-display` ("Presupuesto para el mes") y `cc-keypad`.
+    - Teclado físico como en el registro rápido.
+    - Devuelve las unidades menores.
+  - `cc-keypad` (molécula): 5 columnas como en 1Money (÷ × − + a la izquierda, ⌫ y 000 a la derecha, ✓ alto). Sirve al registro rápido y a la calculadora.
 
 ## 1.4 Configuración
 
@@ -433,9 +575,15 @@ No se agrega:
     - `space_members` filtrado por `space_id`, con perfiles.
   - **Flujos:**
     - `e2e/transactions-page.e2e.ts`: lista por día, búsqueda (revisa `search_terms` en `rpcCalls`), poner y quitar un filtro, totales, editar y guardar (en el panel en escritorio, en el sheet en móvil), eliminar, y descartar con cambios sin guardar.
-    - `e2e/budget.e2e.ts`: barras y excedido, editar un monto y pasar con Enter (revisa `budgets` en `writes()`), la nota de un mes pasado, Año en solo lectura y presupuestos apagados.
+    - `e2e/budget.e2e.ts`:
+      - La lista con las filas de fondo y la pastilla, y un excedido.
+      - Abrir una categoría (sheet en móvil, panel en escritorio).
+      - Editar el General y una subcategoría en la fila con cada alcance (revisa las filas en `writes()`).
+      - La calculadora con × o ÷.
+      - "Ver transacciones" (llega con el filtro) y "Quitar presupuesto".
+      - Año en solo lectura y presupuestos apagados.
     - `settings`: pantalla de inicio (abrir `/` lleva a ella), periodo por defecto, interruptor de presupuesto y nombre visible.
-  - **Screenshots:** `transacciones`, `transacciones-filtros`, `transacciones-editar`, `presupuesto`, `presupuesto-mes-pasado`, `presupuesto-anual`, `presupuesto-apagado`, `configuracion` y los del catálogo `/ui`.
+  - **Screenshots:** `transacciones`, `transacciones-filtros`, `transacciones-editar`, `presupuesto`, `presupuesto-detalle`, `presupuesto-calculadora`, `presupuesto-anual`, `presupuesto-apagado`, `configuracion` y los del catálogo `/ui`.
 
 ## 1.7 Commits
 
@@ -445,10 +593,13 @@ No se agrega:
 4. `refactor(ui): registro rápido en línea y sesiones del flujo`.
 5. `feat(ui): chips de filtro, grupo de cifras, barra de progreso y avance del presupuesto` (con el catálogo).
 6. `feat(transactions): lista, búsqueda, filtros, totales y edición en el panel`.
-7. `feat(budget): presupuesto por periodo con avance e ingresos esperados`.
-8. `feat(settings): perfil, pantalla de inicio, periodo por defecto y presupuestos`.
-9. `feat(pwa): aviso de nueva versión`.
-10. `test(e2e): transacciones, presupuesto y configuración`.
+7. `docs: ajustes de la F1e` (presupuesto por subcategoría, alcance, detalle y calculadora; Mis finanzas en la spec).
+8. `feat(db): presupuesto por subcategoría en category_totals`.
+9. `feat(money): multiplicar y dividir en el teclado`.
+10. `feat(budget): presupuesto por categoría y subcategoría, con alcance, detalle y calculadora`.
+11. `feat(settings): perfil, pantalla de inicio, periodo por defecto y presupuestos`.
+12. `feat(pwa): aviso de nueva versión`.
+13. `test(e2e): transacciones, presupuesto y configuración`.
 
 ## Layouts · Parte 1
 
@@ -497,50 +648,60 @@ Sin selección, el panel dice "Elige un movimiento para editarlo" y ofrece "Nuev
 Mediana: un panel a la vez y el registro rápido como diálogo.
 ```
 
-**Presupuesto · móvil**
+**Presupuesto · móvil** (filas como en 1Money: `▒` es el fondo de barra en el tono suave de la categoría)
 
 ```
 ┌──────────────────────────────────┐
 │           Presupuesto            │
-│ ┌──────────────────────────────┐ │
-│ │ Quedan $ 850.000             │ │
-│ │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░          │ │
-│ │ Gastado $ 3.150.000 de $ 4.000.000
-│ │ Sin presupuesto: $ 120.000   │ │
-│ └──────────────────────────────┘ │
-│ Gastos · los cambios rigen desde Diciembre
-│ (🛒) Mercado          $ 800.000  │  ← monto editable en la fila
-│      ▓▓▓▓▓▓▓▓▓▓▓░░░░             │
-│      Gastado $ 650.000 · Quedan $ 150.000
-│ (🏠) Hogar ⚠        $ 1.500.000  │
-│      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ (error)     │
-│      Te pasaste por $ 200.000    │
-│ (🎁) Regalos      Sin presupuesto │
-│      Gastado $ 120.000           │
+│ [ Solo diciembre | Dic. y siguientes ]   ← alcance, en Mes
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░ │
+│ Gastos               ( $ 850.000 )│  pastilla: restante
+│ gastado $ 3.150.000  presup. $ 4M │
+│ Sin presupuesto: $ 120.000        │
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░ │
+│ (🛒) Mercado         ( $ 150.000 )│
+│      $ 650.000    presup. $ 800.000
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ │
+│ (🏠) Hogar          (■ $ 200.000 ■)  excedido resaltado
+│      $ 1.700.000  presup. $ 1,5M  │
 │ Ingresos esperados               │
-│ (💼) Salario        $ 6.000.000  │
-│      ▓▓▓▓▓▓▓▓▓░░░░               │
-│      Recibido $ 4.000.000 · Faltan $ 2.000.000
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░ │
+│ (💼) Salario        ( $ 2.000.000 )  faltan
 └──────────────────────────────────┘
+Tocar una categoría → sheet del detalle:
+┌──────────────────────────────────┐
+│ (🛒) Mercado                    ✕ │
+│ ▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░ │
+│ 1 dic – 31 dic       ( $ 150.000 )│
+│ gastado $ 650.000  presup. $ 800.000
+│ ▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░░░ │
+│ General            $ 200.000  [🧮]│  ← monto en la fila
+│ $ 50.000                ($150.000)│
+│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ │
+│ Supermercado       $ 600.000  [🧮]│  Solo diciembre
+│ $ 600.000                 ( $ 0 ) │
+│ Plaza          Sin presupuesto[🧮]│
+│ $ 0                               │
+│ [🗑 Quitar presupuesto] [🧾 Ver transacciones]
+└──────────────────────────────────┘
+Calculadora (sheet): encabezado "Mercado › Supermercado", periodo, gastado, pastilla, presupuesto;
+"Presupuesto para el mes  $ 600.000"; teclado de 5 columnas:
+  ÷ 7 8 9 ⌫ / × 4 5 6 000 / − 1 2 3 ✓ / + 0 0 , ✓
 ```
 
-**Presupuesto · escritorio**
+**Presupuesto · escritorio** (lista y detalle lado a lado, §13.5)
 
 ```
-┌──────┬─────────────────────────────────────────────────────────────────────────┐
-│ rail │                              Presupuesto                                 │
-│      │ ┌─────────────────────────────────────────────────────────────────────┐ │
-│      │ │ Quedan $ 850.000   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░   Gastado $ 3.150.000 de $ 4M │ │
-│      │ └─────────────────────────────────────────────────────────────────────┘ │
-│      │ Gastos                              │ Ingresos esperados                 │
-│      │ (🛒) Mercado          $ 800.000     │ (💼) Salario        $ 6.000.000    │
-│      │      ▓▓▓▓▓▓▓▓▓▓░░░  Quedan $ 150k   │      ▓▓▓▓▓▓▓▓░░░  Faltan $ 2M      │
-│      │ (🏠) Hogar ⚠        $ 1.500.000     │ (🧾) Independiente  $ 1.000.000    │
-│      │      ▓▓▓▓▓▓▓▓▓▓▓▓▓  Te pasaste…     │      ▓▓▓▓▓▓▓▓▓▓▓▓  Recibiste de más│
-└──────┴─────────────────────────────────────┴────────────────────────────────────┘
-Mediana: una columna centrada, igual que en móvil.
-Mes pasado: la nota cambia a "Rige desde octubre: también cambia noviembre y diciembre", y la fila
-con monto propio en un mes siguiente lo aclara en su hint.
+┌──────┬────────────────────────────────────┬─────────────────────────────────────┐
+│ rail │ Presupuesto                        │ (🛒) Mercado                         │
+│      │ [ Solo diciembre | Dic. y sig. ]    │ ▒▒▒▒▒▒▒▒▒▒▒░░░░  1 dic – 31 dic      │
+│      │ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░  Gastos ($850k)   │ gastado $650k  presup. $800k ($150k) │
+│      │ ▒▒▒▒▒▒▒▒░░░░░░░░  🛒 Mercado ($150k)│ General        $ 200.000 [🧮] ($150k)│
+│      │ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ 🏠 Hogar (■$200k■)│ Supermercado   $ 600.000 [🧮] ($0)   │
+│      │ Ingresos esperados                  │ Plaza          Sin presupuesto [🧮]  │
+│      │ ▒▒▒▒▒▒▒▒▒▒▒░░░░░  💼 Salario ($2M)  │ [Quitar presupuesto] [Ver transacc.] │
+└──────┴────────────────────────────────────┴─────────────────────────────────────┘
+La calculadora es un diálogo. Mediana: un panel a la vez (el detalle como sheet).
 ```
 
 ## Verificación y entrega · Parte 1
@@ -859,7 +1020,7 @@ grant execute on function public.net_worth(uuid, date) to authenticated;
   - Mock de `rpc/net_worth`.
   - En `e2e/accounts.e2e.ts` (o uno nuevo): la pestaña con activos, deudas y neto, una cuenta en USD con y sin tasa, y que el query param se conserve al recargar.
   - Screenshot `cuentas-mis-finanzas`.
-- **Spec:** §7 Cuentas ("Mis finanzas" en la F1e2, las reglas de arriba y Deudas en la F2), §6 Patrimonio (los bienes en la F2), §8 con `net_worth` y §12.
+- **Spec:** la decisión (pestaña de Cuentas) y sus reglas ya quedaron en §7 Cuentas desde la parte 1. La parte 2 agrega `net_worth` a §8, la nota de los bienes en §6 y la decisión en §12.
 
 ## Layouts · Parte 2
 

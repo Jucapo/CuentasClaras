@@ -253,22 +253,55 @@ Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
 - Interruptor para mostrar u ocultar presupuestos.
 - Sin acumulación de sobrantes entre periodos.
 
-Reglas de la pantalla Presupuesto (F1e):
+Presupuesto por subcategoría (F1e):
+
+- Cada subcategoría puede tener su propio monto. `budgets` ya acepta subcategorías, así que el esquema no cambia.
+- **Presupuesto de una categoría:** su monto propio más la suma de los de sus subcategorías.
+  - El monto propio cubre lo registrado directamente en la categoría y se muestra como la fila "General".
+  - Los montos que ya existen (los puso el asistente por categoría) quedan como "General", sin migrar datos.
+- **Por fila:** gastado, restante y excedido se calculan por fila (General y cada subcategoría) y se suman en la categoría.
+  - Si la categoría tiene algún presupuesto, una fila sin monto pero con gasto se marca como excedida por lo gastado.
+  - Una categoría sin ningún presupuesto solo muestra lo gastado.
+- **En las burbujas del inicio:** el total de la categoría (§7).
+- **Ingresos esperados:** las mismas reglas, con lo recibido en lugar de lo gastado.
+
+Alcance de una edición (F1e, vista Mes):
+
+- Arriba de la lista, un selector de alcance: "Solo {mes}" (por defecto) o "{mes} y los siguientes". Se elige una vez y aplica a cada fila que se edite, también a las de subcategoría y a "Quitar presupuesto".
+- **"Solo {mes}":** guarda el monto en ese mes y, si el mes siguiente no tiene monto propio, le guarda el que regía antes. Así los meses siguientes no cambian.
+  - Si antes no regía ninguno, le guarda 0 ("sin monto").
+  - Se guarda primero el mes siguiente, para que un fallo a mitad de camino no cambie los meses que vienen.
+- **"{mes} y los siguientes":** guarda desde ese mes. Los meses posteriores que ya tienen monto propio lo conservan, y la fila dice desde cuál.
+- **Marca "Solo {mes}":** la fila la muestra, discreta, cuando el monto de ese mes es propio y distinto del de los meses siguientes.
+- **Meses pasados:** se editan igual, con el mismo selector.
+- **El asistente (paso 6) no cambia:** sus montos son el "General" de cada categoría y rigen hacia adelante.
+
+Pantalla Presupuesto (F1e):
 
 - **Por periodo:**
-  - **Mes:** los montos se editan en la fila, y cada cambio rige desde ese mes (`effective_from` = el mes que nombra el periodo).
-    - En el mes actual o en uno futuro, la nota dice "Los cambios rigen desde {mes}".
-    - En un mes pasado, la nota nombra los meses siguientes, hasta el actual, que también cambian: "Rige desde octubre: también cambia noviembre y diciembre".
-    - Si una categoría tiene monto propio en alguno de esos meses, su fila lo aclara, porque ese mes y los que le siguen no cambian: "Solo cambia octubre: noviembre tiene monto propio".
+  - **Mes:** editable.
   - **Año:** suma los 12 meses y es de solo lectura ("Para cambiar montos, elige un mes").
   - **Día, Semana, Siempre y rango personalizado:** no muestran presupuesto y ofrecen ir al mes actual.
-- **Categorías:** aparecen las principales activas en su orden. Las que no tienen presupuesto muestran lo gastado y el campo vacío, para ponerles uno.
-- **Total:** arriba, el presupuesto total contra todo lo gastado del periodo (alcance Espacio, en la moneda principal). Si hay gasto en categorías sin presupuesto, se muestra aparte ("Sin presupuesto: $X").
-- **Excedido:** la barra y el texto van en color de error, con ícono de advertencia y "Te pasaste por $X".
-- **Ingresos esperados:** cada categoría de ingreso con lo recibido contra lo esperado ("Recibido $X · Faltan $Y"). Recibir de más se muestra en tono positivo, no de error.
+- **Secciones:** "Gastos" e "Ingresos esperados", cada una encabezada por su fila de total con el mismo estilo de las filas.
+  - La de Gastos es el presupuesto total contra todo lo gastado del periodo (alcance Espacio, en la moneda principal), y debajo dice cuánto fue a categorías sin presupuesto ("Sin presupuesto: $X").
+  - En ingresos, recibir de más es buena noticia: la pastilla va en tono positivo, no de error.
+- **Lista:** cada categoría principal activa, en su orden, con su total, como en 1Money.
+  - El fondo de la fila es la barra de avance, en un tono suave del color de la categoría, con `role="progressbar"`.
+  - A la izquierda, el ícono, el nombre y lo gastado. A la derecha, una pastilla con el restante o el excedido (este, resaltado en color de error) y "presupuestado $X" debajo.
+  - El texto cumple contraste AA sobre el fondo.
+- **Detalle de una categoría:** se abre al tocarla, como sheet en compacta y en el panel de detalle en expandida (§13.5).
+  - **Encabezado:** el periodo, lo gastado, lo restante y lo presupuestado.
+  - **Filas:** "General" y cada subcategoría, con el monto editable en la fila, lo gastado y lo restante.
+  - **"Ver transacciones":** abre Transacciones filtrado por la categoría, en el periodo actual.
+  - **"Quitar presupuesto":** pone en 0 el General y las subcategorías, con confirmación y con el alcance elegido.
+  - Como un sheet no abre otro, en compacta el detalle se cierra devolviendo la intención (calculadora, quitar o ver transacciones), y la pantalla la atiende y lo vuelve a abrir si corresponde.
+- **Calculadora:**
+  - Cada fila editable suma un botón que abre el teclado del registro rápido (`cc-keypad` y `cc-amount-display`): sheet en compacta, diálogo en los demás tamaños.
+  - Trae un encabezado de contexto: "Categoría › Subcategoría", el periodo, lo gastado, lo restante y el presupuesto actual.
+  - El resultado vuelve a la fila y se guarda con el alcance elegido.
+  - La edición sigue siendo en la fila ("Menos modales", §13.5).
 - **Presupuestos apagados:** Presupuesto sigue en la navegación y dice que están apagados. El propietario ve el interruptor para encenderlos; los demás, el texto.
 - **Lector:** ve los montos sin poder editarlos.
-- **Sin RPC nueva:** `category_totals` da lo gastado, lo presupuestado (convertido) y lo restante por categoría.
 
 ---
 
@@ -408,6 +441,11 @@ Detalle (F1d):
 - **Los 3 toques:** categoría → monto → ✓. Cuenta, fecha (hoy) y etiquetas ya vienen puestas.
 - **Teclado:**
   - Edita una expresión con suma y resta, que se muestra formateada (`12.000 + 3.500`) con el resultado debajo. ✓ la evalúa y guarda.
+  - Desde la F1e también multiplica y divide (`×`, `÷`; en el teclado físico `*` y `/`):
+    - La precedencia es la normal.
+    - El resultado se redondea a la unidad menor, alejándose de cero.
+    - Dividir entre cero es un error claro ("No se puede dividir entre cero"), no un monto 0.
+    - El mismo teclado sirve a la calculadora del presupuesto (§4.7).
   - ✓ y Guardar quedan deshabilitados mientras se guarda.
 - **Campos:**
   - Subcategoría en chips de selección única.
@@ -429,7 +467,11 @@ Pestañas:
 
 - **Cuentas:** cuentas y ahorros, agrupados.
 - **Deudas:** debo, me deben y completadas, con círculo de progreso.
-- **Mis finanzas:** patrimonio por moneda y consolidado.
+- **Mis finanzas:** patrimonio por moneda y consolidado. Llega en la F1e2 como pestaña de Cuentas, no como sección del Resumen. Así queda en el panel de lista y, en expandida, el detalle de cuenta sigue al lado (§13.5).
+  - Activos (Cuentas, Ahorros y Me deben) contra Deudas, y el neto, por moneda y consolidado en la moneda principal con la tasa de hoy (RPC `net_worth`).
+  - Entran las cuentas que el usuario ve, aunque no estén en "incluir en el total". Las archivadas no entran.
+  - Si falta una tasa, lo avisa.
+  - Los bienes con valor manual llegan en la F2. Hasta la pestaña Deudas (F2), las deudas siguen en la lista de Cuentas.
 
 Desde la F1b la pestaña Cuentas lista los grupos Cuentas, Ahorros, Deudas y Me deben, cada uno con su total por moneda, más un total general por moneda de las cuentas con "incluir en el total". Las archivadas van en una sección plegada.
 
@@ -490,7 +532,7 @@ Detalle (F1e):
 
 ### Presupuesto
 
-Barras de gastado vs. presupuestado por categoría y total. Edición de montos. Reglas de la pantalla en §4.7 (F1e).
+Barras de gastado vs. presupuestado por categoría y total. Edición de montos. Desde la F1e: presupuesto por subcategoría, alcance de cada edición, detalle de categoría y calculadora (reglas en §4.7).
 
 ### Resumen
 
@@ -643,6 +685,8 @@ recurring_templates (fase 3)
 - RPCs de la F1d, todos con `SECURITY INVOKER`:
   - `save_transaction(...)` crea o actualiza (según exista el id) un movimiento con sus etiquetas y su diferido, todo o nada.
   - `category_totals(space_id, from, to, budget_months)` devuelve por categoría el monto en la moneda principal (cada categoría suma sus subcategorías), el presupuesto, el restante y las monedas sin tasa. Usa el alcance Espacio.
+    - Desde la F1e (mismas columnas), las subcategorías también traen su presupuesto y su restante.
+    - El presupuesto de la categoría es su monto propio (el "General") más la suma de los de sus subcategorías (§4.7).
   - `accounts_total(space_id, on_date)` es el total del encabezado.
   - `save_exchange_rate(...)` reemplaza la tasa del mismo par y día.
 - RPCs de la F1e (Transacciones), con `SECURITY INVOKER`:
@@ -690,9 +734,15 @@ recurring_templates (fase 3)
 | F1d2 · Pulido visual | Tema azul de marca y logo (favicon e íconos de la PWA), densidad por clase de tamaño, encabezados centrados, edición en la fila (§13.5, "Menos modales"), overlays con confirmación (✕ y ✓ flotantes), selector de ícono con Sugeridos y catálogo ampliado, paleta tono × intensidad con color de ícono automático. Sin cambios en la base de datos |
 | F1e · Reportes | Presupuestos, Transacciones (lista, filtros, edición), Resumen y el resto de Configuración |
 | F1f · Compartir | SMTP (Gmail), invitaciones con Edge Function, onboarding por invitación. Cuando la app esté madura |
-| F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes |
+| F2 · Deudas | Préstamos con amortización, deudas simples con plan, tarjetas con diferidos, pagos con desglose, prorrateo en presupuestos, reportes de intereses, flujo real, bienes en patrimonio, TRM automática, alcance Personal en reportes, metas de ahorro por cuenta |
 | F3 · Automatización | Recurrentes, cuotas automáticas, correo, atajos, bandeja "Por confirmar" |
 | F4 · Abrir a terceros | Registro público con captcha, límites de tasa, política de datos, exportar y borrar cuenta, plantilla genérica de categorías pulida |
+
+**Pendientes sin fase:**
+
+- Sugerir el presupuesto de cada categoría según el promedio de los últimos meses (el "Asistente" del presupuesto de 1Money).
+- Presupuesto por etiqueta (§4.4).
+- Metas de ahorro por cuenta (F2).
 
 ---
 
@@ -732,7 +782,11 @@ recurring_templates (fase 3)
 - [x] F1d2: tema azul generado desde las semillas de marca; menos modales (un solo texto o monto se edita en la fila); paleta de 16 tonos × 5 intensidades con el color del ícono elegido por contraste; las claves de color anteriores se mapean a su equivalente sin tocar lo guardado. Detalle en §7, §13.2, §13.3 y §13.5.
 - [x] F1e (Transacciones, Presupuesto y Configuración):
   - **Transacciones:** muestra todo lo que el usuario ve, con un candado en lo privado, y sus totales suman lo listado. Los filtros son de selección múltiple y combinables. En expandida, el registro rápido se edita en línea en el panel de detalle.
-  - **Presupuesto:** se edita por mes y avisa qué meses siguientes cambian. El Año es de solo lectura, y el total cuenta todo lo gastado.
+  - **Presupuesto:**
+    - Va por subcategoría: el monto propio de la categoría es su "General" y el total suma todo, con `category_totals` actualizada.
+    - Cada edición tiene un alcance: "Solo {mes}" (por defecto) o "{mes} y los siguientes".
+    - La lista es por categoría, con detalle (sheet o panel), calculadora con × y ÷, y filas con la barra de fondo y una pastilla.
+    - El Año es de solo lectura.
   - **Configuración y app:** Configuración suma perfil, pantalla de inicio, periodo por defecto y el interruptor de presupuestos, y hay un aviso de nueva versión.
   - Detalle en §4.7, §7 y §8. Plan en `docs/plans/f1e.md`.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
@@ -749,8 +803,8 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
 | Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-progress` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator`, `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
