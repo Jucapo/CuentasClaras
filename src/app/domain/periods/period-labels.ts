@@ -42,6 +42,11 @@ const WEEKDAY_NAMES: Readonly<Record<Weekday, string>> = {
   sunday: 'Domingo',
 };
 
+/** Name of a month (1 to 12), e.g. "Octubre". */
+export function monthName(month: number): string {
+  return MONTH_NAMES[month - 1];
+}
+
 /** Titles of the periods without a date of their own. */
 export const PERIOD_TITLES = { all: 'Siempre', custom: 'Personalizado' } as const;
 

@@ -1,0 +1,10 @@
+@if (data.detail(); as detail) {
+  <cc-budget-detail
+    [detail]="detail"
+    (changed)="data.save($event)"
+    (calculate)="close({ kind: 'calculate', lineId: $event })"
+    (remove)="close({ kind: 'remove' })"
+    (transactions)="close({ kind: 'transactions' })"
+    (closed)="close()"
+  />
+}

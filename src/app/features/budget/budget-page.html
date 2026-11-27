@@ -1,1 +1,122 @@
-<cc-page-header title="Presupuesto" />
+<cc-list-detail-layout [detailOpen]="paneDetail() !== null">
+  <div ccListPane class="list">
+    <cc-page-header [title]="text.title" />
+
+    @switch (view()) {
+      @case ('off') {
+        <cc-section
+          variant="highlight"
+          [title]="text.offTitle"
+          [description]="canConfigure() ? text.offOwner : text.offOthers"
+        >
+          @if (canConfigure()) {
+            <cc-switch
+              icon="savings"
+              [row]="true"
+              [label]="text.enable"
+              [checked]="false"
+              (checkedChange)="enable($event)"
+            />
+          }
+        </cc-section>
+      }
+      @case ('none') {
+        <cc-section [title]="text.noneTitle" [description]="text.noneDescription">
+          <cc-form-actions align="start">
+            <cc-button variant="tonal" icon="calendar_month" (click)="showThisMonth()">
+              {{ text.thisMonth }}
+            </cc-button>
+          </cc-form-actions>
+        </cc-section>
+      }
+      @default {
+        @if (editable()) {
+          <cc-segmented-control
+            [label]="text.scope"
+            [options]="scopeOptions()"
+            [fullWidth]="true"
+            [value]="scope()"
+            (valueChange)="scope.set($event)"
+          />
+        } @else if (view() === 'year') {
+          <p class="note">{{ text.yearNote }}</p>
+        }
+        @if (totalsError(); as error) {
+          <cc-message>{{ error }}</cc-message>
+        }
+        <cc-missing-rates-notice
+          [currencies]="missingRates()"
+          [canDefine]="canEdit()"
+          (define)="defineRate($event)"
+        />
+
+        <section class="group" [attr.aria-label]="text.expenses">
+          <cc-budget-row
+            emphasis="total"
+            [name]="text.expenses"
+            [figures]="expenseTotal()"
+            [currency]="currency()"
+            [note]="unbudgetedNote()"
+          />
+          @for (category of expenses(); track category.id) {
+            <cc-budget-row
+              [name]="category.name"
+              [icon]="category.icon"
+              [color]="category.color"
+              [figures]="category.figures"
+              [currency]="currency()"
+              [actionable]="true"
+              [selected]="selectedId() === category.id"
+              (activate)="open(category.id)"
+            />
+          } @empty {
+            <cc-message>{{ text.noCategories }}</cc-message>
+          }
+        </section>
+
+        @if (incomes().length > 0) {
+          <section class="group" [attr.aria-label]="text.incomes">
+            <cc-budget-row
+              emphasis="total"
+              kind="income"
+              [name]="text.incomes"
+              [figures]="incomeTotal()"
+              [currency]="currency()"
+            />
+            @for (category of incomes(); track category.id) {
+              <cc-budget-row
+                kind="income"
+                [name]="category.name"
+                [icon]="category.icon"
+                [color]="category.color"
+                [figures]="category.figures"
+                [currency]="currency()"
+                [actionable]="true"
+                [selected]="selectedId() === category.id"
+                (activate)="open(category.id)"
+              />
+            }
+          </section>
+        }
+      }
+    }
+  </div>
+
+  <div ccDetailPane class="detail">
+    @if (paneDetail(); as detail) {
+      <cc-budget-detail
+        [detail]="detail"
+        (changed)="save($event)"
+        (calculate)="calculate(selectedId() ?? '', $event)"
+        (remove)="remove(selectedId() ?? '')"
+        (transactions)="viewTransactions(selectedId() ?? '')"
+        (closed)="closePane()"
+      />
+    }
+  </div>
+
+  <div ccDetailEmpty class="empty-detail">
+    <cc-icon name="savings" size="xl" />
+    <p class="empty-text">{{ text.pickOne }}</p>
+  </div>
+</cc-list-detail-layout>

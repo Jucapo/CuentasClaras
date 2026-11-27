@@ -1,0 +1,53 @@
+<cc-overlay-panel [title]="detail().title" (closed)="closed.emit()">
+  <div class="content">
+    <cc-budget-row
+      emphasis="total"
+      [name]="detail().period"
+      [color]="detail().color"
+      [figures]="detail().figures"
+      [currency]="detail().currency"
+      [kind]="detail().kind"
+      [counted]="detail().counted"
+    />
+    @if (detail().note; as note) {
+      <p class="note">{{ note }}</p>
+    }
+    @if (detail().readonly) {
+      <div class="lines" role="list" [attr.aria-label]="text.lines(detail().title)">
+        @for (line of detail().lines; track line.id) {
+          @if (line.progress; as progress) {
+            <cc-budget-row
+              role="listitem"
+              [name]="line.name"
+              [icon]="line.icon"
+              [color]="line.color"
+              [figures]="progress"
+              [currency]="progress.currency"
+              [kind]="progress.kind"
+              [counted]="progress.counted ?? false"
+            />
+          }
+        }
+      </div>
+    } @else {
+      <cc-budget-list
+        [label]="text.lines(detail().title)"
+        [emptyText]="text.empty"
+        [defaultCurrency]="detail().currency"
+        [entries]="detail().lines"
+        (changed)="changed.emit($event)"
+        (calculate)="calculate.emit($event)"
+      />
+    }
+  </div>
+  <div ccOverlayActions class="actions">
+    @if (!detail().readonly) {
+      <cc-button variant="text" icon="delete" [danger]="true" (click)="remove.emit()">
+        {{ text.remove }}
+      </cc-button>
+    }
+    <cc-button variant="tonal" icon="receipt_long" (click)="transactions.emit()">
+      {{ text.transactions }}
+    </cc-button>
+  </div>
+</cc-overlay-panel>

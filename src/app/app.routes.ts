@@ -14,6 +14,7 @@ import {
   ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
 } from './core/routing/app-paths';
+import { pendingSavesGuard } from './core/routing/pending-saves.guard';
 import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
 import { spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
@@ -161,6 +162,9 @@ export const routes: Routes = [
       {
         path: APP_PATHS.budget,
         title: 'Presupuesto',
+        // A category's detail goes beside the list in the expanded class; rows save on their own.
+        data: LIST_DETAIL,
+        canDeactivate: [pendingSavesGuard],
         loadComponent: () => import('./features/budget/budget-page').then((m) => m.BudgetPage),
       },
       {

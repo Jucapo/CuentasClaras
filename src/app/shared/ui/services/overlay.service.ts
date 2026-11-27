@@ -32,7 +32,7 @@ export interface OverlayOptions<D> {
    * `picker` is wide enough for grids; `confirm` is a short question; `entry` is the quick entry,
    * a tall sheet on phones and a two-column dialog elsewhere.
    */
-  readonly size?: 'picker' | 'confirm' | 'entry';
+  readonly size?: 'picker' | 'confirm' | 'entry' | 'calculator';
   /** What gets the focus: the title by default, or a CSS selector, e.g. `input` for a new item. */
   readonly autoFocus?: string;
 }

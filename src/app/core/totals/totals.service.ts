@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, resource } from '@angular/core';
 import { AccountsService } from '../accounts/accounts.service';
+import { BudgetsService } from '../budgets/budgets.service';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { PeriodService } from '../periods/period.service';
 import { SpaceService } from '../spaces/space.service';
@@ -11,7 +12,8 @@ import { TotalsApi } from './totals.api';
 
 /**
  * Totals of the active space: per category in the selected period, and the accounts total of the
- * header (spec §7). They reload with the period, the movements, the rates and the accounts.
+ * header (spec §7). They reload with the period, the movements, the rates, the budgets and the
+ * accounts.
  */
 @Injectable({ providedIn: 'root' })
 export class TotalsService {
@@ -21,6 +23,7 @@ export class TotalsService {
   private readonly transactions = inject(TransactionsService);
   private readonly rates = inject(ExchangeRatesService);
   private readonly accounts = inject(AccountsService);
+  private readonly budgets = inject(BudgetsService);
 
   private readonly categoryStore = resource({
     params: () => {
@@ -32,6 +35,7 @@ export class TotalsService {
             budgetMonths: this.periods.budgetMonths(),
             revision: this.transactions.revision(),
             rates: this.rates.revision(),
+            budgets: this.budgets.revision(),
           }
         : undefined;
     },

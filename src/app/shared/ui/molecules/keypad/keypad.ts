@@ -16,6 +16,28 @@ interface KeypadButton {
 
 const digit = (key: KeypadKey): KeypadButton => ({ key, text: key, kind: 'digit' });
 
+const PHYSICAL_KEYS: Readonly<Record<string, KeypadKey>> = {
+  '+': 'plus',
+  '-': 'minus',
+  '−': 'minus',
+  '*': 'times',
+  '×': 'times',
+  '/': 'divide',
+  '÷': 'divide',
+  Backspace: 'backspace',
+};
+
+/** The keypad key a physical key types, with the decimal separator of the user; null for others. */
+export function keypadKeyOf(event: KeyboardEvent, decimalSeparator: string): KeypadKey | null {
+  if (/^\d$/.test(event.key)) {
+    return event.key as KeypadKey;
+  }
+  if (event.key === decimalSeparator || event.code === 'NumpadDecimal') {
+    return 'decimal';
+  }
+  return PHYSICAL_KEYS[event.key] ?? null;
+}
+
 /** The rows above the last one: an operator, three digits and a side key. */
 const UPPER_ROWS: readonly KeypadButton[] = [
   { key: 'divide', text: '÷', label: KEYPAD_TEXT.divide, kind: 'operator' },

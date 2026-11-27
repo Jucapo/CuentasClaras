@@ -50,7 +50,16 @@ import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-p
 import { QuickEntrySheet } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
 import { QuickEntry, QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
 import { ProgressBar } from '../../shared/ui/atoms/progress-bar/progress-bar';
-import { BudgetProgress } from '../../shared/ui/molecules/budget-progress/budget-progress';
+import { BudgetPill } from '../../shared/ui/molecules/budget-pill/budget-pill';
+import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
+import {
+  AmountCalculator,
+  AmountCalculatorData,
+} from '../../shared/ui/organisms/amount-calculator/amount-calculator';
+import {
+  BudgetDetail,
+  BudgetDetailData,
+} from '../../shared/ui/organisms/budget-detail/budget-detail';
 import { FilterChip, FilterChips } from '../../shared/ui/molecules/filter-chips/filter-chips';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
@@ -210,7 +219,9 @@ interface WindowClassDemo {
     BudgetList,
     CategoryChecklist,
     ProgressBar,
-    BudgetProgress,
+    BudgetPill,
+    BudgetRow,
+    BudgetDetail,
     FilterChips,
     StatGroup,
     QuickEntry,
@@ -565,33 +576,47 @@ export class UiCatalogPage {
     { currency: 'USD', amount: 20000 },
   ];
   /** Presupuesto: under, over, without a budget, and an expected income received in excess. */
+  /** The lines of a category's detail: General, a month-only amount, over, and over without one. */
   protected readonly budgetProgressEntries: readonly BudgetListEntry[] = [
     {
       id: 'c4',
-      name: 'Mercado',
+      name: 'General',
       icon: 'shopping_cart',
       color: 'green',
-      amount: { currency: 'COP', amount: 80000000 },
-      progress: { spent: 65000000, budget: 80000000, currency: 'COP', kind: 'expense' },
+      amount: { currency: 'COP', amount: 20000000 },
+      progress: { spent: 5000000, budget: 20000000, currency: 'COP', kind: 'expense', counted: true },
     },
     {
-      id: 'c1',
-      name: 'Hogar',
-      icon: 'home',
-      color: 'orange',
-      amount: { currency: 'COP', amount: 150000000 },
-      progress: { spent: 170000000, budget: 150000000, currency: 'COP', kind: 'expense' },
-      hint: 'Solo cambia octubre: noviembre tiene monto propio',
+      id: 'c5',
+      name: 'Supermercado',
+      icon: 'store',
+      color: 'green',
+      amount: { currency: 'COP', amount: 60000000 },
+      progress: { spent: 65000000, budget: 60000000, currency: 'COP', kind: 'expense', counted: true },
+      mark: 'Solo diciembre',
     },
     {
-      id: 'c9',
-      name: 'Regalos',
-      icon: 'redeem',
-      color: 'pink',
+      id: 'c6',
+      name: 'Plaza',
+      icon: 'storefront',
+      color: 'green',
       amount: null,
-      progress: { spent: 12000000, budget: null, currency: 'COP', kind: 'expense' },
+      progress: { spent: 3000000, budget: null, currency: 'COP', kind: 'expense', counted: true },
+      hint: 'Desde enero conserva su monto propio.',
     },
   ];
+  protected readonly budgetDetailDemo: BudgetDetailData = {
+    title: 'Mercado',
+    color: 'green',
+    period: '1 dic – 31 dic',
+    kind: 'expense',
+    figures: { spent: 73000000, budget: 80000000 },
+    counted: true,
+    currency: 'COP',
+    readonly: false,
+    note: 'Solo diciembre',
+    lines: this.budgetProgressEntries,
+  };
   protected readonly incomeProgressEntries: readonly BudgetListEntry[] = [
     {
       id: 'i1',
@@ -633,6 +658,25 @@ export class UiCatalogPage {
 
   protected resetPaneEntry(): void {
     this.paneEntryKey.update((key) => key + 1);
+  }
+
+  protected openCalculator(): void {
+    void this.overlay.open<number, AmountCalculatorData>(AmountCalculator, {
+      label: 'Mercado › Supermercado',
+      size: 'calculator',
+      data: {
+        title: 'Mercado › Supermercado',
+        period: '1 dic – 31 dic',
+        figures: { spent: 65000000, budget: 60000000 },
+        figuresCurrency: 'COP',
+        kind: 'expense',
+        counted: true,
+        color: 'green',
+        label: 'Presupuesto para el mes',
+        value: 60000000,
+        currency: 'COP',
+      },
+    });
   }
   protected readonly progressStates: readonly StepProgressState[] = [
     'done',

@@ -697,33 +697,69 @@
       </app-catalog-entry>
 
       <app-catalog-entry
-        name="cc-budget-progress"
-        description="Total arriba, fila a medias, pasada, sin presupuesto e ingreso de más"
+        name="cc-budget-pill"
+        description="Restante, excedido, faltante e ingreso de más"
+      >
+        <ng-template>
+          <cc-budget-pill currency="COP" [standing]="{ kind: 'left', amount: 15000000 }" />
+          <cc-budget-pill currency="COP" [standing]="{ kind: 'over', amount: 20000000 }" />
+          <cc-budget-pill
+            currency="COP"
+            kind="income"
+            [standing]="{ kind: 'left', amount: 200000000 }"
+          />
+          <cc-budget-pill
+            currency="COP"
+            kind="income"
+            [standing]="{ kind: 'over', amount: 30000000 }"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-row"
+        description="Total de la sección, a medias (abre el detalle), excedida, sin presupuesto e ingreso"
         layout="column"
       >
         <ng-template>
-          <cc-budget-progress
-            label="el presupuesto"
-            emphasis="summary"
+          <cc-budget-row
+            emphasis="total"
+            name="Gastos"
             currency="COP"
-            [spent]="315000000"
-            [budget]="400000000"
-            [unbudgeted]="12000000"
+            note="Sin presupuesto: $ 120,000.00"
+            [figures]="{ spent: 315000000, budget: 400000000 }"
           />
-          <cc-budget-progress
-            label="Mercado"
+          <cc-budget-row
+            name="Mercado"
+            icon="shopping_cart"
+            color="green"
             currency="COP"
-            [spent]="65000000"
-            [budget]="80000000"
+            [actionable]="true"
+            [figures]="{ spent: 65000000, budget: 80000000 }"
           />
-          <cc-budget-progress label="Hogar" currency="COP" [spent]="170000000" [budget]="150000000" />
-          <cc-budget-progress label="Regalos" currency="COP" [spent]="12000000" [budget]="null" />
-          <cc-budget-progress
-            label="Independiente"
+          <cc-budget-row
+            name="Hogar"
+            icon="home"
+            color="orange"
+            currency="COP"
+            [actionable]="true"
+            [selected]="true"
+            [figures]="{ spent: 170000000, budget: 150000000 }"
+          />
+          <cc-budget-row
+            name="Regalos"
+            icon="redeem"
+            color="pink"
+            currency="COP"
+            [figures]="{ spent: 12000000, budget: null }"
+          />
+          <cc-budget-row
+            name="Salario"
+            icon="work"
+            color="teal"
+            currency="COP"
             kind="income"
-            currency="COP"
-            [spent]="130000000"
-            [budget]="100000000"
+            [figures]="{ spent: 400000000, budget: 600000000 }"
           />
         </ng-template>
       </app-catalog-entry>
@@ -1089,12 +1125,12 @@
 
       <app-catalog-entry
         name="cc-budget-list · avance"
-        description="Pantalla Presupuesto: barra, restante, excedido, sin presupuesto e ingresos esperados"
+        description="Filas de un detalle: fondo de barra, monto en la fila, pastilla, marca «Solo diciembre» y calculadora"
         layout="column"
       >
         <ng-template>
           <cc-budget-list
-            label="Gastos"
+            label="Mercado"
             emptyText="Sin presupuesto"
             defaultCurrency="COP"
             [entries]="budgetProgressEntries"
@@ -1103,9 +1139,21 @@
             label="Ingresos esperados"
             emptyText="Sin monto"
             defaultCurrency="COP"
-            [readonly]="true"
             [entries]="incomeProgressEntries"
           />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-budget-detail · cc-amount-calculator"
+        description="Detalle de una categoría (panel en expandida, sheet en compacta) y la calculadora"
+        layout="column"
+      >
+        <ng-template>
+          <cc-budget-detail [detail]="budgetDetailDemo" />
+          <cc-button variant="tonal" icon="calculate" (click)="openCalculator()">
+            Calculadora
+          </cc-button>
         </ng-template>
       </app-catalog-entry>
 

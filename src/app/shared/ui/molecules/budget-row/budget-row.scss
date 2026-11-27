@@ -1,0 +1,90 @@
+// The bar behind is a positioned child: the row isolates it so it stays under the text.
+:host {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--cc-radius-md);
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  width: 100%;
+  min-height: var(--cc-list-item-min-height);
+  padding: var(--cc-list-item-padding);
+  border: none;
+  border-radius: inherit;
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+  text-align: start;
+}
+
+button.main {
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+    outline-offset: calc(-1 * var(--cc-swatch-ring-width));
+  }
+}
+
+.selected {
+  outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  outline-offset: calc(-1 * var(--cc-swatch-ring-width));
+}
+
+.badge {
+  flex-shrink: 0;
+}
+
+.texts {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font: var(--mat-sys-body-large);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.figure {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--cc-space-1);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.texts .figure {
+  justify-content: flex-start;
+}
+
+.end {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: flex-end;
+  gap: var(--cc-space-0-5);
+}
+
+:host(.total) {
+  .name {
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+// A Material 3 state layer, so the bar behind still shows through.
+@media (hover: hover) {
+  button.main:hover {
+    background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+  }
+}

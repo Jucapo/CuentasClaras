@@ -37,7 +37,7 @@ import { AmountDisplay } from '../../molecules/amount-display/amount-display';
 import { ChipChoice } from '../../molecules/chip-choice/chip-choice';
 import { ChipOption, ChipSelect } from '../../molecules/chip-select/chip-select';
 import { Disclosure } from '../../molecules/disclosure/disclosure';
-import { Keypad } from '../../molecules/keypad/keypad';
+import { Keypad, keypadKeyOf } from '../../molecules/keypad/keypad';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
 import { MONEY_FORMAT } from '../../money/money-format';
 import { UI_TEXT } from '../../ui.constants';
@@ -368,7 +368,7 @@ export class QuickEntry {
     if (event.ctrlKey || event.metaKey || event.altKey || isEditable(event.target)) {
       return;
     }
-    const key = this.keypadKey(event);
+    const key = keypadKeyOf(event, this.decimalSeparator());
     if (key) {
       event.preventDefault();
       this.press(key);
@@ -384,31 +384,6 @@ export class QuickEntry {
       event.preventDefault();
       this.submitEntry();
     }
-  }
-
-  private keypadKey(event: KeyboardEvent): KeypadKey | null {
-    if (/^\d$/.test(event.key)) {
-      return event.key as KeypadKey;
-    }
-    if (event.key === '+') {
-      return 'plus';
-    }
-    if (event.key === '-' || event.key === '−') {
-      return 'minus';
-    }
-    if (event.key === '*' || event.key === '×') {
-      return 'times';
-    }
-    if (event.key === '/' || event.key === '÷') {
-      return 'divide';
-    }
-    if (event.key === 'Backspace') {
-      return 'backspace';
-    }
-    if (event.key === this.decimalSeparator() || event.code === 'NumpadDecimal') {
-      return 'decimal';
-    }
-    return null;
   }
 
   private display(expression: string, account: QuickEntryAccount | null) {

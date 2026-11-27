@@ -1,0 +1,10 @@
+@if (amount() !== null) {
+  <span
+    class="pill"
+    [class.over]="over() && kind() === 'expense'"
+    [class.extra]="over() && kind() === 'income'"
+  >
+    <span class="cc-visually-hidden">{{ prefix() }}</span>
+    <cc-amount tone="neutral" [amount]="amount() ?? 0" [currency]="currency()" />
+  </span>
+}

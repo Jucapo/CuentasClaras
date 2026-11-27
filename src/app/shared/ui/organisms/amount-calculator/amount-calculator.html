@@ -1,0 +1,26 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  <div class="content">
+    <cc-budget-row
+      emphasis="total"
+      [name]="data.period"
+      [color]="data.color"
+      [figures]="data.figures"
+      [currency]="data.figuresCurrency"
+      [kind]="data.kind"
+      [counted]="data.counted"
+    />
+    <cc-amount-display
+      [label]="data.label"
+      [expression]="display().expression"
+      [result]="display().result"
+      [error]="error()"
+    />
+    <cc-keypad
+      [decimalSeparator]="decimalSeparator()"
+      [showDecimal]="showDecimal()"
+      [submitLabel]="ui.done"
+      (pressed)="press($event)"
+      (submitted)="submit()"
+    />
+  </div>
+</cc-overlay-panel>

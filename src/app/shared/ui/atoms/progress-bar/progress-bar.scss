@@ -28,3 +28,24 @@
   background-color: var(--cc-progress-color);
   transition: inline-size var(--cc-transition-fast);
 }
+
+// Behind the content of its row: a soft tone of the category over the surface, so text on top
+// keeps its contrast in both themes.
+:host(.backdrop) {
+  position: absolute;
+  inset: 0;
+  z-index: var(--cc-z-backdrop);
+  block-size: auto;
+  border-radius: inherit;
+  background: none;
+  pointer-events: none;
+
+  .fill {
+    border-radius: 0 var(--cc-radius-md) var(--cc-radius-md) 0;
+    background-color: color-mix(
+      in srgb,
+      var(--cc-progress-tint, var(--mat-sys-primary)) var(--cc-backdrop-tint),
+      var(--mat-sys-surface)
+    );
+  }
+}

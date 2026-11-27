@@ -98,6 +98,30 @@ describe('BudgetsService', () => {
     expect(api.update).not.toHaveBeenCalled();
   });
 
+  it('saves an edit of only one month keeping the next month first', async () => {
+    const service = await setup([budget({ effective_from: '2020-01-01' })]);
+
+    await service.setAmount('home', 100, 'COP', '2026-10-01', 'month');
+
+    const rows = api.create.mock.calls.map(
+      (call) => call[0] as { effective_from: string; amount: number },
+    );
+    expect(rows.map((row) => [row.effective_from, row.amount])).toEqual([
+      ['2026-11-01', 300000000],
+      ['2026-10-01', 100],
+    ]);
+  });
+
+  it('stops at the first failed row, so later months stay as they were', async () => {
+    const service = await setup([budget({ effective_from: '2020-01-01' })]);
+    api.create.mockResolvedValueOnce({ ok: false, message: 'Sin conexión.' });
+
+    const result = await service.setAmount('home', 100, 'COP', '2026-10-01', 'month');
+
+    expect(result).toEqual({ ok: false, message: 'Sin conexión.' });
+    expect(api.create).toHaveBeenCalledTimes(1);
+  });
+
   it('reads the amount in force and the totals per currency', async () => {
     const service = await setup([
       budget({ effective_from: '2020-01-01' }),
