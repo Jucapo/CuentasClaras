@@ -2,12 +2,9 @@
   <cc-button ccOverlayHeaderAction (click)="done()">{{ text.done }}</cc-button>
   <cc-form [form]="form">
     <div class="fields">
-      @if (data.currencyEditable) {
-        <cc-currency-select label="Moneda" [formField]="form.currency" />
-      }
       <cc-money-field
         [label]="data.label"
-        [currency]="form.currency().value()"
+        [currency]="data.currency"
         [allowNegative]="data.allowNegative ?? false"
         [hint]="data.hint"
         [formField]="form.amount"

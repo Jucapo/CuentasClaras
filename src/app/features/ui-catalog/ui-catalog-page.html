@@ -473,8 +473,40 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-money-row"
+        description="Monto que se escribe en la fila (§13.5): con ícono, con error y con la moneda como botón"
+        layout="column"
+      >
+        <ng-template>
+          <cc-money-row
+            icon="account_balance"
+            label="Saldo"
+            currency="COP"
+            [allowNegative]="true"
+            [formField]="demo.balance"
+          />
+          <cc-money-row
+            icon="account_balance"
+            label="Lo que debes"
+            currency="COP"
+            placeholder="0"
+            [formField]="demo.badAmount"
+          />
+          <cc-money-row
+            label="Mercado"
+            valuePosition="end"
+            placeholder="Sin presupuesto"
+            [currency]="'COP'"
+            [currencyOptions]="currencies"
+          >
+            <cc-icon-badge ccMoneyRowLeading icon="shopping_cart" color="green" />
+          </cc-money-row>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-field-row"
-        description="Fila que abre un sheet enfocado; con error y deshabilitada"
+        description="Fila que abre la lista de opciones; con error y deshabilitada"
         layout="column"
       >
         <ng-template>
@@ -511,8 +543,7 @@
       >
         <ng-template>
           <cc-button variant="tonal" (click)="openOptions()">¿Qué vas a crear?</cc-button>
-          <cc-button variant="tonal" (click)="openAmount()">Lo que debes</cc-button>
-          <cc-button variant="tonal" (click)="openBudgetAmount()">Monto con moneda</cc-button>
+          <cc-button variant="tonal" (click)="openAmount()">Ajustar al saldo real</cc-button>
         </ng-template>
       </app-catalog-entry>
 
@@ -930,14 +961,16 @@
 
       <app-catalog-entry
         name="cc-budget-list"
-        description="Montos mensuales por categoría y totales por moneda"
+        description="Montos mensuales escritos en cada fila (Enter pasa a la siguiente) y totales por moneda"
         layout="column"
       >
         <ng-template>
           <cc-budget-list
             label="Presupuesto de ejemplo"
+            emptyText="Sin presupuesto"
             totalLabel="Total al mes"
             totalNote="Ingreso esperado: $ 6,000,000.00"
+            defaultCurrency="COP"
             [entries]="budgetEntries"
             [totals]="budgetTotals"
           />

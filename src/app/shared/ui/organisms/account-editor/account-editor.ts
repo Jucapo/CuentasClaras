@@ -12,24 +12,18 @@ import {
   AccountKind,
 } from '../../../../domain/accounts/account-kinds';
 import { todayIsoDate } from '../../../../domain/dates/local-date';
-import { formatMoney } from '../../../../domain/money/money';
 import { DateField } from '../../atoms/date-field/date-field';
 import { Switch } from '../../atoms/switch/switch';
 import { TitleField } from '../../atoms/title-field/title-field';
-import { MONEY_FORMAT } from '../../money/money-format';
-import {
-  AmountPanel,
-  AmountPanelData,
-  AmountPanelResult,
-} from '../../molecules/amount-panel/amount-panel';
 import { AppearancePicker } from '../../molecules/appearance-picker/appearance-picker';
 import { Disclosure } from '../../molecules/disclosure/disclosure';
 import { FieldRow } from '../../molecules/field-row/field-row';
 import { FlowHero } from '../../molecules/flow-hero/flow-hero';
+import { MoneyRow } from '../../molecules/money-row/money-row';
 import { OptionPanel, OptionPanelData } from '../../molecules/option-panel/option-panel';
 import { OverlayService } from '../../services/overlay.service';
 import { UI_TEXT } from '../../ui.constants';
-import { ACCOUNT_FORM_MESSAGES, AccountFormValue, applyKindDefaults } from './account-editor.model';
+import { AccountFormValue, applyKindDefaults } from './account-editor.model';
 
 let nextEditorId = 0;
 
@@ -43,8 +37,9 @@ const BALANCE_TEXT: Readonly<Record<AccountGroup, { label: string; hint: string 
 
 /**
  * An account as a short flow (spec §7, §13.5): the large name with the icon and color badge, rows
- * for kind, currency and balance that open focused sheets, switches, and "Más opciones". Used by
- * the account screen and the setup wizard; validate the tree with `accountFormSchema`.
+ * for kind and currency that open their lists, the balance typed in its row, switches, and "Más
+ * opciones". Used by the account screen and the setup wizard; validate the tree with
+ * `accountFormSchema`.
  */
 @Component({
   selector: 'cc-account-editor',
@@ -54,6 +49,7 @@ const BALANCE_TEXT: Readonly<Record<AccountGroup, { label: string; hint: string 
     TitleField,
     AppearancePicker,
     FieldRow,
+    MoneyRow,
     Switch,
     Disclosure,
     DateField,
@@ -69,7 +65,6 @@ export class AccountEditor {
   readonly autofocusName = input(false);
 
   private readonly overlay = inject(OverlayService);
-  private readonly moneyFormat = inject(MONEY_FORMAT);
 
   protected readonly text = UI_TEXT;
   protected readonly today = todayIsoDate();
@@ -81,14 +76,8 @@ export class AccountEditor {
   protected readonly balanceText = computed(() => BALANCE_TEXT[this.group()]);
   protected readonly kindLabel = computed(() => ACCOUNT_KIND_OPTIONS[this.value().kind].label);
   protected readonly currencyText = computed(() => currencyLabel(this.value().currency));
-  protected readonly balanceValue = computed(() => {
-    const { balance, currency } = this.value();
-    return balance === null ? '—' : formatMoney(balance, currency, this.moneyFormat());
-  });
-  protected readonly balanceError = computed(() => {
-    const balance = this.fields().balance();
-    return balance.touched() ? (balance.errors()[0]?.message ?? null) : null;
-  });
+  /** Overdrafts happen in everyday accounts; debts and receivables are typed positive. */
+  protected readonly allowNegativeBalance = computed(() => this.group() === 'accounts');
   protected readonly isPrivate = computed(() => this.value().isPrivate);
 
   protected async pickKind(): Promise<void> {
@@ -134,28 +123,5 @@ export class AccountEditor {
     if (picked) {
       currency().value.set(picked);
     }
-  }
-
-  protected async editBalance(): Promise<void> {
-    const balance = this.fields().balance;
-    const { label, hint } = this.balanceText();
-    const result = await this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
-      label,
-      autoFocus: 'input',
-      data: {
-        title: label,
-        label,
-        hint,
-        currency: this.value().currency,
-        value: balance().value(),
-        // Overdrafts happen in everyday accounts; debts and receivables are typed positive.
-        allowNegative: this.group() === 'accounts',
-        requiredMessage: ACCOUNT_FORM_MESSAGES.balanceRequired,
-      },
-    });
-    if (result) {
-      balance().value.set(result.amount);
-    }
-    balance().markAsTouched();
   }
 }

@@ -7,8 +7,9 @@
     matInput
     class="amount"
     type="text"
-    inputmode="decimal"
-    autocomplete="off"
+    [ccMoneyInput]="text"
+    [ccMoneyInputCurrency]="currency()"
+    [ccMoneyInputAllowNegative]="allowNegative()"
     [id]="controlId"
     [value]="text()"
     [disabled]="disabled()"
@@ -16,9 +17,6 @@
     [placeholder]="placeholder()"
     [errorStateMatcher]="errorStateMatcher"
     [attr.name]="name() || null"
-    (beforeinput)="onBeforeInput($event)"
-    (input)="onInput($event)"
-    (compositionend)="onCompositionEnd($event)"
     (blur)="onBlur()"
   />
   @if (errorMessage(); as message) {

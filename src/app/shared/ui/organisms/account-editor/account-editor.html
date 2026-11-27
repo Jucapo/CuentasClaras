@@ -30,13 +30,14 @@
     [disabled]="fields().currency().disabled()"
     (activate)="pickCurrency()"
   />
-  <cc-field-row
+  <cc-money-row
     icon="account_balance"
+    placeholder="0"
     [label]="balanceText().label"
-    [valueText]="balanceValue()"
-    [error]="balanceError()"
-    [disabled]="fields().balance().disabled()"
-    (activate)="editBalance()"
+    [hint]="balanceText().hint"
+    [currency]="value().currency"
+    [allowNegative]="allowNegativeBalance()"
+    [formField]="fields().balance"
   />
   <cc-switch
     icon="functions"

@@ -18,9 +18,10 @@
       emptyText="Sin presupuesto"
       totalLabel="Total al mes"
       [entries]="entries()"
+      [defaultCurrency]="amounts.mainCurrency()"
       [totals]="totals()"
       [totalNote]="totalNote()"
-      (opened)="amounts.edit($event)"
+      (changed)="amounts.save($event)"
     />
   }
 

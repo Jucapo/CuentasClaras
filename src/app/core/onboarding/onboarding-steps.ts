@@ -64,7 +64,7 @@ export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     id: 'budget',
     path: ONBOARDING_STEP_PATHS.budget,
     title: 'Presupuesto',
-    help: 'Cuánto quieres gastar al mes en cada categoría. Se repite cada mes hasta que lo cambies.',
+    help: 'Cuánto quieres gastar al mes en cada categoría. Se repite cada mes hasta que lo cambies; 0 lo quita.',
     icon: 'pie_chart',
     optional: true,
   },

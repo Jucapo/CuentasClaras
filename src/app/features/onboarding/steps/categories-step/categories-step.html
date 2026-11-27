@@ -46,8 +46,9 @@
           label="Ingreso mensual esperado por categoría"
           totalLabel="Total esperado al mes"
           [entries]="amountEntries()"
+          [defaultCurrency]="amounts.mainCurrency()"
           [totals]="amountTotals()"
-          (opened)="amounts.edit($event)"
+          (changed)="amounts.save($event)"
         />
       </cc-section>
     }

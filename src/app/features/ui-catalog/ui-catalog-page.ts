@@ -60,6 +60,7 @@ import { ColorGrid } from '../../shared/ui/molecules/color-grid/color-grid';
 import { Disclosure } from '../../shared/ui/molecules/disclosure/disclosure';
 import { FieldRow } from '../../shared/ui/molecules/field-row/field-row';
 import { FlowHero } from '../../shared/ui/molecules/flow-hero/flow-hero';
+import { MoneyRow } from '../../shared/ui/molecules/money-row/money-row';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
 import { Form } from '../../shared/ui/molecules/form/form';
 import { IconGrid } from '../../shared/ui/molecules/icon-grid/icon-grid';
@@ -172,6 +173,7 @@ interface WindowClassDemo {
     ColorGrid,
     Disclosure,
     FieldRow,
+    MoneyRow,
     FlowHero,
     Form,
     FormActions,
@@ -616,32 +618,17 @@ export class UiCatalogPage {
     void chooseAccountGroup(this.overlay);
   }
 
-  protected openBudgetAmount(): void {
-    void this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
-      label: 'Presupuesto de Hogar',
-      autoFocus: 'input',
-      data: {
-        title: 'Presupuesto de Hogar',
-        label: 'Presupuesto mensual',
-        hint: 'Se repite cada mes hasta que lo cambies. Escribe 0 para quitarlo.',
-        currency: 'COP',
-        currencyEditable: true,
-        value: 300000000,
-        requiredMessage: 'Escribe el monto; puede ser 0.',
-      },
-    });
-  }
-
   protected openAmount(): void {
     void this.overlay.open<AmountPanelResult, AmountPanelData>(AmountPanel, {
-      label: 'Lo que debes',
+      label: 'Ajustar al saldo real',
       autoFocus: 'input',
       data: {
-        title: 'Lo que debes',
-        label: 'Lo que debes',
-        hint: 'Escríbelo en positivo: la app lo cuenta como deuda.',
+        title: 'Ajustar al saldo real',
+        label: 'Saldo en el banco',
+        hint: 'Se crea un ajuste por la diferencia.',
         currency: 'COP',
         value: 125000000,
+        allowNegative: true,
         requiredMessage: 'Escribe el saldo; puede ser 0.',
       },
     });

@@ -1,0 +1,61 @@
+<!-- Clicks on the row only move the focus to its amount; the input itself takes the keyboard. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<div
+  class="row"
+  [class.invalid]="!!shownError()"
+  [class.disabled]="disabled()"
+  (click)="focusFromRow($event)"
+>
+  <span class="leading">
+    @if (icon(); as icon) {
+      <cc-icon class="icon" [name]="icon" />
+    } @else {
+      <ng-content select="[ccMoneyRowLeading]" />
+    }
+  </span>
+  <span class="texts">
+    <label class="label" [for]="controlId">{{ label() }}</label>
+    <span class="value">
+      @if (currencyOptions().length > 0) {
+        <button
+          type="button"
+          class="currency picker"
+          aria-haspopup="dialog"
+          [disabled]="disabled()"
+          [attr.aria-label]="currencyButtonLabel()"
+          (click)="pickCurrency()"
+        >
+          {{ symbol() }}
+          <cc-icon name="expand_more" size="sm" />
+        </button>
+      } @else {
+        <span class="currency" aria-hidden="true">{{ symbol() }}</span>
+      }
+      <input
+        #input
+        class="input"
+        type="text"
+        [ccMoneyInput]="text"
+        [ccMoneyInputCurrency]="currency()"
+        [ccMoneyInputAllowNegative]="allowNegative()"
+        [id]="controlId"
+        [value]="text()"
+        [disabled]="disabled()"
+        [required]="required()"
+        [placeholder]="placeholder()"
+        [attr.enterkeyhint]="enterKeyHint()"
+        [attr.name]="name() || null"
+        [attr.aria-invalid]="shownError() ? 'true' : null"
+        [attr.aria-describedby]="shownError() || shownHint() ? supportId : null"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        (keydown.enter)="onEnter($event)"
+      />
+    </span>
+  </span>
+</div>
+@if (shownError(); as error) {
+  <p class="support error" role="alert" [id]="supportId">{{ error }}</p>
+} @else if (shownHint(); as hint) {
+  <p class="support" [id]="supportId">{{ hint }}</p>
+}
