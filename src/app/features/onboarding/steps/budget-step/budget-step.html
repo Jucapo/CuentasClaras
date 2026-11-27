@@ -22,6 +22,7 @@
       [totals]="totals()"
       [totalNote]="totalNote()"
       (changed)="amounts.save($event)"
+      (hasAmountsChange)="typedAmounts.set($event)"
     />
   }
 

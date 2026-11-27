@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { BudgetsService } from '../../../../core/budgets/budgets.service';
 import { CategoriesService } from '../../../../core/categories/categories.service';
 import { ONBOARDING_STEPS, stepUrl } from '../../../../core/onboarding/onboarding-steps';
@@ -39,7 +39,10 @@ export class BudgetStep {
     const income = this.amounts.totalsText('income');
     return income ? `Ingreso esperado: ${income}` : undefined;
   });
+  /** Some row holds an amount the user typed, even before it is saved. */
+  protected readonly typedAmounts = signal(false);
+  /** "Saltar" only while no row has an amount, saved or typed. */
   protected readonly nextLabel = computed(() =>
-    this.amounts.count('expense') === 0 ? 'Saltar' : 'Continuar',
+    this.amounts.count('expense') === 0 && !this.typedAmounts() ? 'Saltar' : 'Continuar',
   );
 }
