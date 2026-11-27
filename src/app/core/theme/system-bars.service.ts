@@ -68,7 +68,9 @@ export class SystemBarsService {
       ? blendColors(surface, scrim.color, stackedOpacity(scrim.opacity, open))
       : toHexColor(surface);
     // Both metas keep their media queries and take the same color: whichever applies, it is right.
-    for (const meta of this.document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    for (const meta of this.document.querySelectorAll<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    )) {
       meta.content = color;
     }
   }

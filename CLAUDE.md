@@ -18,7 +18,8 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - `npm run brand:build`: genera los PNG de la PWA, el `apple-touch-icon` y los favicons (`.ico` y `.svg`) desde los logos de `public/brand/`. Correrlo al cambiar un logo y commitear los resultados.
 - Tema: las paletas de `src/styles/_theme-colors.scss` salen del schematic `ng generate @angular/material:theme-color` con las semillas de marca (el comando exacto está en el archivo). Se regeneran, nunca se editan a mano.
 - `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`).
-  - Corre en 4 proyectos con el Chrome instalado, más `iphone-webkit` (solo invitación y login), que requiere `npx playwright install webkit` una vez.
+  - Corre en 4 proyectos con el Chrome instalado, más `iphone-webkit` (invitación, login y `native-feel`), que requiere `npx playwright install webkit` una vez.
+  - `capture()` deja crecer el shell para el screenshot de página completa, porque en la app solo se desplaza el contenido.
   - Reutiliza `ng serve` si está corriendo, y Supabase siempre está simulado (`e2e/support`).
   - Screenshots en `e2e/screenshots/` (ignorada por git).
 - `npm run e2e:local`: flujos contra el stack local real (`e2e/local/*.local.ts`, iPhone WebKit): invitar, el correo en Mailpit, reenviar y aceptar. Requiere `npm run db:start` y `npm run functions:serve`.
@@ -77,6 +78,7 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - usan la service role solo para lo que no se puede de otra forma (p. ej. `auth.admin`);
   - tienen CORS limitado a `ALLOWED_ORIGINS`.
 - Commits pequeños en conventional commits. Los PRs se mergean con squash.
+- Versión de la app: la de `package.json` (Acerca de, en el menú). Cada fase sube el minor (F1g = 0.10.0).
 
 ## Proceso por fase
 

@@ -14,8 +14,13 @@ body {
 }
 
 html {
-  touch-action: manipulation;
   text-size-adjust: 100%;
+}
+
+// Every element, since a scroll container stops what its ancestors allow; anything that sets its
+// own (a drag handle) wins over this.
+:where(*) {
+  touch-action: manipulation;
 }
 
 body {
@@ -57,6 +62,21 @@ label,
   *::-webkit-scrollbar {
     display: none;
   }
+}
+
+// Every control shows it is pressed (spec §13.4). Material's controls and the rows with a ripple
+// bring their own state layer.
+:where(button, a[href], [role='button'], [role='option'], [role='radio'], [role='tab']):not(
+    .mat-mdc-button-base,
+    .mat-ripple,
+    .mdc-tab,
+    .mat-mdc-tab-link,
+    .mat-mdc-chip-action,
+    .mat-mdc-option,
+    .mat-mdc-chip,
+    :disabled
+  ):active {
+  box-shadow: var(--cc-pressed-layer);
 }
 
 input,

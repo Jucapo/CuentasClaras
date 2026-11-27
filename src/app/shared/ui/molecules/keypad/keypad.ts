@@ -2,11 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import { KeypadKey } from '../../../../domain/money/amount-expression';
 import { Icon } from '../../atoms/icon/icon';
-import {
-  colorOrFallback,
-  paletteColor,
-  paletteForeground,
-} from '../../colors/color-palette';
+import { colorOrFallback, paletteColor, paletteForeground } from '../../colors/color-palette';
 import { IconName } from '../../icons/icon-glyphs';
 import { KEYPAD_TEXT } from '../../ui.constants';
 

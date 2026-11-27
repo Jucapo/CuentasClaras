@@ -13,12 +13,14 @@ describe('screenTransition', () => {
       kind: 'fade',
       scope: 'content',
     });
-    expect(screenTransition(screen('/configuracion'), screen('/configuracion/miembros'))).toEqual(
-      { kind: 'forward', scope: 'content' },
-    );
-    expect(screenTransition(screen('/configuracion/miembros'), screen('/configuracion'))).toEqual(
-      { kind: 'back', scope: 'content' },
-    );
+    expect(screenTransition(screen('/configuracion'), screen('/configuracion/miembros'))).toEqual({
+      kind: 'forward',
+      scope: 'content',
+    });
+    expect(screenTransition(screen('/configuracion/miembros'), screen('/configuracion'))).toEqual({
+      kind: 'back',
+      scope: 'content',
+    });
   });
 
   it('slides the whole page when the header and the navigation come or go', () => {

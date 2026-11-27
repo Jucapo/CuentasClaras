@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, resource } from '@angular/core';
+import { computed, inject, Injectable, linkedSignal, resource, Signal } from '@angular/core';
 import { AccountsService } from '../accounts/accounts.service';
 import { BudgetsService } from '../budgets/budgets.service';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
@@ -17,9 +17,34 @@ import {
 import { TotalsApi } from './totals.api';
 
 /**
+ * The latest value of a resource of a space: kept while the next one loads, null until the first
+ * one of the space arrives.
+ */
+function keepWhileLoading<T>(
+  spaceId: () => string | undefined,
+  value: () => T | undefined,
+): Signal<T | null> {
+  const latest = linkedSignal<
+    { readonly spaceId: string | undefined; readonly value: T | undefined },
+    { readonly spaceId: string | undefined; readonly value: T | null }
+  >({
+    source: () => ({ spaceId: spaceId(), value: value() }),
+    computation: (next, previous) => {
+      if (next.value !== undefined) {
+        return { spaceId: next.spaceId, value: next.value };
+      }
+      return previous && previous.value.spaceId === next.spaceId
+        ? previous.value
+        : { spaceId: next.spaceId, value: null };
+    },
+  });
+  return computed(() => latest().value);
+}
+
+/**
  * Totals of the active space: per category in the selected period, and the accounts total of the
  * header (spec §7). They reload with the period, the movements, the rates, the budgets and the
- * accounts.
+ * accounts, keeping the last ones on screen meanwhile.
  */
 @Injectable({ providedIn: 'root' })
 export class TotalsService {
@@ -80,17 +105,27 @@ export class TotalsService {
     },
   });
 
-  /** Totals of every category in the selected period. */
-  readonly categoryTotals = computed<readonly CategoryTotal[]>(() =>
-    this.categoryStore.hasValue() ? this.categoryStore.value() : [],
+  // While new totals load (another period, a new movement), the last ones stay on screen instead of
+  // "$ 0" or a placeholder (spec §13.4); another space starts empty.
+  private readonly lastCategoryTotals = keepWhileLoading(
+    () => this.spaces.activeSpace()?.id,
+    () => (this.categoryStore.hasValue() ? this.categoryStore.value() : undefined),
   );
-  readonly categoryTotalsLoaded = computed(() => this.categoryStore.hasValue());
+  private readonly lastAccountsTotal = keepWhileLoading(
+    () => this.spaces.activeSpace()?.id,
+    () => (this.accountsStore.hasValue() ? this.accountsStore.value() : undefined),
+  );
+
+  /** Totals of every category in the selected period. */
+  readonly categoryTotals = computed<readonly CategoryTotal[]>(
+    () => this.lastCategoryTotals() ?? [],
+  );
+  /** Whether the totals of the space arrived once; later reloads keep the last ones. */
+  readonly categoryTotalsLoaded = computed(() => this.lastCategoryTotals() !== null);
   readonly categoryTotalsError = computed(() => this.categoryStore.error()?.message ?? null);
 
   /** Total of the accounts included in it, in the main currency; null until loaded. */
-  readonly accountsTotal = computed<AccountsTotal | null>(() =>
-    this.accountsStore.hasValue() ? this.accountsStore.value() : null,
-  );
+  readonly accountsTotal = computed<AccountsTotal | null>(() => this.lastAccountsTotal());
 
   /** Currencies whose amounts are left out of the totals for lack of a rate. */
   readonly missingRateCurrencies = computed(() => {

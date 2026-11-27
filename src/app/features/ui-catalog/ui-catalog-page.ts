@@ -47,6 +47,16 @@ import {
   ExchangeRateSheetData,
 } from '../../shared/ui/organisms/exchange-rate-sheet/exchange-rate-sheet';
 import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-panel/period-panel';
+import {
+  AppDrawer,
+  AppDrawerData,
+  AppDrawerTheme,
+} from '../../shared/ui/organisms/app-drawer/app-drawer';
+import { Avatar } from '../../shared/ui/atoms/avatar/avatar';
+import { Skeleton } from '../../shared/ui/atoms/skeleton/skeleton';
+import { SheetHandle } from '../../shared/ui/molecules/sheet-handle/sheet-handle';
+import { SkeletonList } from '../../shared/ui/molecules/skeleton-list/skeleton-list';
+import { APP_VERSION } from '../../core/config/app.constants';
 import { QuickEntrySheet } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
 import { QuickEntry, QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
 import { ProgressBar } from '../../shared/ui/atoms/progress-bar/progress-bar';
@@ -193,6 +203,10 @@ interface WindowClassDemo {
 @Component({
   selector: 'app-ui-catalog-page',
   imports: [
+    Avatar,
+    Skeleton,
+    SheetHandle,
+    SkeletonList,
     MemberList,
     InvitationList,
     InvitationCard,
@@ -1237,6 +1251,32 @@ export class UiCatalogPage {
         period: { kind: 'month', anchor: '2026-11-01' },
         settings: { monthStartDay: 1, weekStart: 'monday' },
         today: '2026-11-26',
+      },
+    });
+  }
+
+  protected openDrawer(): void {
+    const theme = signal<AppDrawerTheme>('system');
+    void this.overlay.open<unknown, AppDrawerData>(AppDrawer, {
+      label: 'Menú',
+      size: 'drawer',
+      data: {
+        name: signal('Juan Camilo'),
+        email: 'juan@example.com',
+        spaces: [
+          { id: 's1', name: 'Hogar', icon: 'home', color: 'green', role: 'Propietario' },
+          { id: 's2', name: 'Personal', icon: 'person', color: 'blue', role: 'Propietario' },
+        ],
+        activeSpaceId: 's1',
+        membersText: signal('2 miembros'),
+        theme,
+        setTheme: (value) => theme.set(value),
+        installed: false,
+        installPlatform: 'android',
+        canPrompt: signal(false),
+        install: async () => false,
+        version: APP_VERSION,
+        checkForUpdate: async () => null,
       },
     });
   }

@@ -220,7 +220,12 @@
         @for (tag of chosenTags(); track tag.value) {
           <span class="tag-chip">
             @if (tag.color; as color) {
-              <cc-color-swatch [color]="color" [label]="tag.label" [decorative]="true" [small]="true" />
+              <cc-color-swatch
+                [color]="color"
+                [label]="tag.label"
+                [decorative]="true"
+                [small]="true"
+              />
             }
             {{ tag.label }}
           </span>

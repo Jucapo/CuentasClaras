@@ -75,23 +75,11 @@
   &:focus-visible {
     outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
   }
-
-  &:active {
-    background-color: color-mix(
-      in srgb,
-      currentcolor calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
-      transparent
-    );
-  }
 }
 
 .row.static,
 .row.theme {
   cursor: default;
-
-  &:active {
-    background: none;
-  }
 }
 
 .row.nested {

@@ -35,10 +35,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chrome', colorScheme: 'dark' },
     },
     // The invitation email opens in Safari on iPhone (spec §3.3): that flow and the login also run
-    // on WebKit. Needs `npx playwright install webkit` once (CLAUDE.md).
+    // on WebKit, and so does what makes the app feel native (spec §13.4). Needs
+    // `npx playwright install webkit` once (CLAUDE.md).
     {
       name: 'iphone-webkit',
-      testMatch: ['**/invitation.e2e.ts', '**/auth-screens.e2e.ts'],
+      testMatch: ['**/invitation.e2e.ts', '**/auth-screens.e2e.ts', '**/native-feel.e2e.ts'],
       use: { ...devices['iPhone 15'], colorScheme: 'light' },
     },
   ],

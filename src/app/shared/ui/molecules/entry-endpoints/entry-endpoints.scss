@@ -33,15 +33,6 @@
     outline: var(--cc-swatch-ring-width) solid var(--mat-sys-on-surface);
     outline-offset: calc(-2 * var(--cc-swatch-ring-width));
   }
-
-  // Pressed: Material 3's state layer over the color.
-  &:active {
-    background-color: color-mix(
-      in srgb,
-      currentcolor calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
-      var(--cc-endpoint-color)
-    );
-  }
 }
 
 // Only the outer top corners follow the sheet's.

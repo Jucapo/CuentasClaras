@@ -98,9 +98,7 @@ export class OverlayPanel {
   protected readonly floating = computed(
     () => this.confirmLabel() !== null || this.floatingClose(),
   );
-  protected readonly closesWithHandle = computed(
-    () => this.inSheet && this.handleLabel() !== null,
-  );
+  protected readonly closesWithHandle = computed(() => this.inSheet && this.handleLabel() !== null);
 
   protected confirm(): void {
     if (!this.confirming()) {

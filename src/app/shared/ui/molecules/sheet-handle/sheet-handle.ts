@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, viewChild } from '@angular/core';
 import { DragDismiss } from '../../services/drag-dismiss';
 
 /**
@@ -17,4 +17,13 @@ export class SheetHandle {
   /** Accessible name when it is a button, e.g. "Cerrar". */
   readonly label = input<string | null>(null);
   readonly activate = output<void>();
+
+  private readonly drag = viewChild(DragDismiss);
+
+  /** A tap closes; the click that ends a drag does not (the drag already decided). */
+  protected onClick(): void {
+    if (!this.drag()?.takeDragEnd()) {
+      this.activate.emit();
+    }
+  }
 }

@@ -18,5 +18,7 @@ export class SkeletonList {
   readonly variant = input<'rows' | 'blocks'>('rows');
   readonly label = input('Cargando');
 
-  protected readonly items = computed(() => Array.from({ length: this.rows() }, (_, index) => index));
+  protected readonly items = computed(() =>
+    Array.from({ length: this.rows() }, (_, index) => index),
+  );
 }

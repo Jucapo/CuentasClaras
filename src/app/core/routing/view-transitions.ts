@@ -51,7 +51,12 @@ export function screenTransition(
 }
 
 function firstSegment(url: string): string {
-  return url.split(/[?#]/, 1)[0].split('/').find((segment) => segment.length > 0) ?? '';
+  return (
+    url
+      .split(/[?#]/, 1)[0]
+      .split('/')
+      .find((segment) => segment.length > 0) ?? ''
+  );
 }
 
 /** The URL path and the merged route data of a router state, from its root snapshot. */
@@ -88,7 +93,8 @@ export function onViewTransitionCreated({ transition, from, to }: ViewTransition
   }
   const end = (snapshot: ActivatedRouteSnapshot): TransitionEnd => {
     const { url, data } = describe(snapshot);
-    const fullScreen = data[ROUTE_DATA_KEYS.flow] === true || data[ROUTE_DATA_KEYS.subscreen] === true;
+    const fullScreen =
+      data[ROUTE_DATA_KEYS.flow] === true || data[ROUTE_DATA_KEYS.subscreen] === true;
     return {
       url,
       chrome: !(fullScreen && layout.isCompact()),

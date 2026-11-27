@@ -1,13 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import { HOUSEHOLD } from './support/catalog-fixture';
 import { capture, captureViewport } from './support/screenshots';
-import {
-  blockSupabase,
-  E2E_USER,
-  mockDataApi,
-  seedSession,
-  SUPABASE_URL,
-} from './support/supabase';
+import { blockSupabase, mockDataApi, seedSession, SUPABASE_URL } from './support/supabase';
 
 test.beforeEach(async ({ page }) => {
   await blockSupabase(page);
@@ -168,7 +162,9 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
 
   await grid.getByRole('button', { name: 'Hogar', exact: true }).click();
   await expect(page).toHaveURL(/\/bienvenida\/gastos\/categories-\d+\?clase=gasto$/);
-  await expect(page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Hogar');
   await expect(
     page.getByRole('list', { name: 'Subcategorías', exact: true }).getByRole('listitem'),

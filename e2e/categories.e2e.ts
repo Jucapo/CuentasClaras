@@ -82,7 +82,9 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
 
   await page.getByRole('button', { name: 'Hogar', exact: true }).click();
   await expect(page).toHaveURL(/\/categorias\/editar\/cat-home/);
-  await expect(page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Hogar');
   const subcategories = page.getByRole('list', { name: 'Subcategorías', exact: true });
   await expect(subcategories.getByRole('listitem')).toHaveText([/Arriendo/, /Servicios públicos/]);
@@ -188,7 +190,9 @@ test('a new category is saved first when a subcategory is added', async ({ page,
   const child = api.writes().filter((write) => write.table === 'categories')[1];
   expect(child?.body).toMatchObject({ name: 'Veterinario', parent_id: parentId });
   // The category exists now: the screen is in edit mode, with back instead of close.
-  await expect(page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Cerrar' })).toBeHidden();
 });
 

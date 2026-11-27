@@ -2,7 +2,7 @@
 :host {
   display: block;
   width: var(--cc-skeleton-width, 100%);
-  height: var(--cc-skeleton-height, 1em);
+  height: var(--cc-skeleton-height, var(--cc-skeleton-line-height));
   border-radius: var(--cc-radius-sm);
   background-color: var(--mat-sys-surface-container-highest);
   animation: shimmer var(--cc-skeleton-duration) var(--cc-easing-standard) infinite alternate;

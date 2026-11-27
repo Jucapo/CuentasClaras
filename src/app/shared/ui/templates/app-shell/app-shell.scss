@@ -62,12 +62,12 @@
 
 // Two rows in the compact class, like 1Money (spec §7): the avatar, the total in the center and the
 // action; under them, the period with its arrows.
+// The rows take their height from .total and .bar below.
 :host(.compact) .header-content {
   grid-template-areas:
     'menu total actions'
     'bar bar bar';
   grid-template-columns: var(--cc-touch-target-min) minmax(0, 1fr) var(--cc-touch-target-min);
-  grid-template-rows: var(--cc-header-row-height) minmax(var(--cc-header-period-height), auto);
   row-gap: 0;
   min-height: 0;
   padding: 0 var(--cc-space-2) var(--cc-space-1);
@@ -105,7 +105,13 @@
 
 :host(.compact) .total {
   align-items: center;
+  justify-content: center;
+  min-height: var(--cc-header-row-height);
   text-align: center;
+}
+
+:host(.compact) .bar {
+  min-height: var(--cc-header-period-height);
 }
 
 .total-label {

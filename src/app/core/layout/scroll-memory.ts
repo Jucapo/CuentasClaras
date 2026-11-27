@@ -1,4 +1,4 @@
-import { afterNextRender, inject, Injectable, Injector } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { navigationKind, pathSegments } from '../../domain/navigation/navigation-kind';
 import { ScrollContainer } from '../../shared/ui/services/scroll-container';
@@ -36,7 +36,6 @@ function screenKey(url: string): string {
 export class ScrollMemory {
   private readonly router = inject(Router);
   private readonly container = inject(ScrollContainer);
-  private readonly injector = inject(Injector);
   private readonly positions = new Map<string, number>();
   private pending: (() => void) | null = null;
 
@@ -55,8 +54,9 @@ export class ScrollMemory {
         const action = scrollActionFor(fromUrl, toUrl);
         if (action !== 'keep') {
           const top = action === 'top' ? 0 : (this.positions.get(screenKey(toUrl)) ?? 0);
-          // Written once the new screen is in place, before the view transition takes it.
-          afterNextRender({ write: () => this.scrollTo(top) }, { injector: this.injector });
+          // Next frame, with the new screen in place. Not afterNextRender: in a zoneless app it waits
+          // for a render that may never come when the screen's data is already loaded.
+          requestAnimationFrame(() => this.scrollTo(top));
         }
       }
     });

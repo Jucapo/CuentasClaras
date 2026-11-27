@@ -91,6 +91,29 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-avatar"
+        description="Iniciales del nombre visible (md, lg); sin nombre, una persona"
+      >
+        <ng-template>
+          <cc-avatar name="Juan Camilo" />
+          <cc-avatar name="Laura" size="lg" />
+          <cc-avatar />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-skeleton"
+        description="Mientras llegan los datos: línea, círculo y bloque; brilla salvo con movimiento reducido"
+        layout="column"
+      >
+        <ng-template>
+          <cc-skeleton />
+          <cc-skeleton shape="circle" />
+          <cc-skeleton shape="block" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-progress-ring"
         description="Tasa de ahorro: positiva, negativa (tono de error) y por encima del 100 %"
       >
@@ -659,10 +682,38 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-keypad" description="Con y sin tecla decimal" layout="column">
+      <app-catalog-entry
+        name="cc-keypad"
+        description="Registro rápido (fecha y ✓ con el color de la categoría), sin decimales y la calculadora"
+        layout="column"
+      >
         <ng-template>
-          <cc-keypad submitLabel="Guardar" decimalSeparator="," />
-          <cc-keypad submitLabel="Guardar" [showDecimal]="false" [submitDisabled]="true" />
+          <cc-keypad submitLabel="Guardar" decimalSeparator="," accent="orange" [dateKey]="true" />
+          <cc-keypad submitLabel="Guardar" accent="teal" [dateKey]="true" [showDecimal]="false" />
+          <cc-keypad submitLabel="Listo" [submitDisabled]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-sheet-handle"
+        description="El asa de los sheets: para arrastrar o, con nombre, el botón Cerrar del registro rápido"
+      >
+        <ng-template>
+          <div class="handle-demo">
+            <cc-sheet-handle />
+            <cc-sheet-handle label="Cerrar" />
+          </div>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-skeleton-list"
+        description="Filas (cuentas, movimientos) y bloques (resúmenes) mientras cargan"
+        layout="column"
+      >
+        <ng-template>
+          <cc-skeleton-list [rows]="3" />
+          <cc-skeleton-list variant="blocks" [rows]="2" />
         </ng-template>
       </app-catalog-entry>
 
@@ -1167,6 +1218,7 @@
             >Ajuste (editar)</cc-button
           >
           <cc-button variant="tonal" (click)="openPeriodPanel()">Periodo</cc-button>
+          <cc-button variant="tonal" (click)="openDrawer()">Menú lateral</cc-button>
           <cc-button variant="tonal" (click)="openRate()">Tasa de cambio</cc-button>
         </ng-template>
       </app-catalog-entry>
@@ -1441,11 +1493,7 @@
                 userName="Juan Camilo"
                 [navItems]="navItems"
               >
-                <cc-period-chip
-                  ccShellPeriod
-                  title="Noviembre"
-                  range="1 nov – 30 nov"
-                />
+                <cc-period-chip ccShellPeriod title="Noviembre" range="1 nov – 30 nov" />
                 <p>Contenido de la pantalla.</p>
               </cc-app-shell>
             </app-fixed-layout>

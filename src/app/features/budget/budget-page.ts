@@ -44,6 +44,7 @@ import { ConfirmService } from '../../shared/ui/services/confirm.service';
 import { LayoutService } from '../../shared/ui/services/layout.service';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { ToastService } from '../../shared/ui/services/toast.service';
+import { SkeletonList } from '../../shared/ui/molecules/skeleton-list/skeleton-list';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { TransactionFiltersStore } from '../transactions/transaction-filters.store';
 import {
@@ -85,6 +86,7 @@ const NOTHING_TO_REVERT = (): void => undefined;
     BudgetDetail,
     MissingRatesNotice,
     ListDetailLayout,
+    SkeletonList,
   ],
   templateUrl: './budget-page.html',
   styleUrl: './budget-page.scss',
@@ -167,6 +169,8 @@ export class BudgetPage {
       this.incomes().map((category) => category.figures),
     ),
   );
+  /** The first totals of the space are on their way: placeholder rows (spec §13.4). */
+  protected readonly loading = computed(() => !this.totals.categoryTotalsLoaded());
   protected readonly missingRates = this.totals.missingRateCurrencies;
   protected readonly totalsError = this.totals.categoryTotalsError;
 

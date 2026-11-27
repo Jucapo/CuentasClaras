@@ -107,6 +107,8 @@ export const DRAG_DISMISS = {
   distanceRatio: 0.3,
   maxDistancePx: 160,
   velocityPxPerMs: 0.5,
+  /** A fast flick closes only past this distance, so a jitter does not. */
+  flickMinPx: 40,
 } as const;
 
 /** How long the drawer takes to slide in and out; matches --cc-duration-medium. */

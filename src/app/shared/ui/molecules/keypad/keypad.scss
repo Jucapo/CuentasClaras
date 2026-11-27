@@ -30,15 +30,6 @@
   &:focus-visible {
     outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
   }
-
-  // Pressed: the state layer of Material 3 over the key's own color.
-  &:active:not(:disabled) {
-    background-color: color-mix(
-      in srgb,
-      currentcolor calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
-      var(--cc-key-color)
-    );
-  }
 }
 
 // Operators, erase and the date: neutral gray, never the brand color (spec §7).

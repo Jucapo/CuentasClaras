@@ -137,7 +137,9 @@ export class SettingsPage {
 
   /** Only to those who cannot change it: it explains why the fields are locked. */
   protected readonly spaceDescription = computed(() =>
-    this.canConfigure() ? undefined : 'Solo el propietario puede cambiar la configuración del espacio.',
+    this.canConfigure()
+      ? undefined
+      : 'Solo el propietario puede cambiar la configuración del espacio.',
   );
 
   // Follow the loaded values: a reload or a space switch replaces what is shown.

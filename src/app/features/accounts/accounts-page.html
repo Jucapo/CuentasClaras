@@ -31,11 +31,7 @@
           }
         </cc-section>
       } @else {
-        <cc-account-list
-          [groups]="groups()"
-          [totals]="listTotals()"
-          [loading]="!loaded()"
-        />
+        <cc-account-list [groups]="groups()" [totals]="listTotals()" [loading]="!loaded()" />
       }
 
       @if (hasArchived()) {

@@ -1,5 +1,10 @@
 <!-- The menu stays while a view covers it, so it keeps its scroll and its focus. -->
-<nav class="drawer" ccDragDismiss="start" [hidden]="view() !== 'menu'" [attr.aria-label]="text.menu">
+<nav
+  class="drawer"
+  ccDragDismiss="start"
+  [hidden]="view() !== 'menu'"
+  [attr.aria-label]="text.menu"
+>
   <h2 class="cc-visually-hidden">{{ text.menu }}</h2>
   <div class="user">
     <cc-avatar size="lg" [name]="data.name()" />

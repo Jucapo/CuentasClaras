@@ -165,7 +165,13 @@ export class AppDrawer {
   protected readonly lowerRows = computed<readonly DrawerRow[]>(() => [
     ...(this.data.installed
       ? []
-      : [{ id: 'install' as const, icon: 'install_mobile' as const, label: APP_DRAWER_TEXT.install }]),
+      : [
+          {
+            id: 'install' as const,
+            icon: 'install_mobile' as const,
+            label: APP_DRAWER_TEXT.install,
+          },
+        ]),
     {
       id: 'about',
       icon: 'info',
