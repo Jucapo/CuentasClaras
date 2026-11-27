@@ -17,6 +17,7 @@ type AppearanceTab = 'icon' | 'color';
   imports: [Tabs, IconGrid, ColorGrid, IconBadge],
   templateUrl: './appearance-editor.html',
   styleUrl: './appearance-editor.scss',
+  host: { '[class.bounded]': 'bounded()' },
 })
 export class AppearanceEditor {
   /** Icon key. */
@@ -27,6 +28,11 @@ export class AppearanceEditor {
   readonly inheritFrom = input<string | null>(null);
   /** Hides the large preview when the surrounding screen already shows one. */
   readonly showPreview = input(true);
+  /**
+   * Gives the grids a height of their own that scrolls, for an editor inside a longer sheet (a
+   * subcategory) so what follows stays at hand; the dedicated picker scrolls as a whole.
+   */
+  readonly bounded = input(false);
   /** What the icon is for; it decides the groups suggested. */
   readonly iconContext = input<IconContext | null>(null);
   /** Name typed for the item; its words suggest icons. */

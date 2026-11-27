@@ -141,9 +141,9 @@ function scrollportTop(scroller: Element): number {
     : scroller.getBoundingClientRect().top + scroller.clientTop;
 }
 
-/** The nearest ancestor that scrolls vertically, else the page. */
+/** The element itself or its nearest ancestor that scrolls vertically, else the page. */
 function scrollParentOf(element: HTMLElement): Element | null {
-  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+  for (let parent: HTMLElement | null = element; parent; parent = parent.parentElement) {
     const overflow = getComputedStyle(parent).overflowY;
     if (
       (overflow === 'auto' || overflow === 'scroll') &&

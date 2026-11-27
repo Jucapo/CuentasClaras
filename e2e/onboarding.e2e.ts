@@ -206,9 +206,11 @@ test('the setup wizard goes from creating the space to the summary', async ({ pa
   await expect(page.getByRole('button', { name: 'Saltar' })).toBeVisible();
   const budget = page.getByRole('list', { name: 'Presupuesto mensual por categoría' });
   await budget.getByRole('textbox', { name: 'Hogar' }).fill('1,500,000');
+  // A typed amount is enough for "Continuar", before it is saved.
+  await expect(page.getByRole('button', { name: 'Continuar' })).toBeVisible();
   await capture(page, 'bienvenida-presupuesto');
   // Straight to the main button, without Enter: leaving the row saves it and the step waits.
-  await page.getByRole('button', { name: 'Saltar' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
 
   // 7 · Resumen
   await expect(page).toHaveURL(/\/bienvenida\/resumen$/);
@@ -256,14 +258,17 @@ test('the budget step waits for its rows and stays when one fails to save', asyn
 
   const budget = page.getByRole('list', { name: 'Presupuesto mensual por categoría' });
   const home = budget.getByRole('textbox', { name: 'Hogar' });
+  await expect(page.getByRole('button', { name: 'Saltar' })).toBeVisible();
   await home.fill('1,500,000');
-  await page.getByRole('button', { name: 'Saltar' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
 
   // The save failed: the step stays, says why and the row goes back to what it had.
   await expect(page.getByText('No se pudo guardar. Inténtalo de nuevo.').first()).toBeVisible();
   await expect(page).toHaveURL(/\/bienvenida\/presupuesto$/);
   await expect(home).toHaveValue('');
   expect(api.settings()['onboarding_step']).toBe(5);
+  // With no amount left, the step can be skipped again.
+  await expect(page.getByRole('button', { name: 'Saltar' })).toBeVisible();
 
   // The symbol picks the currency of a row, and Enter moves to the next one.
   await budget

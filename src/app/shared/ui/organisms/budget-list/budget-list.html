@@ -9,6 +9,7 @@
       [currencyOptions]="currencyOptions"
       [placeholder]="emptyText()"
       [enterKeyHint]="last ? 'done' : 'next'"
+      (valueChange)="onValueChange(entry.id, $event)"
       (committed)="emitChange(entry.id, $event)"
       (enter)="focusAfter(index)"
     >

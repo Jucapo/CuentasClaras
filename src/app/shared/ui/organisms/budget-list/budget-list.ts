@@ -1,4 +1,4 @@
-import { Component, input, output, viewChildren } from '@angular/core';
+import { Component, input, output, signal, viewChildren } from '@angular/core';
 import { currencyLabel, SUPPORTED_CURRENCIES } from '../../../../core/config/space.constants';
 import { CurrencyAmount } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
@@ -52,10 +52,28 @@ export class BudgetList {
   readonly totalNote = input<string>();
   /** An amount was confirmed in a row (Enter, leaving it or a new currency). */
   readonly changed = output<BudgetAmountChange>();
+  /**
+   * Whether some row holds an amount other than 0, saved or still being typed; emitted as the
+   * user types, e.g. so "Saltar" becomes "Continuar" right away.
+   */
+  readonly hasAmountsChange = output<boolean>();
 
   private readonly rows = viewChildren(MoneyRow);
+  /** What each row holds while the user types, before it is saved. */
+  private readonly typed = signal<ReadonlyMap<string, number | null>>(new Map());
 
   protected readonly currencyOptions = CURRENCY_OPTIONS;
+
+  protected onValueChange(categoryId: string, amount: number | null): void {
+    const typed = new Map(this.typed()).set(categoryId, amount);
+    this.typed.set(typed);
+    this.hasAmountsChange.emit(
+      this.entries().some((entry) => {
+        const value = typed.has(entry.id) ? typed.get(entry.id) : entry.amount?.amount;
+        return value !== null && value !== undefined && value !== 0;
+      }),
+    );
+  }
 
   protected emitChange(categoryId: string, commit: MoneyRowCommit): void {
     this.changed.emit({ ...commit, categoryId });

@@ -91,6 +91,8 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   const sheet = overlay(page, isMobile);
   await expect(sheet.getByRole('heading', { name: 'Subcategoría' })).toBeVisible();
   await expect(sheet.getByLabel('Nombre')).toHaveValue('Arriendo');
+  // The icons scroll in their own area, so "Más opciones" stays in view below them.
+  await expect(sheet.getByRole('button', { name: 'Más opciones' })).toBeInViewport();
   await captureViewport(page, 'subcategoria');
   await sheet.getByRole('button', { name: 'Cerrar' }).click();
   await expect(sheet).toBeHidden();
