@@ -223,6 +223,10 @@ export async function mockDataApi(
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       return route.fulfill({ json: accountsTotal(ledger, body, spaceSettings) });
     }
+    if (name === 'net_worth') {
+      const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
+      return route.fulfill({ json: netWorth(ledger, body, spaceSettings) });
+    }
     if (name === 'daily_category_totals' || name === 'breakdown_totals') {
       const ledger = { accounts: tables['accounts'], transactions, rates: exchangeRates };
       const movements = spaceMovements(ledger, tables['categories'], body, spaceSettings);
@@ -633,6 +637,30 @@ function categoryTotals(
       budget,
       remaining: budget === null ? null : budget - amount,
       missing_rate_currencies: [...(missing.get(category['id']) ?? [])],
+    };
+  });
+}
+
+/** Plays the part of net_worth: active accounts but assets, per group and currency, converted. */
+function netWorth(ledger: Ledger, body: Record<string, unknown>, settings: Row) {
+  const main = String(settings['main_currency']);
+  const onDate = String(body['on_date']);
+  const sums = new Map<string, number>();
+  for (const account of ledger.accounts) {
+    if (account['archived_at'] || account['account_group'] === 'assets') {
+      continue;
+    }
+    const key = `${account['account_group']}|${account['currency']}`;
+    sums.set(key, (sums.get(key) ?? 0) + balanceOf(account, ledger.transactions));
+  }
+  return [...sums.entries()].map(([key, balance]) => {
+    const [group, currency] = key.split('|');
+    return {
+      account_group: group,
+      currency,
+      balance,
+      converted: convert(ledger, balance, currency, main, onDate),
+      main_currency: main,
     };
   });
 }

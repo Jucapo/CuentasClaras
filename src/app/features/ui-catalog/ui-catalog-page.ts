@@ -79,6 +79,11 @@ import {
   BreakdownItem,
   BreakdownList,
 } from '../../shared/ui/organisms/breakdown-list/breakdown-list';
+import {
+  NetWorthCurrency,
+  NetWorthGroupView,
+  NetWorthPanel,
+} from '../../shared/ui/organisms/net-worth/net-worth';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
@@ -249,6 +254,7 @@ interface WindowClassDemo {
     BarChart,
     ProgressRing,
     BreakdownList,
+    NetWorthPanel,
   ],
   templateUrl: './ui-catalog-page.html',
   styleUrl: './ui-catalog-page.scss',
@@ -721,6 +727,43 @@ export class UiCatalogPage {
     }),
   );
   protected readonly chartTicks: readonly number[] = [0, 7, 14, 21, 29];
+  protected readonly netWorthFigures = { assets: 866190050, debts: 185000000, net: 681190050 };
+  protected readonly netWorthGroups: readonly NetWorthGroupView[] = [
+    {
+      id: 'accounts',
+      label: 'Cuentas',
+      icon: 'account_balance_wallet',
+      color: 'blue',
+      totals: [{ currency: 'COP', amount: 294190050 }],
+      converted: 294190050,
+      debt: false,
+    },
+    {
+      id: 'savings',
+      label: 'Ahorros',
+      icon: 'savings',
+      color: 'teal',
+      totals: [
+        { currency: 'COP', amount: 50000000 },
+        { currency: 'USD', amount: 120000 },
+      ],
+      converted: 542000000,
+      debt: false,
+    },
+    {
+      id: 'debts',
+      label: 'Deudas',
+      icon: 'credit_card',
+      color: 'red',
+      totals: [{ currency: 'COP', amount: 185000000 }],
+      converted: 185000000,
+      debt: true,
+    },
+  ];
+  protected readonly netWorthCurrencies: readonly NetWorthCurrency[] = [
+    { currency: 'COP', assets: 344190050, debts: 185000000, net: 159190050 },
+    { currency: 'USD', assets: 120000, debts: 0, net: 120000 },
+  ];
   protected readonly breakdownItems: readonly BreakdownItem[] = [
     {
       id: 'b-home',

@@ -38,8 +38,14 @@ export const NEW_ITEM_PATH = 'nueva';
 /** Query param with the category kind shown (Gastos / Ingresos) or created. */
 export const CATEGORY_QUERY_PARAMS = { kind: 'clase' } as const;
 
-/** Query param of the new account screen with the group picked in "¿Qué vas a crear?". */
-export const ACCOUNT_QUERY_PARAMS = { group: 'grupo' } as const;
+/**
+ * Query params of Cuentas: the group picked in "¿Qué vas a crear?" for the new account screen, and
+ * the tab shown, so going back and reloading keep it.
+ */
+export const ACCOUNT_QUERY_PARAMS = { group: 'grupo', view: 'vista' } as const;
+
+/** Value of the `vista` query param for the "Mis finanzas" tab (spec §7). */
+export const NET_WORTH_VIEW = 'mis-finanzas';
 
 /** Route `data` flags the shell and the wizard read from the active route chain (spec §13.5). */
 export const ROUTE_DATA_KEYS = {

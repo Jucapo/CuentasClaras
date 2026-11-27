@@ -6,26 +6,54 @@
       }
     </cc-page-header>
 
-    @if (loadError(); as error) {
-      <cc-message>{{ error }}</cc-message>
-    } @else if (isEmpty()) {
-      <cc-section
-        title="Aún no tienes cuentas"
-        description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
-      >
-        @if (canEdit()) {
-          <cc-button icon="add" (click)="create()">Agregar una cuenta</cc-button>
-        }
-      </cc-section>
-    } @else {
-      <cc-account-list [groups]="groups()" [totals]="totals()" />
-    }
+    <cc-tabs
+      label="Qué ver"
+      [options]="viewTabs"
+      [value]="view()"
+      (valueChange)="changeView($event)"
+    >
+      <div class="tab">
+        @if (view() === 'accounts') {
+          @if (loadError(); as error) {
+            <cc-message>{{ error }}</cc-message>
+          } @else if (isEmpty()) {
+            <cc-section
+              title="Aún no tienes cuentas"
+              description="Agrega tu efectivo, bancos, ahorros, tarjetas y deudas con su saldo actual."
+            >
+              @if (canEdit()) {
+                <cc-button icon="add" (click)="create()">Agregar una cuenta</cc-button>
+              }
+            </cc-section>
+          } @else {
+            <cc-account-list [groups]="groups()" [totals]="totals()" />
+          }
 
-    @if (hasArchived()) {
-      <cc-disclosure [label]="archivedLabel()">
-        <cc-account-list [groups]="archivedGroups()" />
-      </cc-disclosure>
-    }
+          @if (hasArchived()) {
+            <cc-disclosure [label]="archivedLabel()">
+              <cc-account-list [groups]="archivedGroups()" />
+            </cc-disclosure>
+          }
+        } @else {
+          @if (netWorthError(); as error) {
+            <cc-message>{{ error }}</cc-message>
+          }
+          @if (netWorth(); as worth) {
+            <cc-missing-rates-notice
+              [currencies]="worth.missingRateCurrencies"
+              [canDefine]="canEdit()"
+              (define)="defineRate($event)"
+            />
+            <cc-net-worth
+              [figures]="worth.consolidated"
+              [groups]="netWorthGroups()"
+              [byCurrency]="worth.byCurrency"
+              [currency]="mainCurrency()"
+            />
+          }
+        }
+      </div>
+    </cc-tabs>
   </div>
 
   <div ccDetailPane class="detail">

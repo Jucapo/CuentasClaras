@@ -1,0 +1,45 @@
+<cc-stat-group [label]="text.summary" [items]="summary()" />
+
+@for (section of sections(); track section.title) {
+  <section class="group" [attr.aria-label]="section.title">
+    <h3 class="heading">{{ section.title }}</h3>
+    <ul class="rows">
+      @for (group of section.rows; track group.id) {
+        <li>
+          <cc-list-item [title]="group.label">
+            <cc-icon-badge ccListItemLeading [icon]="group.icon" [color]="group.color" />
+            <span ccListItemTrailing class="amounts">
+              <cc-amount tone="neutral" [amount]="group.converted" [currency]="currency()" />
+              @for (total of foreign(group); track total.currency) {
+                <cc-amount
+                  class="foreign"
+                  tone="neutral"
+                  [amount]="total.amount"
+                  [currency]="total.currency"
+                />
+              }
+            </span>
+          </cc-list-item>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+@if (byCurrency().length > 1) {
+  <section class="group" [attr.aria-label]="text.byCurrency">
+    <h3 class="heading">{{ text.byCurrency }}</h3>
+    <ul class="rows">
+      @for (row of byCurrency(); track row.currency) {
+        <li>
+          <cc-list-item [title]="row.currency" [subtitle]="currencyLine(row)">
+            <span ccListItemTrailing class="amounts">
+              <span class="label">{{ text.net }}</span>
+              <cc-amount tone="auto" [amount]="row.net" [currency]="row.currency" />
+            </span>
+          </cc-list-item>
+        </li>
+      }
+    </ul>
+  </section>
+}

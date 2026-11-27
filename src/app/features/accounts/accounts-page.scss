@@ -4,6 +4,13 @@
   gap: var(--cc-stack-gap);
 }
 
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-stack-gap);
+  padding-top: var(--cc-stack-gap);
+}
+
 .detail {
   min-height: 100%;
 }

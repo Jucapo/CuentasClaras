@@ -1015,6 +1015,21 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-net-worth"
+        description="Mis finanzas: activos contra deudas, cada grupo con sus monedas, y por moneda"
+        layout="column"
+      >
+        <ng-template>
+          <cc-net-worth
+            currency="COP"
+            [figures]="netWorthFigures"
+            [groups]="netWorthGroups"
+            [byCurrency]="netWorthCurrencies"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-breakdown-list"
         description="Las 3 mayores, «Más…» con el resto, una categoría que despliega sus subcategorías y la lista vacía"
         layout="column"
