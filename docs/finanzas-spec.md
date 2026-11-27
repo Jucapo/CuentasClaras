@@ -1,6 +1,6 @@
 # Cuentas Claras — Especificación funcional y técnica
 
-> Versión 0.9 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
+> Versión 0.10 · 27-nov-2026 · Repo: `Jucapo/CuentasClaras`
 > Fuente de verdad del proyecto. Vive en `docs/finanzas-spec.md` del repo y como contexto del proyecto "Finanzas" en Claude. Si algo cambia, se actualiza aquí primero.
 
 ---
@@ -253,6 +253,23 @@ Toda la lógica de rangos vive en una sola función pura con pruebas unitarias.
 - Interruptor para mostrar u ocultar presupuestos.
 - Sin acumulación de sobrantes entre periodos.
 
+Reglas de la pantalla Presupuesto (F1e):
+
+- **Por periodo:**
+  - **Mes:** los montos se editan en la fila, y cada cambio rige desde ese mes (`effective_from` = el mes que nombra el periodo).
+    - En el mes actual o en uno futuro, la nota dice "Los cambios rigen desde {mes}".
+    - En un mes pasado, la nota nombra los meses siguientes, hasta el actual, que también cambian: "Rige desde octubre: también cambia noviembre y diciembre".
+    - Si una categoría tiene monto propio en alguno de esos meses, su fila lo aclara, porque ese mes y los que le siguen no cambian: "Solo cambia octubre: noviembre tiene monto propio".
+  - **Año:** suma los 12 meses y es de solo lectura ("Para cambiar montos, elige un mes").
+  - **Día, Semana, Siempre y rango personalizado:** no muestran presupuesto y ofrecen ir al mes actual.
+- **Categorías:** aparecen las principales activas en su orden. Las que no tienen presupuesto muestran lo gastado y el campo vacío, para ponerles uno.
+- **Total:** arriba, el presupuesto total contra todo lo gastado del periodo (alcance Espacio, en la moneda principal). Si hay gasto en categorías sin presupuesto, se muestra aparte ("Sin presupuesto: $X").
+- **Excedido:** la barra y el texto van en color de error, con ícono de advertencia y "Te pasaste por $X".
+- **Ingresos esperados:** cada categoría de ingreso con lo recibido contra lo esperado ("Recibido $X · Faltan $Y"). Recibir de más se muestra en tono positivo, no de error.
+- **Presupuestos apagados:** Presupuesto sigue en la navegación y dice que están apagados. El propietario ve el interruptor para encenderlos; los demás, el texto.
+- **Lector:** ve los montos sin poder editarlos.
+- **Sin RPC nueva:** `category_totals` da lo gastado, lo presupuestado (convertido) y lo restante por categoría.
+
 ---
 
 ## 5. Deudas
@@ -449,9 +466,31 @@ Los organismos de estas pantallas y sheets son los que el asistente reutiliza ta
 - Filtros: cuenta, categoría, etiqueta, tipo, persona y estado.
 - Crear, editar y eliminar movimientos y transferencias.
 
+Detalle (F1e):
+
+- **Qué muestra:** los movimientos del periodo global que el usuario ve, incluidas sus cuentas privadas, igual que el detalle de cuenta. Van agrupados por día, los más recientes primero, de a 50 con "Ver más".
+  - La fila lleva la categoría ("Padre › Hija"), la cuenta, las etiquetas y la nota. Las transferencias dicen "Efectivo → Nequi" (o "Cuenta privada de X").
+  - Un candado pequeño marca los movimientos de cuentas privadas, porque explica por qué los totales pueden diferir de Categorías, que usa el alcance Espacio.
+- **Búsqueda:**
+  - Busca en la nota, la categoría (y su padre) y la cuenta de origen o destino, sin distinguir mayúsculas ni tildes.
+  - Cada palabra tiene que aparecer en algún campo.
+  - Si el texto completo es un monto válido en el formato del usuario, también encuentra los movimientos con ese monto exacto (o monto destino).
+  - Los nombres de cuentas que el usuario no ve no se buscan.
+- **Filtros:**
+  - Son chips: tocar uno abre la lista de opciones, de selección múltiple. Los activos muestran lo elegido y una ✕, y con dos o más aparece "Limpiar".
+  - Dentro de un filtro basta cualquiera de los valores; entre filtros se combinan.
+  - Elegir una categoría incluye sus subcategorías, y el filtro de cuenta mira el origen o el destino.
+  - "Persona" (quien registró) solo aparece si el espacio tiene más de un miembro.
+  - Los filtros se recuerdan mientras la app está abierta, no en el dispositivo.
+- **Totales:** ingresos, gastos y neto de lo filtrado, en la moneda principal, con la tasa de la fecha de cada movimiento. Las transferencias y los ajustes no suman. Si falta una tasa, el aviso de siempre.
+- **Editar:**
+  - Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo: en compacta como sheet, y en mediana como diálogo.
+  - En expandida, lista y detalle van lado a lado (§13.5): el registro rápido se abre en línea en el panel de detalle. Si hay cambios sin guardar y se toca otro movimiento, se cierra el panel o se sale, pregunta "¿Descartar los cambios?".
+- **Crear:** "+" (atajo `N`) abre "¿Qué vas a registrar?": Transferencia y las categorías agrupadas en Gastos e Ingresos. Luego abre el registro rápido, en el panel en expandida.
+
 ### Presupuesto
 
-Barras de gastado vs. presupuestado por categoría y total. Edición de montos.
+Barras de gastado vs. presupuestado por categoría y total. Edición de montos. Reglas de la pantalla en §4.7 (F1e).
 
 ### Resumen
 
@@ -500,6 +539,24 @@ Se abre al primer inicio de sesión sin espacio. Guía paso a paso la configurac
   - categorías, etiquetas y cuentas;
   - monedas (`/configuracion/monedas`, F1d): una sección por moneda en uso distinta de la principal, con la tasa vigente, su historial y "Nueva tasa";
   - configuración inicial: completar el asistente o revisarlo (solo el propietario).
+
+Detalle (F1e):
+
+- **Orden:**
+  - "Tú": el perfil y las preferencias.
+  - "Espacio": el formulario, los catálogos, las monedas y la configuración inicial.
+  - "Sesión".
+- **Perfil:** el nombre visible (`profiles.display_name`), que es el que ven los demás miembros. El avatar llega cuando haya almacenamiento de archivos.
+- **Pantalla de inicio:** Cuentas, Categorías, Transacciones, Presupuesto o Resumen. Abrir la app en `/` lleva a ella.
+- **Periodo por defecto:** Día, Semana, Mes, Año o Siempre. Solo se usa en los dispositivos que no recuerdan otro (§4.5).
+- **Presupuesto on/off:** el interruptor "Mostrar presupuestos", que se guarda con el resto del espacio. Solo el propietario.
+- **Miembros e invitaciones:** en la F1f.
+
+### Nueva versión (F1e)
+
+- Cuando el service worker tiene lista una versión nueva, un aviso "Nueva versión disponible" con "Recargar". El aviso no se cierra solo.
+- La app busca versiones nuevas al volver a primer plano y cada cierto tiempo.
+- Si el service worker queda en un estado irrecuperable, la app lo avisa y recarga.
 
 ---
 
@@ -588,6 +645,10 @@ recurring_templates (fase 3)
   - `category_totals(space_id, from, to, budget_months)` devuelve por categoría el monto en la moneda principal (cada categoría suma sus subcategorías), el presupuesto, el restante y las monedas sin tasa. Usa el alcance Espacio.
   - `accounts_total(space_id, on_date)` es el total del encabezado.
   - `save_exchange_rate(...)` reemplaza la tasa del mismo par y día.
+- RPCs de la F1e (Transacciones), con `SECURITY INVOKER`:
+  - `search_transactions(space_id, from, to, search_terms, search_amount, filter_*)` devuelve las filas de `transactions` que quien llama ve, con la búsqueda y los filtros de §7. Así PostgREST embebe etiquetas, autor y diferido, y ordena y pagina.
+  - `transaction_totals(...)` toma los mismos argumentos y da ingresos, gastos y neto en la moneda principal, más las monedas sin tasa.
+  - La búsqueda sin tildes usa la extensión `unaccent` a través de `private.search_text`.
 - Triggers de la F1d:
   - la moneda e "incluir en el espacio" del movimiento;
   - la clase de la categoría y el monto destino;
@@ -669,6 +730,11 @@ recurring_templates (fase 3)
 - [x] F1d: ajuste con dirección y monto positivo; saldos desde la fecha del saldo inicial; tasas manuales por espacio con su regla de fecha; guardado idempotente con "Deshacer"; periodo recordado por tipo; montos formateados mientras se escribe. Detalle en §4.1, §4.2, §4.5, §4.6, §5.1 c, §7 y §8.
 - [x] Datos reales desde la F1d: respaldo de producción (`npm run db:backup`) antes de cada `db push`, y prueba de migraciones con esos datos en local (`npm run db:restore-local`). Las reglas viven en `CLAUDE.md`.
 - [x] F1d2: tema azul generado desde las semillas de marca; menos modales (un solo texto o monto se edita en la fila); paleta de 16 tonos × 5 intensidades con el color del ícono elegido por contraste; las claves de color anteriores se mapean a su equivalente sin tocar lo guardado. Detalle en §7, §13.2, §13.3 y §13.5.
+- [x] F1e (Transacciones, Presupuesto y Configuración):
+  - **Transacciones:** muestra todo lo que el usuario ve, con un candado en lo privado, y sus totales suman lo listado. Los filtros son de selección múltiple y combinables. En expandida, el registro rápido se edita en línea en el panel de detalle.
+  - **Presupuesto:** se edita por mes y avisa qué meses siguientes cambian. El Año es de solo lectura, y el total cuenta todo lo gastado.
+  - **Configuración y app:** Configuración suma perfil, pantalla de inicio, periodo por defecto y el interruptor de presupuestos, y hay un aviso de nueva versión.
+  - Detalle en §4.7, §7 y §8. Plan en `docs/plans/f1e.md`.
 - [x] F1c: el asistente se retoma al entrar hasta que el propietario lo pospone ("Terminar más tarde", guardado en el espacio para todos sus dispositivos); presupuestos e ingresos esperados con moneda por fila y vigencia por mes del periodo; plantilla para gasto e ingreso con lista para marcar. Detalle en §4.3, §4.7, §7, §8 y §13.5.
 
 ---
@@ -682,9 +748,9 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 | Nivel | Qué es | Ejemplos | Carpeta |
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
-| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry-sheet`, `cc-account-list`, `cc-budget-list`, `cc-nav-rail` | `shared/ui/organisms` |
+| Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar` | `shared/ui/atoms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-progress` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
