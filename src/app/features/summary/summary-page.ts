@@ -47,7 +47,6 @@ import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
 import { FALLBACK_COLOR } from '../../shared/ui/colors/color-palette';
 import { MONEY_FORMAT } from '../../shared/ui/money/money-format';
 import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { StatGroup, StatItem } from '../../shared/ui/molecules/stat-group/stat-group';
 import { TotalOption, TotalToggle } from '../../shared/ui/molecules/total-toggle/total-toggle';
 import {
@@ -77,7 +76,6 @@ const KINDS: readonly CategoryKind[] = ['expense', 'income'];
 @Component({
   selector: 'app-summary-page',
   imports: [
-    PageHeader,
     Message,
     Amount,
     ProgressRing,

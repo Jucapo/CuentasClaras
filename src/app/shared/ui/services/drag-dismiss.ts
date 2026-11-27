@@ -51,7 +51,6 @@ export class DragDismiss {
     this.startedAt = event.timeStamp;
     this.offset = 0;
     this.dragging = false;
-    this.host.setPointerCapture(event.pointerId);
   }
 
   protected move(event: PointerEvent): void {
@@ -63,7 +62,12 @@ export class DragDismiss {
     if (!this.dragging && travelled < DRAG_DISMISS.slopPx) {
       return;
     }
-    this.dragging = true;
+    if (!this.dragging) {
+      // Captured only once it is a drag, so a tap still reaches the button under the finger.
+      this.dragging = true;
+      this.startedAt = event.timeStamp;
+      this.host.setPointerCapture(event.pointerId);
+    }
     this.offset = travelled;
     this.pane.classList.remove(RETURN_CLASS);
     this.pane.style.transform = this.translate(travelled);

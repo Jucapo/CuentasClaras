@@ -1437,13 +1437,16 @@
                 totalLabel="Total"
                 total="$ 1,234,567.90"
                 periodLabel="Periodo"
+                menuLabel="Abrir el menú"
+                userName="Juan Camilo"
                 [navItems]="navItems"
               >
-                <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" />
-                <cc-button ccShellPeriod variant="tonal">Este mes</cc-button>
-                <cc-icon-button ccShellPeriod icon="chevron_right" label="Periodo siguiente" />
-                <cc-icon-button ccShellActions icon="settings" label="Configuración" />
-                <cc-page-header title="Categorías" />
+                <cc-period-chip
+                  ccShellPeriod
+                  title="Noviembre"
+                  range="1 nov – 30 nov"
+                />
+                <p>Contenido de la pantalla.</p>
               </cc-app-shell>
             </app-fixed-layout>
           </ng-template>

@@ -11,23 +11,25 @@ import { APP_UPDATE_CHECK_INTERVAL_MS, APP_UPDATE_TEXT } from '../config/app.con
  */
 @Injectable({ providedIn: 'root' })
 export class AppUpdateService {
-  private readonly updates = inject(SwUpdate);
+  // Absent where the service worker is not provided at all, e.g. unit tests.
+  private readonly updates = inject(SwUpdate, { optional: true });
   private readonly toast = inject(ToastService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Starts watching; does nothing where the service worker is off (development, e2e). */
   init(): void {
-    if (!this.updates.isEnabled) {
+    const updates = this.updates;
+    if (!updates?.isEnabled) {
       return;
     }
-    const ready = this.updates.versionUpdates
+    const ready = updates.versionUpdates
       .pipe(filter((event) => event.type === 'VERSION_READY'))
-      .subscribe(() => void this.offerReload());
-    const broken = this.updates.unrecoverable.subscribe(() => void this.recover());
+      .subscribe(() => void this.offerReload(updates));
+    const broken = updates.unrecoverable.subscribe(() => void this.recover());
 
     const view = this.document.defaultView;
-    const check = () => void this.updates.checkForUpdate().catch(() => false);
+    const check = () => void updates.checkForUpdate().catch(() => false);
     const onVisible = () => {
       if (this.document.visibilityState === 'visible') {
         check();
@@ -46,12 +48,23 @@ export class AppUpdateService {
     });
   }
 
-  private async offerReload(): Promise<void> {
+  /**
+   * Looks for a new version now ("Buscar actualizaciones" in Acerca de): true if one is on its way,
+   * and its notice follows; null where the service worker is off.
+   */
+  async check(): Promise<boolean | null> {
+    if (!this.updates?.isEnabled) {
+      return null;
+    }
+    return this.updates.checkForUpdate().catch(() => false);
+  }
+
+  private async offerReload(updates: SwUpdate): Promise<void> {
     const reload = await this.toast.showWithAction(APP_UPDATE_TEXT.ready, APP_UPDATE_TEXT.reload, {
       persistent: true,
     });
     if (reload) {
-      await this.updates.activateUpdate().catch(() => false);
+      await updates.activateUpdate().catch(() => false);
       this.document.location.reload();
     }
   }

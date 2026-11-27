@@ -65,6 +65,11 @@ export const NET_WORTH_VIEW = 'mis-finanzas';
 export const ROUTE_DATA_KEYS = {
   /** A create or edit flow: full screen in the compact window class. */
   flow: 'flow',
+  /**
+   * A screen below a destination, with its own ← bar (an account, Configuración): in the compact
+   * window class it shows only that bar, without the global header or the bottom navigation.
+   */
+  subscreen: 'subscreen',
   /** List and detail side by side in the expanded window class. */
   listDetail: 'listDetail',
   /** Id of the wizard step a route belongs to. */
@@ -80,6 +85,9 @@ export const FLOW_ROUTE_DATA = { [ROUTE_DATA_KEYS.flow]: true } as const;
 
 /** Route data of a list and its detail side by side in the expanded window class (spec §13.5). */
 export const LIST_DETAIL_ROUTE_DATA = { [ROUTE_DATA_KEYS.listDetail]: true } as const;
+
+/** Route data of a screen below a destination, with its own ← bar (spec §13.5). */
+export const SUBSCREEN_ROUTE_DATA = { [ROUTE_DATA_KEYS.subscreen]: true } as const;
 
 /** Child paths of the setup wizard, one per step (spec §7). */
 export const ONBOARDING_STEP_PATHS = {

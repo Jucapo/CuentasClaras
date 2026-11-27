@@ -1,0 +1,136 @@
+<!-- The menu stays while a view covers it, so it keeps its scroll and its focus. -->
+<nav class="drawer" ccDragDismiss="start" [hidden]="view() !== 'menu'" [attr.aria-label]="text.menu">
+  <h2 class="cc-visually-hidden">{{ text.menu }}</h2>
+  <div class="user">
+    <cc-avatar size="lg" [name]="data.name()" />
+    <div class="user-texts">
+      <span class="name">{{ data.name() }}</span>
+      <span class="email">{{ data.email }}</span>
+    </div>
+  </div>
+
+  @if (activeSpace(); as space) {
+    @if (otherSpaces().length > 0) {
+      <button
+        type="button"
+        class="row space"
+        [attr.aria-expanded]="spacesOpen()"
+        [attr.aria-label]="text.changeSpace + ': ' + space.name + ', ' + space.role"
+        (click)="toggleSpaces()"
+      >
+        <cc-icon-badge [icon]="space.icon" [color]="space.color" size="sm" />
+        <span class="row-texts">
+          <span class="row-label">{{ space.name }}</span>
+          <span class="row-detail">{{ space.role }}</span>
+        </span>
+        <cc-icon [name]="spacesOpen() ? 'expand_less' : 'expand_more'" />
+      </button>
+      @if (spacesOpen()) {
+        <ul class="spaces" [attr.aria-label]="text.spaces">
+          @for (other of otherSpaces(); track other.id) {
+            <li>
+              <button type="button" class="row nested" (click)="pickSpace(other.id)">
+                <cc-icon-badge [icon]="other.icon" [color]="other.color" size="sm" />
+                <span class="row-texts">
+                  <span class="row-label">{{ other.name }}</span>
+                  <span class="row-detail">{{ other.role }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <div class="row space static">
+        <cc-icon-badge [icon]="space.icon" [color]="space.color" size="sm" />
+        <span class="row-texts">
+          <span class="row-label">{{ space.name }}</span>
+          <span class="row-detail">{{ space.role }}</span>
+        </span>
+      </div>
+    }
+  }
+
+  <hr class="divider" />
+
+  <ul class="rows">
+    @for (row of rows(); track row.id) {
+      <li>
+        <button type="button" class="row" (click)="choose(row.id)">
+          <cc-icon [name]="row.icon" />
+          <span class="row-texts">
+            <span class="row-label">{{ row.label }}</span>
+            @if (row.detail; as detail) {
+              <span class="row-detail">{{ detail }}</span>
+            }
+          </span>
+        </button>
+      </li>
+    }
+    <li class="row theme">
+      <cc-icon name="palette" />
+      <cc-segmented-control
+        class="theme-control"
+        [label]="text.theme"
+        [options]="themeOptions"
+        [fullWidth]="true"
+        [value]="data.theme()"
+        (valueChange)="setTheme($event)"
+      />
+    </li>
+    @for (row of lowerRows(); track row.id) {
+      <li>
+        <button type="button" class="row" (click)="choose(row.id)">
+          <cc-icon [name]="row.icon" />
+          <span class="row-texts">
+            <span class="row-label">{{ row.label }}</span>
+            @if (row.detail; as detail) {
+              <span class="row-detail">{{ detail }}</span>
+            }
+          </span>
+        </button>
+      </li>
+    }
+  </ul>
+</nav>
+
+@switch (view()) {
+  @case ('install') {
+    <section class="view">
+      <header class="view-bar">
+        <cc-icon-button icon="arrow_back" [label]="ui.back" (click)="back()" />
+        <h2 class="view-title">{{ text.install }}</h2>
+      </header>
+      <cc-install-steps
+        [platform]="data.installPlatform"
+        [email]="data.email"
+        [canPrompt]="data.canPrompt()"
+        (install)="promptFromSteps()"
+      />
+    </section>
+  }
+  @case ('about') {
+    <section class="view">
+      <header class="view-bar">
+        <cc-icon-button icon="arrow_back" [label]="ui.back" (click)="back()" />
+        <h2 class="view-title">{{ text.about }}</h2>
+      </header>
+      <div class="about">
+        <cc-brand />
+        <p class="version">{{ text.version(data.version) }}</p>
+        <cc-button
+          variant="tonal"
+          icon="update"
+          [loading]="checking()"
+          [loadingLabel]="text.checking"
+          (click)="checkForUpdate()"
+        >
+          {{ text.checkForUpdate }}
+        </cc-button>
+        @if (updateMessage(); as message) {
+          <p class="update-message" role="status">{{ message }}</p>
+        }
+      </div>
+    </section>
+  }
+}

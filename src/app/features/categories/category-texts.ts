@@ -19,3 +19,14 @@ export const CATEGORY_GRID_LABELS: Readonly<Record<CategoryKind, string>> = {
   expense: 'Categorías de gasto',
   income: 'Categorías de ingreso',
 };
+
+/**
+ * The center of the donut switches the kind (spec §7): its name says where it goes, and the switch
+ * is announced once done.
+ */
+export const CATEGORY_KIND_SWITCH: Readonly<
+  Record<CategoryKind, { readonly action: string; readonly done: string }>
+> = {
+  expense: { action: 'Ver ingresos', done: 'Mostrando gastos' },
+  income: { action: 'Ver gastos', done: 'Mostrando ingresos' },
+};

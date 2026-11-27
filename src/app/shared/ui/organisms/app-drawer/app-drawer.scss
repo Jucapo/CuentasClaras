@@ -1,0 +1,170 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// The swipe that closes it goes sideways; vertical moves still scroll the menu.
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-1);
+  min-height: 100%;
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-5)) var(--cc-space-3)
+    calc(var(--cc-safe-area-bottom) + var(--cc-space-4));
+  touch-action: pan-y;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  padding: 0 var(--cc-space-2) var(--cc-space-3);
+}
+
+.user-texts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email {
+  overflow: hidden;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rows,
+.spaces {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-0-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// A full-width row with its icon, as Material 3's navigation drawer.
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  width: 100%;
+  min-height: var(--cc-touch-target-min);
+  padding: var(--cc-space-2) var(--cc-space-3);
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+
+  &:active {
+    background-color: color-mix(
+      in srgb,
+      currentcolor calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+      transparent
+    );
+  }
+}
+
+.row.static,
+.row.theme {
+  cursor: default;
+
+  &:active {
+    background: none;
+  }
+}
+
+.row.nested {
+  padding-inline-start: var(--cc-space-5);
+}
+
+.row-texts {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.row-label {
+  overflow: hidden;
+  color: var(--mat-sys-on-surface);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-detail {
+  font: var(--mat-sys-body-small);
+}
+
+.theme-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.divider {
+  width: 100%;
+  margin: var(--cc-space-2) 0;
+  border: none;
+  border-top: var(--cc-border-width) solid var(--mat-sys-outline-variant);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+  padding: calc(var(--cc-safe-area-top) + var(--cc-space-3)) var(--cc-space-3)
+    calc(var(--cc-safe-area-bottom) + var(--cc-space-4));
+}
+
+.view-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-2);
+}
+
+.view-title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.about {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cc-space-3);
+  padding: var(--cc-space-2);
+}
+
+.version,
+.update-message {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (hover: hover) {
+  .row:not(.static, .theme):hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+}

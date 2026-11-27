@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CategoriesService } from '../../core/categories/categories.service';
 import { CategoryKind } from '../../core/categories/category.models';
@@ -17,9 +17,7 @@ import { TotalsService } from '../../core/totals/totals.service';
 import { Button } from '../../shared/ui/atoms/button/button';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Message } from '../../shared/ui/atoms/message/message';
-import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import {
   CategoryGrid,
@@ -28,24 +26,29 @@ import {
 } from '../../shared/ui/organisms/category-grid/category-grid';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
+import { ScreenAction } from '../../shared/ui/services/screen-chrome';
 import { QuickEntryFlow } from '../transactions/quick-entry-flow';
-import { CATEGORY_GRID_LABELS, CATEGORY_KIND_TABS, EMPTY_CATEGORIES_TITLE } from './category-texts';
+import {
+  CATEGORY_GRID_LABELS,
+  CATEGORY_KIND_SWITCH,
+  EMPTY_CATEGORIES_TITLE,
+} from './category-texts';
 
 /**
  * Home screen (spec §7): the categories of a kind around the donut, with what was spent or received
  * in the selected period and what remains of each budget. Tapping a category opens the quick entry;
- * the pencil opens the edit mode.
+ * tapping the center of the donut switches between expenses and incomes, as in 1Money; the pencil
+ * in the header opens the edit mode.
  */
 @Component({
   selector: 'app-categories-page',
   imports: [
-    PageHeader,
+    ScreenAction,
     IconButton,
     Button,
     Message,
     Section,
     FormActions,
-    Tabs,
     CategoryGrid,
     MissingRatesNotice,
   ],
@@ -70,9 +73,18 @@ export class CategoriesPage {
 
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly loadError = this.categories.loadError;
-  protected readonly kindTabs: readonly TabOption<CategoryKind>[] = CATEGORY_KIND_TABS;
   protected readonly kind = computed(() => categoryKindFromParam(this.clase()));
   protected readonly kindLabel = computed(() => CATEGORY_KIND_LABELS[this.kind()]);
+  protected readonly switchLabel = computed(() => CATEGORY_KIND_SWITCH[this.kind()].action);
+  protected readonly otherKindLabel = computed(
+    () => CATEGORY_KIND_LABELS[this.kind() === 'expense' ? 'income' : 'expense'],
+  );
+  /** Empty until the user switches, so loading the screen announces nothing. */
+  protected readonly switchAnnouncement = signal('');
+  /** The categories, or their totals, are on their way. */
+  protected readonly loading = computed(
+    () => !this.categories.loaded() || !this.totals.categoryTotalsLoaded(),
+  );
   protected readonly gridLabel = computed(() => CATEGORY_GRID_LABELS[this.kind()]);
   protected readonly mainCurrency = computed(
     () => this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency,
@@ -118,7 +130,10 @@ export class CategoriesPage {
     useShortcuts({ e: () => void this.edit() });
   }
 
-  protected changeKind(kind: CategoryKind): void {
+  /** The center of the donut: the other kind, in the URL so going back keeps it. */
+  protected switchKind(): void {
+    const kind: CategoryKind = this.kind() === 'expense' ? 'income' : 'expense';
+    this.switchAnnouncement.set(CATEGORY_KIND_SWITCH[kind].done);
     void this.router.navigate(['/', APP_PATHS.categories], {
       queryParams: { [CATEGORY_QUERY_PARAMS.kind]: CATEGORY_KIND_PARAM[kind] },
       replaceUrl: true,

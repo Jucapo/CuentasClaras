@@ -4,11 +4,10 @@
   gap: var(--cc-stack-gap);
 }
 
-.tab {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cc-stack-gap);
-  padding-top: var(--cc-stack-gap);
+// The tabs fill the header's second row.
+.view-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .detail {

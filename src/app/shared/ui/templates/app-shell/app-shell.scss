@@ -1,17 +1,18 @@
+// The whole screen and no more: the header and the navigation stay, and only the content scrolls
+// (spec §13.5). The catalog shows copies inside a frame, with --cc-shell-height: 100%.
 :host {
   display: flex;
-  min-height: 100dvh;
+  height: var(--cc-shell-height, 100dvh);
+  overflow: hidden;
 }
 
 .nav-rail {
-  position: sticky;
-  top: 0;
   flex: none;
-  height: 100dvh;
   z-index: var(--cc-z-app-bar);
 }
 
 .main-column {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -19,18 +20,39 @@
 }
 
 .shell-header {
-  position: sticky;
-  top: 0;
+  flex: none;
   z-index: var(--cc-z-app-bar);
   padding-top: var(--cc-safe-area-top);
-  background-color: var(--mat-sys-surface-container);
+  background-color: var(--cc-bar-surface);
   color: var(--mat-sys-on-surface);
 }
 
+// The parts that stay while screens change (spec §13.5): only the content moves. The catalog's
+// copies of the shell keep no names, which must be unique on the page.
+:host(.primary) {
+  .shell-header {
+    view-transition-name: cc-header;
+  }
+
+  .scroller {
+    view-transition-name: cc-content;
+  }
+
+  .bottom-nav {
+    view-transition-name: cc-nav;
+  }
+
+  .nav-rail {
+    view-transition-name: cc-rail;
+  }
+}
+
+// One row from the medium class on: the total, the period (or the screen's row) and the action.
 .header-content {
-  display: flex;
+  display: grid;
+  grid-template-areas: 'total bar actions';
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: var(--cc-space-2);
   max-width: var(--cc-content-max-width);
   min-height: var(--cc-header-height);
@@ -38,12 +60,52 @@
   padding-inline: var(--cc-space-4) var(--cc-space-2);
 }
 
-// The total wins over the period (spec §7): it never shrinks, and the period chip takes the rest of
-// the center, cutting its range first when the total is long.
-.total {
+// Two rows in the compact class, like 1Money (spec §7): the avatar, the total in the center and the
+// action; under them, the period with its arrows.
+:host(.compact) .header-content {
+  grid-template-areas:
+    'menu total actions'
+    'bar bar bar';
+  grid-template-columns: var(--cc-touch-target-min) minmax(0, 1fr) var(--cc-touch-target-min);
+  grid-template-rows: var(--cc-header-row-height) minmax(var(--cc-header-period-height), auto);
+  row-gap: 0;
+  min-height: 0;
+  padding: 0 var(--cc-space-2) var(--cc-space-1);
+}
+
+.menu {
+  grid-area: menu;
   display: flex;
-  flex: none;
+  justify-content: center;
+}
+
+.menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cc-touch-target-min);
+  min-height: var(--cc-touch-target-min);
+  padding: 0;
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+}
+
+.total {
+  grid-area: total;
+  display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+:host(.compact) .total {
+  align-items: center;
+  text-align: center;
 }
 
 .total-label {
@@ -52,44 +114,60 @@
 }
 
 .total-value {
+  overflow: hidden;
   font: var(--mat-sys-title-medium);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.period,
-.actions {
-  display: flex;
-  align-items: center;
+.total-skeleton {
+  --cc-skeleton-width: var(--cc-total-skeleton-width);
 }
 
-.period {
-  flex: 1 1 auto;
+.actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: var(--cc-touch-target-min);
+}
+
+.bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
   justify-content: center;
   min-width: 0;
 }
 
-.actions {
-  flex: none;
+.scroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  outline: none;
 }
 
 .shell-content {
-  flex: 1;
   width: 100%;
   max-width: var(--cc-content-max-width);
   margin-inline: auto;
   padding: var(--cc-page-padding);
-  padding-bottom: calc(
-    var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-page-padding)
-  );
 
-  // A full-screen flow has no bottom navigation to clear.
+  // A full-screen flow brings its own bar and paddings; it only clears the system's bar.
   &.immersive {
     padding: 0 0 var(--cc-safe-area-bottom);
   }
-}
 
-:host(.with-rail) .shell-content {
-  padding-bottom: var(--cc-page-padding);
+  // A subscreen keeps the page's padding (its bar spans it) and clears the system's bar.
+  &.subscreen {
+    padding-bottom: calc(var(--cc-page-padding) + var(--cc-safe-area-bottom));
+  }
+
+  // The last row stays above the floating button.
+  &.with-fab {
+    padding-bottom: var(--cc-overlay-confirm-clearance);
+  }
 }
 
 :host(.with-rail.wide-content) {
@@ -99,9 +177,18 @@
   }
 }
 
+.fab {
+  position: absolute;
+  right: var(--cc-space-4);
+  bottom: calc(var(--cc-bottom-nav-height) + var(--cc-safe-area-bottom) + var(--cc-space-4));
+  z-index: var(--cc-z-app-bar);
+}
+
+:host(.with-rail) .fab {
+  bottom: calc(var(--cc-safe-area-bottom) + var(--cc-space-4));
+}
+
 .bottom-nav {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
+  flex: none;
   z-index: var(--cc-z-app-bar);
 }

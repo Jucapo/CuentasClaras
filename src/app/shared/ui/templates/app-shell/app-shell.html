@@ -4,23 +4,67 @@
     [items]="navItems()"
     [label]="navLabel()"
     [expanded]="layout.isExpanded()"
-  />
+  >
+    <ng-container ccRailTop [ngTemplateOutlet]="menuButton" />
+  </cc-nav-rail>
 }
 <div class="main-column">
   <header class="shell-header" [hidden]="hideChrome()">
     <div class="header-content">
+      @if (layout.isCompact()) {
+        <div class="menu"><ng-container [ngTemplateOutlet]="menuButton" /></div>
+      }
       <div class="total">
         <span class="total-label">{{ totalLabel() }}</span>
-        <span class="total-value">{{ total() }}</span>
+        <span class="total-value">
+          @if (total(); as total) {
+            {{ total }}
+          } @else {
+            <cc-skeleton class="total-skeleton" shape="text" [label]="loadingLabel()" />
+          }
+        </span>
       </div>
-      <div class="period" role="group" [attr.aria-label]="periodLabel()">
-        <ng-content select="[ccShellPeriod]" />
+      <div class="actions">
+        @if (chrome.action(); as action) {
+          <ng-container [ngTemplateOutlet]="action" />
+        }
       </div>
-      <div class="actions"><ng-content select="[ccShellActions]" /></div>
+      @if (chrome.bar(); as bar) {
+        <div class="bar"><ng-container [ngTemplateOutlet]="bar" /></div>
+      } @else {
+        <div class="bar period" role="group" [attr.aria-label]="periodLabel()">
+          <ng-content select="[ccShellPeriod]" />
+        </div>
+      }
     </div>
   </header>
-  <main class="shell-content" [class.immersive]="hideChrome()"><ng-content /></main>
+  <!-- Only the content scrolls: the header and the navigation never move (spec §13.5). -->
+  <div #scroller class="scroller" cdkScrollable tabindex="-1">
+    <main
+      class="shell-content"
+      [class.immersive]="hideChrome() && immersive()"
+      [class.subscreen]="hideChrome() && !immersive()"
+      [class.with-fab]="chrome.fab() !== null"
+    >
+      <ng-content />
+    </main>
+  </div>
+  @if (chrome.fab(); as fab) {
+    <div class="fab" [hidden]="hideChrome()"><ng-container [ngTemplateOutlet]="fab" /></div>
+  }
+  @if (layout.isCompact() && !hideChrome()) {
+    <cc-bottom-nav class="bottom-nav" [items]="navItems()" [label]="navLabel()" />
+  }
 </div>
-@if (layout.isCompact() && !hideChrome()) {
-  <cc-bottom-nav class="bottom-nav" [items]="navItems()" [label]="navLabel()" />
-}
+
+<ng-template #menuButton>
+  <button
+    type="button"
+    class="menu-button"
+    aria-haspopup="dialog"
+    [attr.aria-label]="menuLabel()"
+    (click)="menuOpened.emit()"
+  >
+    <cc-avatar [name]="userName()" />
+  </button>
+</ng-template>

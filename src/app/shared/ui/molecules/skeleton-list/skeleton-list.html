@@ -1,0 +1,14 @@
+@for (item of items(); track item) {
+  @if (variant() === 'rows') {
+    <div class="row">
+      <cc-skeleton shape="circle" />
+      <div class="lines">
+        <cc-skeleton class="line" />
+        <cc-skeleton class="line short" />
+      </div>
+      <cc-skeleton class="amount" />
+    </div>
+  } @else {
+    <cc-skeleton class="block" shape="block" />
+  }
+}

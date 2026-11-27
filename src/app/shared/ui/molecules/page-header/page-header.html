@@ -1,6 +1,8 @@
 <div class="start">
   @if (backLink(); as commands) {
     <cc-icon-button icon="arrow_back" [label]="backLabel()" [link]="commands" />
+  } @else if (backAction()) {
+    <cc-icon-button icon="arrow_back" [label]="backLabel()" (click)="back.emit()" />
   }
 </div>
 <div class="titles">

@@ -35,6 +35,73 @@
   color: var(--mat-sys-on-surface);
 }
 
+.center-static {
+  display: contents;
+}
+
+// The center of the donut as a button that switches the kind (spec §7): the whole inner circle.
+.center-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cc-space-1);
+  width: 100%;
+  aspect-ratio: 1;
+  padding: var(--cc-space-2);
+  border: none;
+  border-radius: var(--cc-radius-full);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--cc-swatch-ring-width) solid var(--mat-sys-primary);
+  }
+
+  &:active {
+    background-color: color-mix(
+      in srgb,
+      var(--mat-sys-on-surface) calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+      transparent
+    );
+  }
+}
+
+.switch-icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (hover: hover) {
+  .center-switch:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+}
+
+.center-skeleton {
+  --cc-skeleton-width: var(--cc-total-skeleton-width);
+}
+
+// Placeholder bubbles while the categories load (spec §13.4).
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cc-space-1);
+  padding: var(--cc-bubble-padding);
+}
+
+.placeholder-name,
+.placeholder-amount {
+  --cc-skeleton-width: 70%;
+}
+
+.placeholder-badge {
+  --cc-skeleton-width: var(--cc-badge-size-lg);
+  --cc-skeleton-height: var(--cc-badge-size-lg);
+}
+
 .total {
   display: flex;
   flex-direction: column;

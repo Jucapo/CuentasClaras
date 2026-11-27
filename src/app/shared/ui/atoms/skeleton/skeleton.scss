@@ -1,0 +1,36 @@
+// The size comes from where it sits: a line takes the width it is given and one line of height.
+:host {
+  display: block;
+  width: var(--cc-skeleton-width, 100%);
+  height: var(--cc-skeleton-height, 1em);
+  border-radius: var(--cc-radius-sm);
+  background-color: var(--mat-sys-surface-container-highest);
+  animation: shimmer var(--cc-skeleton-duration) var(--cc-easing-standard) infinite alternate;
+}
+
+:host(.shape-text) {
+  border-radius: var(--cc-radius-full);
+}
+
+:host(.shape-circle) {
+  width: var(--cc-skeleton-width, var(--cc-badge-size-md));
+  height: var(--cc-skeleton-height, var(--cc-badge-size-md));
+  border-radius: var(--cc-radius-full);
+}
+
+:host(.shape-block) {
+  height: var(--cc-skeleton-height, var(--cc-touch-target-min));
+  border-radius: var(--cc-radius-md);
+}
+
+@keyframes shimmer {
+  to {
+    opacity: var(--cc-skeleton-dim-opacity);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}

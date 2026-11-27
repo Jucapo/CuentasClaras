@@ -12,6 +12,7 @@ import {
   NEW_ITEM_PATH,
   ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
+  SUBSCREEN_ROUTE_DATA as SUBSCREEN,
 } from './core/routing/app-paths';
 import { homeScreenGuard } from './core/routing/home-screen.guard';
 import { pendingSavesGuard } from './core/routing/pending-saves.guard';
@@ -113,6 +114,7 @@ export const routes: Routes = [
               {
                 path: '',
                 title: 'Cuenta',
+                data: SUBSCREEN,
                 loadComponent: () =>
                   import('./features/accounts/account-detail/account-detail-page').then(
                     (m) => m.AccountDetailPage,
@@ -188,12 +190,14 @@ export const routes: Routes = [
       {
         path: APP_PATHS.settings,
         title: 'Configuración',
+        data: SUBSCREEN,
         loadComponent: () =>
           import('./features/settings/settings-page').then((m) => m.SettingsPage),
       },
       {
         path: `${APP_PATHS.settings}/${SETTINGS_PATHS.currencies}`,
         title: 'Monedas',
+        data: SUBSCREEN,
         loadComponent: () =>
           import('./features/settings/currencies/currencies-settings-page').then(
             (m) => m.CurrenciesSettingsPage,
@@ -202,12 +206,14 @@ export const routes: Routes = [
       {
         path: `${APP_PATHS.settings}/${SETTINGS_PATHS.tags}`,
         title: 'Etiquetas',
+        data: SUBSCREEN,
         loadComponent: () =>
           import('./features/settings/tags/tags-settings-page').then((m) => m.TagsSettingsPage),
       },
       {
         path: `${APP_PATHS.settings}/${SETTINGS_PATHS.members}`,
         title: 'Miembros',
+        data: SUBSCREEN,
         loadComponent: () =>
           import('./features/settings/members/members-settings-page').then(
             (m) => m.MembersSettingsPage,

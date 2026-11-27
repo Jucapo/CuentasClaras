@@ -23,6 +23,7 @@ import { pendingStepsText } from '../../core/onboarding/onboarding-texts';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ProfileService } from '../../core/profiles/profile.service';
 import { APP_PATHS, CATEGORY_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
+import { BackNavigation } from '../../core/routing/back-navigation';
 import { SpaceMembership, ThemePreference } from '../../core/spaces/space.models';
 import { SpaceMembersService } from '../../core/spaces/space-members.service';
 import { SpaceService } from '../../core/spaces/space.service';
@@ -100,6 +101,7 @@ export class SettingsPage {
   private readonly profiles = inject(ProfileService);
   private readonly members = inject(SpaceMembersService);
   private readonly invitations = inject(InvitationsService);
+  private readonly back = inject(BackNavigation);
   protected readonly layout = inject(LayoutService);
   protected readonly shortcuts = inject(KeyboardShortcuts);
 
@@ -209,6 +211,11 @@ export class SettingsPage {
   protected readonly preferencesForm = form(this.preferencesModel, {
     submission: { action: () => this.savePreferences() },
   });
+
+  /** ← goes back to where Configuración was opened from (the menu of any screen). */
+  protected goBack(): void {
+    this.back.back(['/']);
+  }
 
   protected async signOut(): Promise<void> {
     this.signingOut.set(true);

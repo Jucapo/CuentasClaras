@@ -20,13 +20,14 @@ import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Message } from '../../shared/ui/atoms/message/message';
 import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
 import { Disclosure } from '../../shared/ui/molecules/disclosure/disclosure';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
+import { SkeletonList } from '../../shared/ui/molecules/skeleton-list/skeleton-list';
 import { AccountList } from '../../shared/ui/organisms/account-list/account-list';
 import { MissingRatesNotice } from '../../shared/ui/organisms/missing-rates-notice/missing-rates-notice';
 import { NetWorthGroupView, NetWorthPanel } from '../../shared/ui/organisms/net-worth/net-worth';
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
+import { ScreenAction, ScreenBar } from '../../shared/ui/services/screen-chrome';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { chooseAccountGroup, newAccountQueryParams } from './account-group-chooser';
 import { AccountPane, isAccountPane } from './account-pane';
@@ -50,7 +51,9 @@ const VIEW_TABS: readonly TabOption<AccountsView>[] = [
   imports: [
     RouterOutlet,
     ListDetailLayout,
-    PageHeader,
+    ScreenAction,
+    ScreenBar,
+    SkeletonList,
     Button,
     IconButton,
     Icon,
@@ -116,6 +119,8 @@ export class AccountsPage {
   protected readonly archivedLabel = computed(() => `Archivadas (${this.archived().length})`);
   protected readonly hasArchived = computed(() => this.archived().length > 0);
   protected readonly totals = computed(() => accountsTotal(this.active(), this.mainCurrency()));
+  /** The overall total only with several currencies: in one currency it is the header's. */
+  protected readonly listTotals = computed(() => (this.totals().length > 1 ? this.totals() : []));
   protected readonly groups = computed(() => this.toGroups(this.active()));
   protected readonly archivedGroups = computed(() => this.toGroups(this.archived()));
 

@@ -1,0 +1,38 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-stack-gap);
+  padding: var(--cc-list-item-padding);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-space-3);
+  min-height: var(--cc-list-item-min-height);
+}
+
+.lines {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+}
+
+.line {
+  --cc-skeleton-width: 60%;
+}
+
+.line.short {
+  --cc-skeleton-width: 35%;
+}
+
+.amount {
+  --cc-skeleton-width: 25%;
+
+  flex: none;
+}
+
+.block {
+  --cc-skeleton-height: var(--cc-skeleton-block-height);
+}

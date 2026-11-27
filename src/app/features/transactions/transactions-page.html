@@ -1,18 +1,29 @@
+<!-- Search in the header and "+" floating, as in 1Money (spec §7). -->
+<ng-template ccScreenAction>
+  <cc-icon-button icon="search" [label]="text.search" (click)="toggleSearch()" />
+</ng-template>
+<ng-template ccScreenFab>
+  @if (canEdit()) {
+    <cc-fab icon="add" shortcut="N" [label]="text.add" (click)="create()" />
+  }
+</ng-template>
+
 <cc-list-detail-layout [detailOpen]="session() !== null">
   <div ccListPane class="list">
-    <cc-page-header [title]="text.title">
-      @if (canEdit()) {
-        <cc-icon-button icon="add" [label]="text.add" shortcut="N" (click)="create()" />
-      }
-    </cc-page-header>
+    <h1 class="cc-visually-hidden">{{ text.title }}</h1>
 
     <div class="controls">
-      <cc-text-field
-        type="search"
-        [label]="text.search"
-        [placeholder]="text.searchPlaceholder"
-        [(value)]="query"
-      />
+      @if (showSearch()) {
+        <cc-text-field
+          type="search"
+          [label]="text.search"
+          [placeholder]="text.searchPlaceholder"
+          actionIcon="close"
+          [actionLabel]="text.closeSearch"
+          [(value)]="query"
+          (action)="closeSearch()"
+        />
+      }
       <cc-filter-chips
         [label]="text.filters"
         [filters]="chips()"

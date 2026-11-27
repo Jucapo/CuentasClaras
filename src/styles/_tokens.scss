@@ -31,10 +31,16 @@
   --cc-catalog-panel-min-width: 18rem;
   --cc-catalog-frame-height: 32rem;
 
-  // App chrome.
+  // App chrome. In the compact class the header has two rows (spec §7): the total with the avatar
+  // and the screen's action, then the period.
   --cc-brand-logo-size: 2.5rem;
   --cc-header-height: 4rem;
+  --cc-header-row-height: 3.5rem;
+  --cc-header-period-height: 3rem;
   --cc-bottom-nav-height: 4.5rem;
+  --cc-avatar-size-md: 2.25rem;
+  --cc-avatar-size-lg: 3.5rem;
+  --cc-total-skeleton-width: 7rem;
   --cc-nav-indicator-width: 4rem;
   --cc-nav-indicator-height: 2rem;
   --cc-nav-rail-width: 5.5rem;
@@ -145,11 +151,19 @@
   --cc-elevation-2: var(--mat-sys-level2);
   --cc-elevation-3: var(--mat-sys-level3);
 
+  // Skeletons while the data loads (spec §13.4): they fade back and forth this slowly, this far.
+  --cc-skeleton-duration: 900ms;
+  --cc-skeleton-dim-opacity: 0.45;
+  --cc-skeleton-block-height: 4.5rem;
+
   // Motion.
   --cc-duration-short: 150ms;
   --cc-duration-medium: 250ms;
   --cc-easing-standard: cubic-bezier(0.2, 0, 0, 1);
   --cc-transition-fast: var(--cc-duration-short) var(--cc-easing-standard);
+
+  // How far a screen slides when it comes in or goes out (spec §13.5).
+  --cc-transition-offset: 30%;
 
   // Stacking.
   --cc-z-app-bar: 2;

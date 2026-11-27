@@ -20,7 +20,6 @@ import {
 import { Switch } from '../../shared/ui/atoms/switch/switch';
 import { BudgetRow } from '../../shared/ui/molecules/budget-row/budget-row';
 import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
-import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import { ConfirmOptions } from '../../shared/ui/molecules/confirm-panel/confirm-panel';
 import { MONEY_FORMAT } from '../../shared/ui/money/money-format';
@@ -75,7 +74,6 @@ const NOTHING_TO_REVERT = (): void => undefined;
 @Component({
   selector: 'app-budget-page',
   imports: [
-    PageHeader,
     Section,
     FormActions,
     Button,
