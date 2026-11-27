@@ -1,0 +1,11 @@
+<cc-wizard-step [title]="step.title" [help]="step.help">
+  <div role="list" aria-label="Lo que configuraste">
+    @for (row of rows(); track row.id) {
+      <cc-list-item role="listitem" [title]="row.title" [subtitle]="row.text" [link]="row.link">
+        <cc-icon ccListItemLeading [name]="row.icon" />
+      </cc-list-item>
+    }
+  </div>
+
+  <app-step-actions ccWizardStepActions action="finish" label="Terminar" [step]="step.id" />
+</cc-wizard-step>

@@ -1,0 +1,28 @@
+<cc-wizard-step [title]="step.title" [help]="step.help">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <cc-section
+      title="Aún no hay categorías de gasto"
+      description="El presupuesto se reparte por categoría de gasto."
+    >
+      <cc-form-actions align="start">
+        <cc-button variant="tonal" icon="category" [link]="expensesLink">
+          Crear categorías de gasto
+        </cc-button>
+      </cc-form-actions>
+    </cc-section>
+  } @else {
+    <cc-budget-list
+      label="Presupuesto mensual por categoría"
+      emptyText="Sin presupuesto"
+      totalLabel="Total al mes"
+      [entries]="entries()"
+      [totals]="totals()"
+      [totalNote]="totalNote()"
+      (opened)="amounts.edit($event)"
+    />
+  }
+
+  <app-step-actions ccWizardStepActions [step]="step.id" [label]="nextLabel()" />
+</cc-wizard-step>

@@ -7,12 +7,15 @@ import {
   CATEGORY_KIND_PARAM,
   categoryKindFromParam,
 } from '../../core/config/catalog.constants';
+import { pendingStepsText } from '../../core/onboarding/onboarding-texts';
+import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { APP_PATHS, CATEGORY_PATHS, CATEGORY_QUERY_PARAMS } from '../../core/routing/app-paths';
 import { SpaceService } from '../../core/spaces/space.service';
 import { Button } from '../../shared/ui/atoms/button/button';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Message } from '../../shared/ui/atoms/message/message';
 import { TabOption, Tabs } from '../../shared/ui/atoms/tabs/tabs';
+import { FormActions } from '../../shared/ui/molecules/form-actions/form-actions';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
 import {
@@ -28,7 +31,7 @@ import { CATEGORY_GRID_LABELS, CATEGORY_KIND_TABS, EMPTY_CATEGORIES_TITLE } from
  */
 @Component({
   selector: 'app-categories-page',
-  imports: [PageHeader, IconButton, Button, Message, Section, Tabs, CategoryGrid],
+  imports: [PageHeader, IconButton, Button, Message, Section, FormActions, Tabs, CategoryGrid],
   templateUrl: './categories-page.html',
   styleUrl: './categories-page.scss',
 })
@@ -39,6 +42,13 @@ export class CategoriesPage {
   private readonly categories = inject(CategoriesService);
   private readonly spaces = inject(SpaceService);
   private readonly router = inject(Router);
+  protected readonly onboarding = inject(OnboardingService);
+
+  /** "Completa tu configuración · Faltan N pasos · Continuar" while the wizard is pending. */
+  protected readonly onboardingLink = ['/', APP_PATHS.welcome];
+  protected readonly pendingText = computed(() =>
+    pendingStepsText(this.onboarding.pendingSteps()),
+  );
 
   protected readonly canEdit = this.spaces.canEdit;
   protected readonly loadError = this.categories.loadError;

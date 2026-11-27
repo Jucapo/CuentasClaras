@@ -2,24 +2,20 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { publicSignupGuard } from './core/auth/public-signup.guard';
+import { onboardingGuard, onboardingStepGuard } from './core/onboarding/onboarding.guards';
 import {
   APP_PATHS,
   CATEGORY_PATHS,
   DEFAULT_HOME_PATH,
+  FLOW_ROUTE_DATA as FLOW,
+  LIST_DETAIL_ROUTE_DATA as LIST_DETAIL,
   NEW_ITEM_PATH,
-  ONBOARDING_STEP_PATHS,
-  ROUTE_DATA_KEYS,
   SETTINGS_PATHS,
 } from './core/routing/app-paths';
 import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
-import { noSpaceGuard, spaceGuard } from './core/spaces/space.guard';
+import { spaceGuard } from './core/spaces/space.guard';
 import { DEV_ROUTES } from './dev.routes';
-import { ONBOARDING_STEP_DATA_KEY, ONBOARDING_STEPS } from './features/onboarding/onboarding-steps';
-
-/** A create or edit flow: full screen in the compact window class (spec §13.5). */
-const FLOW = { [ROUTE_DATA_KEYS.flow]: true };
-/** List and detail side by side in the expanded window class (spec §13.5). */
-const LIST_DETAIL = { [ROUTE_DATA_KEYS.listDetail]: true };
+import { ONBOARDING_ROUTES } from './features/onboarding/onboarding.routes';
 
 export const routes: Routes = [
   // Must stay first: an empty-path parent with a component matches "/" even when none of its
@@ -64,21 +60,13 @@ export const routes: Routes = [
   },
   {
     path: APP_PATHS.welcome,
-    canActivate: [authGuard, noSpaceGuard],
+    canActivate: [authGuard, onboardingGuard],
+    canActivateChild: [onboardingStepGuard],
     loadComponent: () =>
       import('./features/onboarding/onboarding-frame/onboarding-frame').then(
         (m) => m.OnboardingFrame,
       ),
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: ONBOARDING_STEPS[0].path },
-      {
-        path: ONBOARDING_STEP_PATHS.space,
-        title: 'Tu espacio',
-        data: { [ONBOARDING_STEP_DATA_KEY]: 'space' },
-        loadComponent: () =>
-          import('./features/onboarding/steps/space-step/space-step').then((m) => m.SpaceStep),
-      },
-    ],
+    children: ONBOARDING_ROUTES,
   },
   {
     path: '',

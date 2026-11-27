@@ -1,12 +1,12 @@
-<cc-wizard-layout [progress]="progress()">
+<cc-wizard-layout [steps]="steps()" [progress]="progress()" [immersive]="immersive()">
   <cc-button
     ccWizardActions
     variant="text"
-    loadingLabel="Cerrando sesión"
-    [loading]="signingOut()"
-    (click)="signOut()"
+    [loadingLabel]="exitBusyLabel()"
+    [loading]="leaving()"
+    (click)="leave()"
   >
-    Cerrar sesión
+    {{ exitLabel() }}
   </cc-button>
-  <router-outlet (activate)="onStepActivated()" />
+  <router-outlet />
 </cc-wizard-layout>

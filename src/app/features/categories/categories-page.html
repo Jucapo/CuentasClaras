@@ -4,6 +4,19 @@
   }
 </cc-page-header>
 
+@if (onboarding.showReminder()) {
+  <cc-section
+    class="reminder"
+    variant="highlight"
+    title="Completa tu configuración"
+    [description]="pendingText()"
+  >
+    <cc-form-actions align="start">
+      <cc-button [link]="onboardingLink">Continuar</cc-button>
+    </cc-form-actions>
+  </cc-section>
+}
+
 <cc-tabs
   label="Clase de categorías"
   [options]="kindTabs"

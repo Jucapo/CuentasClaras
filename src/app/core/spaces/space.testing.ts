@@ -11,6 +11,7 @@ export function spaceSettingsFixture(overrides: Partial<SpaceSettings> = {}): Sp
     default_period: 'month',
     onboarding_step: 1,
     onboarding_completed_at: null,
+    onboarding_postponed_at: null,
     ...overrides,
   };
 }

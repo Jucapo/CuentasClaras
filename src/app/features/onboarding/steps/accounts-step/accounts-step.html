@@ -1,0 +1,28 @@
+<cc-wizard-step [title]="step.title" [help]="step.help">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <cc-section
+      title="Aún no hay cuentas"
+      description="Empieza por la que más usas, por ejemplo tu banco o el efectivo."
+    >
+      <cc-form-actions align="start">
+        <cc-button icon="add" shortcut="N" (click)="add()">Agregar</cc-button>
+      </cc-form-actions>
+    </cc-section>
+  } @else {
+    <cc-account-list [groups]="groups()" [totals]="totals()" />
+    <cc-form-actions align="start">
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="add()">Agregar</cc-button>
+    </cc-form-actions>
+    <cc-field-row
+      label="Cuenta predeterminada"
+      icon="star"
+      hint="La que se propone al registrar un movimiento."
+      [valueText]="defaultName()"
+      (activate)="pickDefault()"
+    />
+  }
+
+  <app-step-actions ccWizardStepActions [step]="step.id" />
+</cc-wizard-step>

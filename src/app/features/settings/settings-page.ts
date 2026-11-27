@@ -8,8 +8,10 @@ import {
   SPACE_DEFAULTS,
   THEME_OPTIONS,
 } from '../../core/config/space.constants';
+import { pendingStepsText } from '../../core/onboarding/onboarding-texts';
+import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { APP_PATHS, CATEGORY_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
-import { SpaceMembership, SpacePatch, ThemePreference } from '../../core/spaces/space.models';
+import { SpaceMembership, ThemePreference } from '../../core/spaces/space.models';
 import { SpaceService } from '../../core/spaces/space.service';
 import { UserSettingsService } from '../../core/user-settings/user-settings.service';
 import { Button } from '../../shared/ui/atoms/button/button';
@@ -67,6 +69,7 @@ export class SettingsPage {
   private readonly spaces = inject(SpaceService);
   private readonly userSettings = inject(UserSettingsService);
   private readonly toast = inject(ToastService);
+  private readonly onboarding = inject(OnboardingService);
   protected readonly layout = inject(LayoutService);
   protected readonly shortcuts = inject(KeyboardShortcuts);
 
@@ -80,6 +83,17 @@ export class SettingsPage {
     categories: ['/', APP_PATHS.categories, CATEGORY_PATHS.edit],
     tags: ['/', APP_PATHS.settings, SETTINGS_PATHS.tags],
   };
+
+  /** The setup wizard: complete it while pending, review it afterwards (spec §7). */
+  protected readonly onboardingLink = ['/', APP_PATHS.welcome];
+  protected readonly onboardingRow = computed(() =>
+    this.onboarding.isComplete()
+      ? { title: 'Revisar configuración inicial', subtitle: 'Vuelve a cualquier paso del asistente' }
+      : {
+          title: 'Completar configuración inicial',
+          subtitle: pendingStepsText(this.onboarding.pendingSteps()),
+        },
+  );
 
   protected readonly spaceDescription = computed(() =>
     this.canConfigure()
@@ -138,30 +152,14 @@ export class SettingsPage {
   private async saveSpace(): Promise<void> {
     this.spaceError.set(null);
     const { space, icon, color } = this.spaceModel();
-    const current = this.spaces.activeSpace();
-    const patch: SpacePatch = {};
-    const name = space.name.trim();
-    if (name !== current?.name) {
-      patch.name = name;
-    }
-    if (icon !== current?.icon) {
-      patch.icon = icon;
-    }
-    if (color && color !== current?.color) {
-      patch.color = color;
-    }
-    if (Object.keys(patch).length > 0) {
-      const updated = await this.spaces.updateActiveSpace(patch);
-      if (!updated.ok) {
-        this.spaceError.set(updated.message);
-        return;
-      }
-    }
-    const saved = await this.spaces.updateActiveSettings({
-      main_currency: space.mainCurrency,
-      month_start_day: space.monthStartDay,
-      week_start: space.weekStart,
-    });
+    const saved = await this.spaces.saveActivePreferences(
+      { name: space.name.trim(), icon, color: color ?? undefined },
+      {
+        main_currency: space.mainCurrency,
+        month_start_day: space.monthStartDay,
+        week_start: space.weekStart,
+      },
+    );
     if (!saved.ok) {
       this.spaceError.set(saved.message);
       return;

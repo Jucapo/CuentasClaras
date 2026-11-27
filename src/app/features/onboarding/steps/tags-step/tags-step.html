@@ -1,0 +1,45 @@
+<cc-wizard-step [title]="step.title" [help]="step.help">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else {
+    @if (isEmpty()) {
+      <cc-section
+        title="Aún no hay etiquetas"
+        description="Crea las que quieras; puedes agregar más cuando registres movimientos."
+      />
+    } @else {
+      <cc-tag-list [tags]="entries()" (opened)="open($event)" />
+    }
+
+    @if (suggestions().length > 0) {
+      <cc-section title="Sugeridas">
+        <div role="list">
+          @for (suggestion of suggestions(); track suggestion.name) {
+            <cc-list-item
+              role="listitem"
+              [title]="suggestion.name"
+              [subtitle]="suggestion.description"
+              [actionable]="true"
+              (activate)="suggest(suggestion.name)"
+            >
+              <cc-color-swatch
+                ccListItemLeading
+                [color]="suggestion.color"
+                [label]="suggestion.name"
+                [decorative]="true"
+              />
+            </cc-list-item>
+          }
+        </div>
+      </cc-section>
+    }
+
+    <cc-form-actions align="start">
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="open(null)">
+        Nueva etiqueta
+      </cc-button>
+    </cc-form-actions>
+  }
+
+  <app-step-actions ccWizardStepActions [step]="step.id" [label]="nextLabel()" />
+</cc-wizard-step>
