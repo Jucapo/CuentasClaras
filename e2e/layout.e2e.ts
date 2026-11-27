@@ -20,11 +20,13 @@ test('phones use the bottom navigation and flows take the whole screen', async (
   await page.goto('/cuentas');
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' });
   await expect(navigation).toBeVisible();
+  // Configuración is in the menu, which the avatar of the header opens (spec §7).
+  await expect(page.getByRole('link', { name: 'Configuración' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Abrir el menú' })).toBeVisible();
 
   await page.goto('/cuentas/nueva?grupo=cuenta');
   await expect(page.getByRole('heading', { name: 'Nueva cuenta', level: 1 })).toBeVisible();
   await expect(navigation).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Configuración' })).toBeHidden();
 });
 
 test('wide screens use a rail and show list and detail side by side', async ({

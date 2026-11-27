@@ -14,7 +14,8 @@ test('"Mis finanzas" puts the assets against the debts, and the tab stays on rel
 }) => {
   const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD });
   await page.goto('/cuentas');
-  await page.getByRole('tab', { name: 'Mis finanzas' }).click();
+  // In Cuentas the second row of the header holds its tabs, not the period (spec §7).
+  await page.getByRole('banner').getByRole('button', { name: 'Mis finanzas' }).click();
   await expect(page).toHaveURL(/\/cuentas\?vista=mis-finanzas$/);
 
   // Every visible account, also those outside the total; US$ 1,200 at 4,100.

@@ -24,8 +24,10 @@ test('accounts are grouped and a new debt is created from "¿Qué vas a crear?"'
   for (const group of ['Cuentas', 'Ahorros', 'Deudas', 'Me deben']) {
     await expect(page.getByRole('heading', { name: group, level: 2 })).toBeVisible();
   }
-  // Only the everyday accounts count in the total: 350,000 + 2,543,000 + 48,900.50.
-  await expect(page.locator('.summary')).toContainText('$ 2,941,900.50');
+  // Only the everyday accounts count in the total: 350,000 + 2,543,000 + 48,900.50. In one currency
+  // it is the header's, so the list has no total row of its own (spec §7).
+  await expect(page.locator('cc-app-shell .total-value')).toContainText('$ 2,941,900.50');
+  await expect(page.locator('cc-account-list .summary')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Tarjeta Visa/ })).toContainText('-$ 1,850,000.00');
   await expect(page.getByRole('link', { name: /Bancolombia/ })).toContainText('Predeterminada');
   await expect(page.getByRole('link', { name: /Nequi/ })).toContainText('Privada');
@@ -97,7 +99,9 @@ test('an account gets a new color and becomes the default one', async ({ page, i
   await page.getByRole('link', { name: 'Editar cuenta' }).click();
 
   await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
-  await expect(page.getByRole('heading', { name: 'Efectivo', level: 1 })).toBeVisible();
+  // The name is already large in the field: the bar says what the screen does (spec §13.5).
+  await expect(page.getByRole('heading', { name: 'Editar cuenta', level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Efectivo');
   // Editing an existing account: back instead of close, and no cursor in the name.
   await expect(page.getByRole('button', { name: 'Volver' })).toBeVisible();
   await expect(page.getByLabel('Nombre', { exact: true })).not.toBeFocused();

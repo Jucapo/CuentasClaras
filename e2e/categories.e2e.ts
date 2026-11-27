@@ -66,9 +66,13 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
   await expect(grid.getByRole('listitem')).toHaveText([/Hogar/, /Mercado/, /Transporte/]);
   await capture(page, 'categorias');
 
-  await page.getByRole('tab', { name: 'Ingresos' }).click();
+  // B5: the center of the donut switches the kind, as in 1Money, and says so (spec §7).
+  await page.getByRole('button', { name: 'Ver ingresos' }).click();
   await expect(page.getByRole('list', { name: 'Categorías de ingreso' })).toContainText('Salario');
-  await page.getByRole('tab', { name: 'Gastos' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Mostrando ingresos' })).toBeAttached();
+  await expect(page).toHaveURL(/clase=ingreso/);
+  await page.getByRole('button', { name: 'Ver gastos' }).click();
+  await expect(page.getByRole('list', { name: 'Categorías de gasto' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Editar categorías' }).click();
   await expect(page).toHaveURL(/\/categorias\/editar\?clase=gasto$/);
@@ -78,7 +82,8 @@ test('the categories tab shows the grid and the pencil opens the edit mode', asy
 
   await page.getByRole('button', { name: 'Hogar', exact: true }).click();
   await expect(page).toHaveURL(/\/categorias\/editar\/cat-home/);
-  await expect(page.getByRole('heading', { name: 'Hogar', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Hogar');
   const subcategories = page.getByRole('list', { name: 'Subcategorías', exact: true });
   await expect(subcategories.getByRole('listitem')).toHaveText([/Arriendo/, /Servicios públicos/]);
   await expect(subcategories.getByRole('listitem').first()).toContainText('Fijos');
@@ -121,7 +126,7 @@ test('Configuración → Categorías opens the same edit mode and back returns t
   await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD });
   await page.goto('/configuracion');
 
-  await page.getByRole('link', { name: /^Categorías De gasto/ }).click();
+  await page.getByRole('main').getByRole('link', { name: 'Categorías', exact: true }).click();
   await expect(page).toHaveURL(/\/categorias\/editar$/);
   await expect(page.getByRole('heading', { name: 'Editar categorías' })).toBeVisible();
 
@@ -183,7 +188,7 @@ test('a new category is saved first when a subcategory is added', async ({ page,
   const child = api.writes().filter((write) => write.table === 'categories')[1];
   expect(child?.body).toMatchObject({ name: 'Veterinario', parent_id: parentId });
   // The category exists now: the screen is in edit mode, with back instead of close.
-  await expect(page.getByRole('heading', { name: 'Mascotas', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Editar categoría', exact: true, level: 1 })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Cerrar' })).toBeHidden();
 });
 
