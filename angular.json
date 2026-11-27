@@ -94,7 +94,8 @@
               "e2e/**/*.ts",
               "scripts/**/*.ts",
               "playwright.config.ts",
-              "playwright.local.config.ts"
+              "playwright.local.config.ts",
+              "playwright.screenshots.config.ts"
             ]
           }
         }
