@@ -396,6 +396,12 @@ export class QuickEntry {
     if (event.key === '-' || event.key === '−') {
       return 'minus';
     }
+    if (event.key === '*' || event.key === '×') {
+      return 'times';
+    }
+    if (event.key === '/' || event.key === '÷') {
+      return 'divide';
+    }
     if (event.key === 'Backspace') {
       return 'backspace';
     }

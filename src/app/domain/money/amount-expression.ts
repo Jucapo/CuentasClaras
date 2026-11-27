@@ -17,26 +17,57 @@ export type KeypadKey =
   | 'decimal'
   | 'plus'
   | 'minus'
+  | 'times'
+  | 'divide'
   | 'backspace';
 
 /**
- * What was typed on the keypad: terms added or subtracted, e.g. `12000+3500.5-200`, always with `.`
- * as decimal point. Only the display follows the user's number format.
+ * What was typed on the keypad: terms joined by `+`, `-`, `*` and `/`, e.g. `12000+3500.5*2`, always
+ * with `.` as decimal point. Only the display follows the user's number format.
  */
 export type AmountExpression = string;
+
+/** Why an expression gives no amount. */
+export type AmountExpressionError = 'division_by_zero' | 'too_large';
+
+/** The amount of an expression in minor units, or why there is none. */
+export type AmountEvaluation =
+  | { readonly ok: true; readonly value: number }
+  | { readonly ok: false; readonly error: AmountExpressionError };
+
+type Operator = '+' | '-' | '*' | '/';
+
+const OPERATORS: Readonly<Partial<Record<KeypadKey, Operator>>> = {
+  plus: '+',
+  minus: '-',
+  times: '*',
+  divide: '/',
+};
+
+/** How each operator is shown. */
+const OPERATOR_SYMBOLS: Readonly<Record<Operator, string>> = {
+  '+': '+',
+  '-': '−',
+  '*': '×',
+  '/': '÷',
+};
 
 // 13 integer digits keep minor units with two decimals within safe integers.
 const MAX_INTEGER_DIGITS = 13;
 
 interface Term extends TypedAmount {
-  readonly operator: '+' | '-' | null;
+  readonly operator: Operator | null;
+}
+
+function isOperator(text: string): text is Operator {
+  return text === '+' || text === '-' || text === '*' || text === '/';
 }
 
 function termsOf(expression: AmountExpression): Term[] {
   const terms: Term[] = [];
   let operator: Term['operator'] = null;
-  for (const text of expression.split(/([+-])/)) {
-    if (text === '+' || text === '-') {
+  for (const text of expression.split(/([+\-*/])/)) {
+    if (isOperator(text)) {
       operator = text;
       continue;
     }
@@ -52,12 +83,12 @@ function termsOf(expression: AmountExpression): Term[] {
 }
 
 function currentTerm(expression: AmountExpression): string {
-  return expression.split(/[+-]/).at(-1) ?? '';
+  return expression.split(/[+\-*/]/).at(-1) ?? '';
 }
 
 /** Whether an expression has more than one term, so its result differs from what is shown. */
 export function hasOperator(expression: AmountExpression): boolean {
-  return /[+-]/.test(expression);
+  return /[+\-*/]/.test(expression);
 }
 
 /**
@@ -71,14 +102,14 @@ export function pressKey(
   exponent: number,
 ): AmountExpression {
   const term = currentTerm(expression);
+  const operator = OPERATORS[key];
+  if (operator) {
+    const base = expression.replace(/\.$/, '').replace(/[+\-*/]$/, '');
+    return base === '' ? '' : `${base}${operator}`;
+  }
   switch (key) {
     case 'backspace':
       return expression.slice(0, -1);
-    case 'plus':
-    case 'minus': {
-      const base = expression.replace(/\.$/, '').replace(/[+-]$/, '');
-      return base === '' ? '' : `${base}${key === 'plus' ? '+' : '-'}`;
-    }
     case 'decimal':
       if (exponent === 0 || term.includes('.')) {
         return expression;
@@ -100,16 +131,88 @@ export function pressKey(
   }
 }
 
-/** Minor units of an expression; 0 when it is empty. Can be zero or negative. */
-export function evaluateExpression(expression: AmountExpression, exponent: number): number {
-  return termsOf(expression).reduce((total, term) => {
-    const units = Number(term.integerDigits || '0') * 10 ** exponent;
-    const fraction = Number((term.fractionDigits ?? '').padEnd(exponent, '0') || '0');
-    return total + (term.operator === '-' ? -1 : 1) * (units + fraction);
-  }, 0);
+/** An exact fraction, to multiply and divide money without float errors. */
+interface Fraction {
+  readonly numerator: bigint;
+  readonly denominator: bigint;
 }
 
-/** An expression for display in the user's format, e.g. `12.000 + 3.500`. */
+function add(first: Fraction, second: Fraction, sign: bigint): Fraction {
+  return {
+    numerator: first.numerator * second.denominator + sign * second.numerator * first.denominator,
+    denominator: first.denominator * second.denominator,
+  };
+}
+
+/** Division rounded half away from zero; `denominator` is positive. */
+function roundedDivision(numerator: bigint, denominator: bigint): bigint {
+  const quotient = numerator / denominator;
+  const remainder = numerator % denominator;
+  const twice = (remainder < 0n ? -remainder : remainder) * 2n;
+  if (twice < denominator) {
+    return quotient;
+  }
+  return quotient + (numerator < 0n ? -1n : 1n);
+}
+
+/**
+ * Minor units of an expression, with the usual precedence (× and ÷ before + and −), computed exactly
+ * and rounded to the minor unit away from zero. A trailing operator still being typed is ignored;
+ * dividing by zero, or a result beyond safe integers, gives the reason instead of an amount.
+ */
+export function evaluateAmount(expression: AmountExpression, exponent: number): AmountEvaluation {
+  const scale = 10n ** BigInt(exponent);
+  const terms = termsOf(expression);
+  // The last term after an operator, while it is still empty, is not there yet.
+  const last = terms.at(-1);
+  if (last && last.operator !== null && last.integerDigits === '' && last.fractionDigits === null) {
+    terms.pop();
+  }
+  let sum: Fraction = { numerator: 0n, denominator: 1n };
+  let product: Fraction | null = null;
+  let sign = 1n;
+  for (const term of terms) {
+    const digits = `${term.integerDigits}${(term.fractionDigits ?? '').padEnd(exponent, '0')}`;
+    // In units of the currency: minor units over the scale.
+    const value: Fraction = { numerator: BigInt(digits || '0'), denominator: scale };
+    if (term.operator === '*' && product) {
+      product = {
+        numerator: product.numerator * value.numerator,
+        denominator: product.denominator * value.denominator,
+      };
+    } else if (term.operator === '/' && product) {
+      if (value.numerator === 0n) {
+        return { ok: false, error: 'division_by_zero' };
+      }
+      product = {
+        numerator: product.numerator * value.denominator,
+        denominator: product.denominator * value.numerator,
+      };
+    } else {
+      if (product) {
+        sum = add(sum, product, sign);
+      }
+      sign = term.operator === '-' ? -1n : 1n;
+      product = value;
+    }
+  }
+  if (product) {
+    sum = add(sum, product, sign);
+  }
+  const minor = roundedDivision(sum.numerator * scale, sum.denominator);
+  if (minor > BigInt(Number.MAX_SAFE_INTEGER) || minor < -BigInt(Number.MAX_SAFE_INTEGER)) {
+    return { ok: false, error: 'too_large' };
+  }
+  return { ok: true, value: Number(minor) };
+}
+
+/** Minor units of an expression; 0 when it is empty or gives no amount. Can be negative. */
+export function evaluateExpression(expression: AmountExpression, exponent: number): number {
+  const evaluation = evaluateAmount(expression, exponent);
+  return evaluation.ok ? evaluation.value : 0;
+}
+
+/** An expression for display in the user's format, e.g. `12.000 + 3.500 × 2`. */
 export function formatExpression(expression: AmountExpression, numberFormat: NumberFormat): string {
   return termsOf(expression)
     .map((term) => {
@@ -117,7 +220,7 @@ export function formatExpression(expression: AmountExpression, numberFormat: Num
       if (term.operator === null) {
         return text;
       }
-      return `${term.operator === '+' ? '+' : '−'} ${text}`.trimEnd();
+      return `${OPERATOR_SYMBOLS[term.operator]} ${text}`.trimEnd();
     })
     .join(' ');
 }

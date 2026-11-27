@@ -2,6 +2,7 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { apply, form } from '@angular/forms/signals';
 import {
+  AMOUNT_EXPRESSION_MESSAGES,
   defaultTagIds,
   includeInSpaceDefault,
   QUICK_ENTRY_MESSAGES,
@@ -71,6 +72,13 @@ describe('quick entry rules', () => {
     expect(errors({ expression: '' })).toEqual([QUICK_ENTRY_MESSAGES.amountRequired]);
     expect(errors({ expression: '100-100' })).toEqual([QUICK_ENTRY_MESSAGES.amountRequired]);
     expect(errors({ expression: '100-50' })).toEqual([]);
+  });
+
+  it('tells a division by zero apart from a missing amount', () => {
+    expect(errors({ expression: '100/0' })).toEqual([
+      AMOUNT_EXPRESSION_MESSAGES.division_by_zero,
+    ]);
+    expect(errors({ expression: '100*3/2' })).toEqual([]);
   });
 
   it('needs another destination for a transfer, and what arrived when the currency changes', () => {

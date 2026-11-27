@@ -40,6 +40,8 @@ export const KEYPAD_TEXT = {
   backspace: 'Borrar',
   plus: 'Sumar',
   minus: 'Restar',
+  times: 'Multiplicar',
+  divide: 'Dividir',
   decimal: 'Decimales',
   thousands: 'Tres ceros',
 } as const;

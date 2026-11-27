@@ -1,5 +1,6 @@
 import {
   AmountExpression,
+  evaluateAmount,
   evaluateExpression,
   expressionFromMinor,
   formatExpression,
@@ -43,6 +44,13 @@ describe('pressKey', () => {
     expect(press(['1', 'plus', 'decimal', '5'])).toBe('1+0.5');
   });
 
+  it('multiplies and divides, replacing an operator typed right after another', () => {
+    expect(press(['1', '2', 'times', '3'])).toBe('12*3');
+    expect(press(['1', '2', 'divide', '4'])).toBe('12/4');
+    expect(press(['1', '2', 'plus', 'times', '3'])).toBe('12*3');
+    expect(press(['times', '5'])).toBe('5');
+  });
+
   it('erases the last key', () => {
     expect(press(['1', '2', 'plus', 'backspace', 'backspace'])).toBe('1');
     expect(press(['backspace'])).toBe('');
@@ -67,6 +75,47 @@ describe('evaluateExpression', () => {
   });
 });
 
+describe('evaluateAmount', () => {
+  it('multiplies and divides before adding and subtracting', () => {
+    expect(evaluateAmount('12000*2', 2)).toEqual({ ok: true, value: 2_400_000 });
+    expect(evaluateAmount('2+3*4', 2)).toEqual({ ok: true, value: 1_400 });
+    expect(evaluateAmount('10-2*3', 2)).toEqual({ ok: true, value: 400 });
+    expect(evaluateAmount('2*3+4*5', 0)).toEqual({ ok: true, value: 26 });
+    expect(evaluateAmount('600000/3*2', 2)).toEqual({ ok: true, value: 40_000_000 });
+  });
+
+  it('works with decimals exactly, without float errors', () => {
+    expect(evaluateAmount('0.1*3', 2)).toEqual({ ok: true, value: 30 });
+    expect(evaluateAmount('19.99*3', 2)).toEqual({ ok: true, value: 5_997 });
+    expect(evaluateAmount('1.5/0.5', 2)).toEqual({ ok: true, value: 300 });
+  });
+
+  it('rounds the result to the minor unit, away from zero', () => {
+    expect(evaluateAmount('100/3', 2)).toEqual({ ok: true, value: 3_333 });
+    expect(evaluateAmount('200/3', 2)).toEqual({ ok: true, value: 6_667 });
+    expect(evaluateAmount('5/2', 0)).toEqual({ ok: true, value: 3 });
+    expect(evaluateAmount('0-5/2', 0)).toEqual({ ok: true, value: -3 });
+  });
+
+  it('says when it divides by zero instead of giving an amount', () => {
+    expect(evaluateAmount('10/0', 2)).toEqual({ ok: false, error: 'division_by_zero' });
+    expect(evaluateAmount('10+5/0*3', 2)).toEqual({ ok: false, error: 'division_by_zero' });
+    expect(evaluateExpression('10/0', 2)).toBe(0);
+  });
+
+  it('ignores an operator still waiting for its number', () => {
+    expect(evaluateAmount('10/', 2)).toEqual({ ok: true, value: 1_000 });
+    expect(evaluateAmount('10*', 2)).toEqual({ ok: true, value: 1_000 });
+  });
+
+  it('refuses results beyond safe integers', () => {
+    expect(evaluateAmount('9999999999999*9999999999999', 2)).toEqual({
+      ok: false,
+      error: 'too_large',
+    });
+  });
+});
+
 describe('formatExpression', () => {
   it('follows the number format of the user', () => {
     expect(formatExpression('12000+3500.5', 'dot_comma')).toBe('12.000 + 3.500,5');
@@ -74,10 +123,13 @@ describe('formatExpression', () => {
     expect(formatExpression('12000-', 'dot_comma')).toBe('12.000 −');
     expect(formatExpression('0.', 'comma_dot')).toBe('0.');
     expect(formatExpression('', 'comma_dot')).toBe('');
+    expect(formatExpression('12000*2/3', 'dot_comma')).toBe('12.000 × 2 ÷ 3');
   });
 
-  it('knows when there is something to add up', () => {
+  it('knows when there is something to work out', () => {
     expect(hasOperator('12+3')).toBe(true);
+    expect(hasOperator('12*3')).toBe(true);
+    expect(hasOperator('12/3')).toBe(true);
     expect(hasOperator('12.5')).toBe(false);
   });
 });

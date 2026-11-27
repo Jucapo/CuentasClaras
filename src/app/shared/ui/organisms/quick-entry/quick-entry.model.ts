@@ -2,7 +2,12 @@ import { maxLength, schema, validate } from '@angular/forms/signals';
 import { TRANSACTION_LIMITS } from '../../../../core/config/transaction.constants';
 import { TransactionEntry } from '../../../../core/transactions/transaction.models';
 import { IsoDate, isIsoDate } from '../../../../domain/dates/local-date';
-import { AmountExpression, evaluateExpression } from '../../../../domain/money/amount-expression';
+import {
+  AmountExpression,
+  AmountExpressionError,
+  evaluateAmount,
+  evaluateExpression,
+} from '../../../../domain/money/amount-expression';
 import { currencyMinorUnits } from '../../../../domain/money/currencies';
 import { AdjustmentDirection, TransactionType } from '../../../../domain/transactions/transactions';
 
@@ -66,8 +71,22 @@ export const QUICK_ENTRY_MESSAGES = {
   noteTooLong: `Usa máximo ${TRANSACTION_LIMITS.noteMaxLength} caracteres.`,
 } as const;
 
+/** Why the keypad gives no amount (spec §7). */
+export const AMOUNT_EXPRESSION_MESSAGES: Readonly<Record<AmountExpressionError, string>> = {
+  division_by_zero: 'No se puede dividir entre cero.',
+  too_large: 'El resultado es demasiado grande.',
+};
+
 function accountOf(context: QuickEntryContext, id: string | null): QuickEntryAccount | null {
   return context.accounts.find((account) => account.id === id) ?? null;
+}
+
+/** The error of an expression that gives no amount, or undefined. */
+function expressionError(expression: AmountExpression, currency: string) {
+  const evaluation = evaluateAmount(expression, currencyMinorUnits(currency));
+  return evaluation.ok
+    ? undefined
+    : { kind: evaluation.error, message: AMOUNT_EXPRESSION_MESSAGES[evaluation.error] };
 }
 
 /** Minor units of the amount typed for the source account. */
@@ -102,11 +121,17 @@ export function asksIncludeInSpace(value: QuickEntryValue, context: QuickEntryCo
 /** Rules of the quick entry (spec §4.2, §5.1 c). */
 export function quickEntrySchema(context: QuickEntryContext) {
   return schema<QuickEntryValue>((path) => {
-    validate(path.expression, ({ valueOf }) =>
-      entryAmount(valueOf(path), context) > 0
+    validate(path.expression, ({ valueOf }) => {
+      const entry = valueOf(path);
+      const currency = accountOf(context, entry.accountId)?.currency ?? '';
+      const error = expressionError(entry.expression, currency);
+      if (error) {
+        return error;
+      }
+      return entryAmount(entry, context) > 0
         ? undefined
-        : { kind: 'amount', message: QUICK_ENTRY_MESSAGES.amountRequired },
-    );
+        : { kind: 'amount', message: QUICK_ENTRY_MESSAGES.amountRequired };
+    });
     validate(path.toAccountId, ({ value, valueOf }) => {
       if (valueOf(path.type) !== 'transfer') {
         return undefined;
@@ -124,6 +149,10 @@ export function quickEntrySchema(context: QuickEntryContext) {
         return undefined;
       }
       const currency = accountOf(context, entry.toAccountId)?.currency ?? '';
+      const error = expressionError(value(), currency);
+      if (error) {
+        return error;
+      }
       return evaluateExpression(value(), currencyMinorUnits(currency)) > 0
         ? undefined
         : { kind: 'amount', message: QUICK_ENTRY_MESSAGES.toAmountRequired };
