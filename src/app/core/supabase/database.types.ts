@@ -819,9 +819,75 @@ export type Database = {
         };
         Returns: string;
       };
+      search_transactions: {
+        Args: {
+          filter_account_ids?: string[];
+          filter_author_ids?: string[];
+          filter_category_ids?: string[];
+          filter_statuses?: Database['public']['Enums']['transaction_status'][];
+          filter_tag_ids?: string[];
+          filter_types?: Database['public']['Enums']['transaction_type'][];
+          from_date?: string;
+          search_amount?: number;
+          search_terms?: string[];
+          target_space_id: string;
+          to_date?: string;
+        };
+        Returns: {
+          account_id: string;
+          adjustment_direction: Database['public']['Enums']['adjustment_direction'] | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          date: string;
+          external_id: string | null;
+          financing_plan_id: string | null;
+          id: string;
+          include_in_space: boolean;
+          note: string | null;
+          operation_id: string | null;
+          source: Database['public']['Enums']['transaction_source'];
+          space_id: string;
+          status: Database['public']['Enums']['transaction_status'];
+          to_account_id: string | null;
+          to_amount: number | null;
+          type: Database['public']['Enums']['transaction_type'];
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'transactions';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       set_default_account: {
         Args: { target_account_id: string; target_space_id: string };
         Returns: undefined;
+      };
+      transaction_totals: {
+        Args: {
+          filter_account_ids?: string[];
+          filter_author_ids?: string[];
+          filter_category_ids?: string[];
+          filter_statuses?: Database['public']['Enums']['transaction_status'][];
+          filter_tag_ids?: string[];
+          filter_types?: Database['public']['Enums']['transaction_type'][];
+          from_date?: string;
+          search_amount?: number;
+          search_terms?: string[];
+          target_space_id: string;
+          to_date?: string;
+        };
+        Returns: {
+          currency: string;
+          expense: number;
+          income: number;
+          missing_rate_currencies: string[];
+          net: number;
+        }[];
       };
     };
     Enums: {

@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(119);
+select plan(125);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -243,6 +243,27 @@ select function_privs_are('private', 'sync_card_deferral', array[]::text[], 'aut
   array[]::text[], 'nobody calls the deferral sync directly');
 select function_privs_are('private', 'delete_space_transactions', array[]::text[], 'authenticated',
   array[]::text[], 'nobody calls the space cleanup directly');
+
+select function_privs_are('public', 'search_transactions',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'anon', array[]::text[], 'anon cannot call search_transactions');
+select function_privs_are('public', 'search_transactions',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'authenticated', array['EXECUTE'], 'authenticated calls search_transactions');
+select function_privs_are('public', 'transaction_totals',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'anon', array[]::text[], 'anon cannot call transaction_totals');
+select function_privs_are('public', 'transaction_totals',
+  array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
+        'uuid[]', 'transaction_status[]'],
+  'authenticated', array['EXECUTE'], 'authenticated calls transaction_totals');
+select function_privs_are('private', 'search_text', array['text'], 'anon',
+  array[]::text[], 'anon cannot call the search text helper');
+select function_privs_are('private', 'search_text', array['text'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls the search text helper through the searches');
 
 select * from finish();
 rollback;
