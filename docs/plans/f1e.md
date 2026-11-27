@@ -451,7 +451,7 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
 
 **UI (`shared/ui`), cada pieza nueva al catálogo `/ui`**
 
-- `cc-filter-chips` (molécula, `MatChipsModule`):
+- `cc-filter-chips` (molécula, con botones propios y área táctil de 44 px; Material no trae un chip que abra opciones y se quite con ✕):
   - Inputs: `filters: FilterChip[]` (`{ key, label, summary: string | null }`) y `label`.
   - Outputs: `opened(key)` y `cleared(key)`.
   - Una fila con scroll, en orden fijo. Los activos muestran el resumen y ✕, y con dos o más activos aparece "Limpiar".
