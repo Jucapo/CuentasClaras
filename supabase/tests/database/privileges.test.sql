@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(139);
+select plan(166);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -21,7 +21,8 @@ select table_privs_are('public', 'budgets', 'anon', array[]::text[], 'anon has n
 -- ── authenticated: read, plus column-level updates ───────────────────────────
 select table_privs_are('public', 'profiles', 'authenticated', array['SELECT'], 'authenticated reads profiles');
 select table_privs_are('public', 'spaces', 'authenticated', array['SELECT'], 'authenticated reads spaces');
-select table_privs_are('public', 'space_members', 'authenticated', array['SELECT'], 'authenticated reads space_members');
+select table_privs_are('public', 'space_members', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads space_members and removes them (RLS decides which, F1f)');
 select table_privs_are('public', 'space_settings', 'authenticated', array['SELECT'], 'authenticated reads space_settings');
 select table_privs_are('public', 'user_settings', 'authenticated', array['SELECT'], 'authenticated reads user_settings');
 select table_privs_are('public', 'accounts', 'authenticated', array['SELECT', 'DELETE'],
@@ -302,6 +303,62 @@ select function_privs_are('private', 'filtered_amounts',
   array['uuid', 'date', 'date', 'text[]', 'bigint', 'uuid[]', 'uuid[]', 'uuid[]', 'transaction_type[]',
         'uuid[]', 'transaction_status[]'],
   'authenticated', array['EXECUTE'], 'authenticated calls the filtered amounts helper through the totals');
+
+-- ── F1f: invitaciones y miembros ─────────────────────────────────────────────
+select table_privs_are('public', 'space_invitations', 'anon', array[]::text[],
+  'anon has no access to space_invitations');
+select table_privs_are('public', 'space_invitations', 'authenticated', array[]::text[],
+  'authenticated has no table-wide privilege on space_invitations: only columns, and writes go through RPCs');
+select table_privs_are('public', 'space_invitations', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on space_invitations');
+select column_privs_are('public', 'space_invitations', 'email', 'authenticated', array['SELECT'],
+  'authenticated reads the invited email');
+select column_privs_are('public', 'space_invitations', 'expires_at', 'authenticated', array['SELECT'],
+  'authenticated reads the expiry');
+select column_privs_are('public', 'space_invitations', 'token_hash', 'authenticated', array[]::text[],
+  'nobody on the client reads the token hash');
+select function_privs_are('public', 'invitation_preview', array['text'], 'anon', array['EXECUTE'],
+  'anon calls invitation_preview: the invitation page shows before signing in');
+select function_privs_are('public', 'invitation_preview', array['text'], 'authenticated', array['EXECUTE'],
+  'authenticated calls invitation_preview');
+select function_privs_are('public', 'create_invitation', array['uuid', 'text', 'member_role'], 'anon',
+  array[]::text[], 'anon cannot call create_invitation');
+select function_privs_are('public', 'create_invitation', array['uuid', 'text', 'member_role'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls create_invitation (the function decides who is owner)');
+select function_privs_are('public', 'rotate_invitation', array['uuid'], 'anon', array[]::text[],
+  'anon cannot call rotate_invitation');
+select function_privs_are('public', 'rotate_invitation', array['uuid'], 'authenticated', array['EXECUTE'],
+  'authenticated calls rotate_invitation');
+select function_privs_are('public', 'revoke_invitation', array['uuid'], 'anon', array[]::text[],
+  'anon cannot call revoke_invitation');
+select function_privs_are('public', 'revoke_invitation', array['uuid'], 'authenticated', array['EXECUTE'],
+  'authenticated calls revoke_invitation');
+select function_privs_are('public', 'my_invitations', array[]::text[], 'anon', array[]::text[],
+  'anon cannot call my_invitations');
+select function_privs_are('public', 'my_invitations', array[]::text[], 'authenticated', array['EXECUTE'],
+  'authenticated calls my_invitations');
+select function_privs_are('public', 'accept_invitation', array['text', 'uuid'], 'anon', array[]::text[],
+  'anon cannot call accept_invitation');
+select function_privs_are('public', 'accept_invitation', array['text', 'uuid'], 'authenticated', array['EXECUTE'],
+  'authenticated calls accept_invitation');
+select function_privs_are('public', 'decline_invitation', array['text', 'uuid'], 'anon', array[]::text[],
+  'anon cannot call decline_invitation');
+select function_privs_are('public', 'decline_invitation', array['text', 'uuid'], 'authenticated', array['EXECUTE'],
+  'authenticated calls decline_invitation');
+select function_privs_are('public', 'space_member_list', array['uuid'], 'anon', array[]::text[],
+  'anon cannot call space_member_list');
+select function_privs_are('public', 'space_member_list', array['uuid'], 'authenticated', array['EXECUTE'],
+  'authenticated calls space_member_list');
+select function_privs_are('private', 'respond_to_invitation', array['space_invitations', 'boolean'],
+  'authenticated', array[]::text[], 'authenticated cannot call the invitation helper directly');
+select function_privs_are('private', 'confirmed_email', array[]::text[], 'authenticated', array[]::text[],
+  'authenticated cannot call the confirmed email helper directly');
+select function_privs_are('private', 'has_confirmed_account', array['text'], 'authenticated', array[]::text[],
+  'authenticated cannot ask whether another email has an account');
+select function_privs_are('private', 'ensure_space_owner', array[]::text[], 'authenticated', array[]::text[],
+  'authenticated cannot call the owner trigger function');
+select ok(not has_schema_privilege('service_role', 'private', 'USAGE'),
+  'service_role still has no access to the private schema');
 
 select * from finish();
 rollback;

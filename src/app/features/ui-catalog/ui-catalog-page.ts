@@ -151,6 +151,18 @@ import {
 } from '../../shared/ui/organisms/subcategory-sheet/subcategory-sheet';
 import { TagList, TagListEntry } from '../../shared/ui/organisms/tag-list/tag-list';
 import { TagSheet, TagSheetData } from '../../shared/ui/organisms/tag-sheet/tag-sheet';
+import {
+  InvitationList,
+  InvitationListEntry,
+} from '../../shared/ui/organisms/invitation-list/invitation-list';
+import {
+  InviteRoleOption,
+  InviteSheet,
+  InviteSheetData,
+} from '../../shared/ui/organisms/invite-sheet/invite-sheet';
+import { MemberList, MemberListEntry } from '../../shared/ui/organisms/member-list/member-list';
+import { InstallSteps } from '../../shared/ui/molecules/install-steps/install-steps';
+import { InvitationCard } from '../../shared/ui/molecules/invitation-card/invitation-card';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { WindowClass } from '../../shared/ui/services/window-class';
 import { AppShell } from '../../shared/ui/templates/app-shell/app-shell';
@@ -181,6 +193,10 @@ interface WindowClassDemo {
 @Component({
   selector: 'app-ui-catalog-page',
   imports: [
+    MemberList,
+    InvitationList,
+    InvitationCard,
+    InstallSteps,
     DecimalField,
     AmountDisplay,
     ChipChoice,
@@ -1218,6 +1234,76 @@ export class UiCatalogPage {
         reason: 'Tienes cuentas en US$. Para sumarlas en los totales hace falta la tasa de cambio.',
         value: { date: '2026-11-26', rate: 4150.25 },
         save: async () => ACTION_OK,
+      },
+    });
+  }
+
+  protected readonly memberEntries: readonly MemberListEntry[] = [
+    {
+      userId: 'u1',
+      name: 'Juan',
+      email: 'juan@example.com',
+      roleLabel: 'Propietario',
+      isMe: true,
+      manageable: false,
+    },
+    {
+      userId: 'u2',
+      name: 'Laura',
+      email: 'laura@example.com',
+      roleLabel: 'Editor',
+      isMe: false,
+      manageable: true,
+    },
+  ];
+
+  protected readonly invitationEntries: readonly InvitationListEntry[] = [
+    {
+      id: 'i1',
+      email: 'mama@example.com',
+      roleLabel: 'Lector',
+      statusLabel: 'Vence el 4 de diciembre',
+      expired: false,
+    },
+    {
+      id: 'i2',
+      email: 'hermano@example.com',
+      roleLabel: 'Editor',
+      statusLabel: 'Venció: reenvíala',
+      expired: true,
+    },
+  ];
+
+  private readonly inviteRoles: readonly InviteRoleOption[] = [
+    { value: 'owner', label: 'Propietario', description: 'Todo, incluido invitar y quitar.' },
+    { value: 'editor', label: 'Editor', description: 'Registra y edita movimientos.' },
+    { value: 'viewer', label: 'Lector', description: 'Ve lo compartido.' },
+  ];
+
+  protected openInvite(): void {
+    void this.overlay.open<unknown, InviteSheetData>(InviteSheet, {
+      label: 'Invitar',
+      data: {
+        spaceName: 'Hogar',
+        roles: this.inviteRoles,
+        defaultRole: 'editor',
+        invite: async (email) => ({ ok: true, value: { kind: 'email', email } }),
+      },
+    });
+  }
+
+  protected openInviteLink(): void {
+    void this.overlay.open<unknown, InviteSheetData>(InviteSheet, {
+      label: 'Link de invitación',
+      data: {
+        spaceName: 'Hogar',
+        roles: this.inviteRoles,
+        defaultRole: 'editor',
+        link: {
+          email: 'laura@example.com',
+          link: 'https://cuentasclaras-inky.vercel.app/invitacion?token=3f9c…',
+        },
+        invite: async (email) => ({ ok: true, value: { kind: 'email', email } }),
       },
     });
   }

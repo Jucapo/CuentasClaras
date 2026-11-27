@@ -17,6 +17,15 @@ import {
 } from '../../../../shared/ui/organisms/space-preferences-form/space-preferences';
 import { SpacePreferencesForm } from '../../../../shared/ui/organisms/space-preferences-form/space-preferences-form';
 import { WizardStep } from '../../../../shared/ui/templates/wizard-step/wizard-step';
+import { MEMBER_ROLE_LABELS } from '../../../../core/config/member.constants';
+import { ReceivedInvitation } from '../../../../core/invitations/invitation.models';
+import { InvitationsService } from '../../../../core/invitations/invitations.service';
+import { Button } from '../../../../shared/ui/atoms/button/button';
+import { Message } from '../../../../shared/ui/atoms/message/message';
+import { InvitationCard } from '../../../../shared/ui/molecules/invitation-card/invitation-card';
+import { Section } from '../../../../shared/ui/molecules/section/section';
+import { ConfirmService } from '../../../../shared/ui/services/confirm.service';
+import { ToastService } from '../../../../shared/ui/services/toast.service';
 import { StepActions } from '../../step-actions/step-actions';
 
 interface SpaceStepModel {
@@ -30,18 +39,72 @@ interface SpaceStepModel {
  */
 @Component({
   selector: 'app-space-step',
-  imports: [Form, WizardStep, StepActions, SpacePreferencesForm, NumberFormatForm],
+  imports: [
+    Form,
+    WizardStep,
+    StepActions,
+    SpacePreferencesForm,
+    NumberFormatForm,
+    Section,
+    InvitationCard,
+    Button,
+    Message,
+  ],
   templateUrl: './space-step.html',
+  styleUrl: './space-step.scss',
 })
 export class SpaceStep {
   private readonly spaces = inject(SpaceService);
   private readonly userSettings = inject(UserSettingsService);
   private readonly onboarding = inject(OnboardingService);
   private readonly router = inject(Router);
+  private readonly invitationsService = inject(InvitationsService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
 
   protected readonly step = ONBOARDING_STEPS[0];
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly editing = computed(() => this.spaces.hasSpace());
+
+  /** Without a space, a pending invitation is offered next to creating one (spec §3.3). */
+  protected readonly invitations = computed(() =>
+    this.editing() ? [] : this.invitationsService.mine(),
+  );
+  protected readonly roleLabels = MEMBER_ROLE_LABELS;
+  protected readonly answering = signal<string | null>(null);
+  protected readonly invitationError = signal<string | null>(null);
+
+  protected async accept(invitation: ReceivedInvitation): Promise<void> {
+    this.invitationError.set(null);
+    this.answering.set(invitation.id);
+    const result = await this.invitationsService.accept({ invitationId: invitation.id });
+    this.answering.set(null);
+    if (!result.ok) {
+      this.invitationError.set(result.message);
+      return;
+    }
+    void this.toast.show(`Ya eres parte de ${invitation.spaceName}.`);
+    await this.router.navigateByUrl('/');
+  }
+
+  protected async decline(invitation: ReceivedInvitation): Promise<void> {
+    const confirmed = await this.confirm.confirm({
+      title: `¿Rechazar la invitación a ${invitation.spaceName}?`,
+      message: 'Si cambias de opinión, pide que te inviten de nuevo.',
+      confirmLabel: 'Rechazar',
+      destructive: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.invitationError.set(null);
+    this.answering.set(invitation.id);
+    const result = await this.invitationsService.decline({ invitationId: invitation.id });
+    this.answering.set(null);
+    if (!result.ok) {
+      this.invitationError.set(result.message);
+    }
+  }
   protected readonly busyLabel = computed(() =>
     this.editing() ? 'Guardando' : 'Creando el espacio',
   );

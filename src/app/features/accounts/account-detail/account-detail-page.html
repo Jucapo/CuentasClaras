@@ -1,6 +1,8 @@
 @if (account(); as account) {
   <cc-page-header [title]="account.name" [backLink]="['..']" backLabel="Volver a Cuentas">
-    <cc-icon-button icon="edit" label="Editar cuenta" [link]="editLink" />
+    @if (canWrite()) {
+      <cc-icon-button icon="edit" label="Editar cuenta" [link]="editLink" />
+    }
   </cc-page-header>
 
   <section class="summary" aria-label="Saldo">

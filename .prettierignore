@@ -7,6 +7,8 @@ docs/finanzas-spec.md
 supabase/.temp/
 supabase/.branches/
 supabase/config.jsonc
+# Go templates of the Auth emails: the Angular HTML parser would break {{ .RedirectTo }}.
+supabase/templates/
 e2e/screenshots/
 e2e/test-results/
 playwright-report/

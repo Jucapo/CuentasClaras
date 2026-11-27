@@ -16,6 +16,15 @@
     (next)="periods.next()"
     (opened)="choosePeriod()"
   />
+  @if (spaceIcon(); as icon) {
+    <cc-icon-button
+      ccShellActions
+      [icon]="icon"
+      [label]="spaceLabel()"
+      [tooltip]="true"
+      (click)="chooseSpace()"
+    />
+  }
   <cc-icon-button
     ccShellActions
     icon="settings"

@@ -93,7 +93,8 @@
               "src/**/*.html",
               "e2e/**/*.ts",
               "scripts/**/*.ts",
-              "playwright.config.ts"
+              "playwright.config.ts",
+              "playwright.local.config.ts"
             ]
           }
         }

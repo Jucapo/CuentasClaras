@@ -7,6 +7,7 @@ import {
 } from '../supabase/data-error-messages';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
+  MemberRole,
   NewSpace,
   SpaceMember,
   SpaceMembership,
@@ -48,13 +49,11 @@ export class SpacesApi {
     return { ok: true, value: memberships };
   }
 
-  /** Members of a space with their display name, oldest first. */
+  /** Members of a space with their display name and email, oldest first (RPC `space_member_list`). */
   async fetchMembers(spaceId: string): Promise<DataResult<SpaceMember[]>> {
-    const { data, error, status } = await this.client
-      .from('space_members')
-      .select('user_id, role, profile:profiles(display_name)')
-      .eq('space_id', spaceId)
-      .order('joined_at');
+    const { data, error, status } = await this.client.rpc('space_member_list', {
+      target_space_id: spaceId,
+    });
     if (error) {
       return actionFailed(dataErrorMessage(error, status, LOAD_ERROR_MESSAGE));
     }
@@ -63,9 +62,38 @@ export class SpacesApi {
       value: data.map((row) => ({
         userId: row.user_id,
         role: row.role,
-        displayName: row.profile?.display_name ?? '',
+        displayName: row.display_name,
+        email: row.email,
       })),
     };
+  }
+
+  /** Changes another member's role (owner only; the database keeps at least one owner). */
+  async updateMemberRole(spaceId: string, userId: string, role: MemberRole): Promise<ActionResult> {
+    const { data, error, status } = await this.client
+      .from('space_members')
+      .update({ role })
+      .eq('space_id', spaceId)
+      .eq('user_id', userId)
+      .select('user_id');
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status));
+    }
+    return data.length > 0 ? ACTION_OK : actionFailed(NOT_ALLOWED_MESSAGE);
+  }
+
+  /** Removes a member, or the user themselves when leaving (spec §3.2: nothing else is deleted). */
+  async removeMember(spaceId: string, userId: string): Promise<ActionResult> {
+    const { data, error, status } = await this.client
+      .from('space_members')
+      .delete()
+      .eq('space_id', spaceId)
+      .eq('user_id', userId)
+      .select('user_id');
+    if (error) {
+      return actionFailed(dataErrorMessage(error, status));
+    }
+    return data.length > 0 ? ACTION_OK : actionFailed(NOT_ALLOWED_MESSAGE);
   }
 
   /** Creates a space with the user as owner (RPC `create_space`); returns its id. */

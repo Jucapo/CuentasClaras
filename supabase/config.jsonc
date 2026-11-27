@@ -230,7 +230,8 @@
 
     "rate_limit": {
       // Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-      "email_sent": 2,
+      // 30 like production with its own SMTP, so the local invitation e2e can run several times.
+      "email_sent": 30,
       // Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
       "sms_sent": 30,
       // Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -271,7 +272,8 @@
       // Number of characters used in the email OTP.
       "otp_length": 6,
       // Number of seconds before the email OTP expires (defaults to 1 hour).
-      "otp_expiry": 3600,
+      // 24 h (the maximum), like production: the invitation email link lasts this long (spec §3.3).
+      "otp_expiry": 86400,
 
       // Use a production-ready SMTP server
       // "smtp": {
@@ -284,13 +286,18 @@
       //   "sender_name": "Admin"
       // },
 
-      // Uncomment to customize email template
-      // "template": {
-      //   "invite": {
-      //     "subject": "You have been invited",
-      //     "content_path": "./supabase/templates/invite.html"
-      //   }
-      // },
+      // Spanish templates with the brand (F1f). Production copies them in the dashboard
+      // (docs/runbooks/f1f-compartir.md). A change needs `npm run db:stop` and `npm run db:start`.
+      "template": {
+        "invite": {
+          "subject": "Te invitaron a Cuentas Claras",
+          "content_path": "./supabase/templates/invite.html"
+        },
+        "recovery": {
+          "subject": "Restablece tu contraseña de Cuentas Claras",
+          "content_path": "./supabase/templates/recovery.html"
+        }
+      },
 
       // Uncomment to customize notification email template
       // "notification": {
@@ -452,8 +459,8 @@
   },
 
   "edge_runtime": {
-    // Off until the invitations Edge Function (F1f).
-    "enabled": false,
+    // The invitations Edge Function (F1f). `npm run functions:serve` serves it with local.env.
+    "enabled": true,
     // Supported request policies: `oneshot`, `per_worker`.
     // `per_worker` (default) — enables hot reload during local development.
     // `oneshot` — fallback mode if hot reload causes issues (e.g. in large repos or with symlinks).
@@ -466,6 +473,14 @@
     // "secrets": {
     //   "secret_key": "env(SECRET_VALUE)"
     // },
+  },
+
+  "functions": {
+    // The function verifies the JWT itself with auth.getUser (spec §8), which works with any
+    // signing key and survives key rotation; the gateway check is off.
+    "invite-member": {
+      "verify_jwt": false
+    }
   },
 
   "analytics": {

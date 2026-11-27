@@ -70,6 +70,15 @@ export class SpaceService {
     return this.pendingLoad;
   }
 
+  /** Loads the user's spaces again, e.g. after joining or leaving one. */
+  reload(): Promise<ActionResult> {
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      return Promise.resolve(actionFailed(GENERIC_DATA_ERROR_MESSAGE));
+    }
+    return this.load(userId);
+  }
+
   /** Makes a space the active one and remembers it for next time. */
   async select(spaceId: string): Promise<ActionResult> {
     this.selectedId.set(spaceId);

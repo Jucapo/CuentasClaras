@@ -1,0 +1,11 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-stack-gap);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cc-space-2);
+}

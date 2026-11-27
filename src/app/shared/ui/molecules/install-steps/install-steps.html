@@ -1,0 +1,59 @@
+<h2 class="title">Instala la app</h2>
+@switch (platform()) {
+  @case ('ios') {
+    <ol class="steps">
+      <li>
+        <cc-icon name="info" size="sm" />
+        <span>Si abriste el link desde otra app, como Gmail, toca «Abrir en Safari».</span>
+      </li>
+      <li>
+        <cc-icon name="ios_share" size="sm" />
+        <span>
+          En Safari, toca <strong>Compartir</strong> (si no lo ves, está en el menú
+          <strong>⋯</strong>).
+        </span>
+      </li>
+      <li>
+        <cc-icon name="add_box" size="sm" />
+        <span>Elige <strong>Agregar a inicio</strong> y luego <strong>Agregar</strong>.</span>
+      </li>
+    </ol>
+  }
+  @case ('android') {
+    @if (canPrompt()) {
+      <cc-button icon="install_mobile" (click)="install.emit()">Instalar la app</cc-button>
+    } @else {
+      <ol class="steps">
+        <li>
+          <cc-icon name="install_mobile" size="sm" />
+          <span>
+            Abre el menú del navegador y elige <strong>Instalar app</strong> o
+            <strong>Agregar a la pantalla principal</strong>.
+          </span>
+        </li>
+      </ol>
+    }
+  }
+  @default {
+    @if (canPrompt()) {
+      <cc-button icon="install_mobile" (click)="install.emit()">Instalar la app</cc-button>
+    } @else {
+      <p class="note">
+        En el celular, abre el link en el navegador e instálala desde ahí. En el computador puedes
+        usarla en el navegador.
+      </p>
+    }
+  }
+}
+<p class="sign-in">
+  <cc-icon name="lock" size="sm" />
+  <span>
+    {{
+      platform() === 'other'
+        ? 'En la app o en el navegador,'
+        : 'Abre Cuentas Claras desde tu pantalla de inicio y'
+    }}
+    entra con tu correo (<strong>{{ email() }}</strong
+    >) y tu contraseña.
+  </span>
+</p>

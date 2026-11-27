@@ -8,6 +8,7 @@ import { CategoriesService } from './core/categories/categories.service';
 import { FEATURE_FLAGS } from './core/config/feature-flags';
 import { SpaceSettings } from './core/spaces/space.models';
 import { SpaceService } from './core/spaces/space.service';
+import { InvitationsService } from './core/invitations/invitations.service';
 import { spaceSettingsFixture } from './core/spaces/space.testing';
 import { UserSettingsService } from './core/user-settings/user-settings.service';
 import { ToastService } from './shared/ui/services/toast.service';
@@ -46,9 +47,11 @@ describe('app routes', () => {
             ),
             canConfigure: computed(() => role() === 'owner'),
             canEdit: signal(true),
+            memberships: signal([]),
             ensureLoaded: vi.fn().mockResolvedValue({ ok: true }),
           },
         },
+        { provide: InvitationsService, useValue: { mine: signal([]) } },
         {
           provide: CategoriesService,
           useValue: { tree: () => [], loaded: signal(true), loadError: signal(null) },

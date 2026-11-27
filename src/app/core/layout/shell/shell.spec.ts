@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { ExchangeRateFlow } from '../../exchange-rates/exchange-rate-flow';
+import { InvitationsService } from '../../invitations/invitations.service';
 import { PeriodService } from '../../periods/period.service';
 import { SpaceService } from '../../spaces/space.service';
 import { TotalsService } from '../../totals/totals.service';
@@ -19,7 +20,11 @@ describe('Shell', () => {
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: { isAuthenticated } },
-        { provide: SpaceService, useValue: { canEdit: signal(false) } },
+        {
+          provide: SpaceService,
+          useValue: { canEdit: signal(false), memberships: signal([]), activeSpace: signal(null) },
+        },
+        { provide: InvitationsService, useValue: { mine: signal([]) } },
         {
           provide: TotalsService,
           useValue: { accountsTotal: signal(null), missingRateCurrencies: signal([]) },

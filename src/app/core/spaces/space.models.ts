@@ -63,11 +63,13 @@ export interface SpaceMembership {
   readonly settings: SpaceSettings;
 }
 
-/** Someone in the active space, as filters and reports name them. */
+/** Someone in the active space, as filters, reports and Miembros name them. */
 export interface SpaceMember {
   readonly userId: string;
   readonly role: MemberRole;
   readonly displayName: string;
+  /** Only members see each other's email (`space_member_list`). */
+  readonly email: string;
 }
 
 /** Data needed to create a space (wizard step 1). */

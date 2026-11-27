@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+}
+
+// The heading stays clear of the floating ✕ (spec §13.5).
+.heading {
+  margin: 0;
+  padding: var(--cc-space-2) var(--cc-overlay-close-clearance) 0 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.lead {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.help {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.link {
+  margin: 0;
+  padding: var(--cc-space-3);
+  border-radius: var(--cc-radius-md);
+  background: var(--mat-sys-surface-container-high);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cc-space-2);
+}

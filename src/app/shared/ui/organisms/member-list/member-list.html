@@ -1,0 +1,22 @@
+<div class="list" role="list">
+  @for (member of members(); track member.userId) {
+    <cc-list-item
+      role="listitem"
+      [title]="member.isMe ? member.name + ' (tú)' : member.name"
+      [subtitle]="member.email"
+      [actionable]="member.manageable"
+      (activate)="roleRequested.emit(member.userId)"
+    >
+      <cc-icon ccListItemLeading name="person" />
+      <span ccListItemTrailing class="role">{{ member.roleLabel }}</span>
+      @if (member.manageable) {
+        <cc-icon-button
+          ccListItemEnd
+          icon="person_remove"
+          [label]="'Quitar a ' + member.name"
+          (click)="removeRequested.emit(member.userId)"
+        />
+      }
+    </cc-list-item>
+  }
+</div>
