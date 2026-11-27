@@ -761,10 +761,14 @@ function searchTransactions(
 }
 
 /** Plays the part of transaction_totals over what search_transactions found. */
-/** Like the RPC: without a status filter only what is confirmed adds up, as in category_totals. */
+/**
+ * Like the RPC: without a status filter only what is confirmed adds up, as in category_totals, and
+ * it says how much comes from accounts outside the space.
+ */
 function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row, args: Row) {
   const main = String(settings['main_currency']);
   const totals = { income: 0, expense: 0 };
+  const outside = { income: 0, expense: 0 };
   const missing = new Set<string>();
   const statuses = args['filter_statuses'];
   const anyStatus = Array.isArray(statuses) && statuses.length > 0;
@@ -783,16 +787,23 @@ function transactionTotals(ledger: Ledger, found: readonly Row[], settings: Row,
       main,
       String(movement['date']),
     );
+    const account = ledger.accounts.find((candidate) => candidate['id'] === movement['account_id']);
+    const inSpace = movement['include_in_space'] === true || account?.['visibility'] === 'shared';
     if (converted === null) {
       missing.add(String(movement['currency']));
     } else {
       totals[type] += converted;
+      if (!inSpace) {
+        outside[type] += converted;
+      }
     }
   }
   return {
     income: totals.income,
     expense: totals.expense,
     net: totals.income - totals.expense,
+    outside_space_income: outside.income,
+    outside_space_expense: outside.expense,
     currency: main,
     missing_rate_currencies: [...missing].sort(),
   };

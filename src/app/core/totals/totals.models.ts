@@ -21,6 +21,11 @@ export interface TransactionTotals {
   readonly expense: number;
   /** Incomes minus expenses. */
   readonly net: number;
+  /**
+   * How much of `income` and `expense` comes from accounts outside the space (own private ones,
+   * not included): what makes them differ from Inicio and Presupuesto (spec §7, §8).
+   */
+  readonly outsideSpace: { readonly income: number; readonly expense: number };
   readonly currency: string;
   readonly missingRateCurrencies: readonly string[];
 }

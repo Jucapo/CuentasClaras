@@ -62,6 +62,10 @@ export class TotalsApi {
             income: data.income,
             expense: data.expense,
             net: data.net,
+            outsideSpace: {
+              income: data.outside_space_income,
+              expense: data.outside_space_expense,
+            },
             currency: data.currency,
             missingRateCurrencies: data.missing_rate_currencies ?? [],
           }

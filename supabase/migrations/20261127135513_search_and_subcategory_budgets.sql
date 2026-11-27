@@ -105,6 +105,9 @@ grant execute on function public.search_transactions(
 -- suman. Sin filtro de estado solo suma lo confirmado, como category_totals: lo pendiente se lista
 -- pero no suma. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es
 -- miembro.
+-- Los movimientos de cuentas fuera del espacio (privadas propias, sin incluir) suman, como en la
+-- lista; outside_space_income y outside_space_expense dicen cuánto de cada total son, en la misma
+-- moneda. Sin ellos, los totales son los de category_totals (Inicio y Presupuesto).
 create function public.transaction_totals(
   target_space_id uuid,
   from_date date default null,
@@ -122,6 +125,8 @@ returns table (
   income bigint,
   expense bigint,
   net bigint,
+  outside_space_income bigint,
+  outside_space_expense bigint,
   currency text,
   missing_rate_currencies text[]
 )
@@ -133,21 +138,30 @@ as $$
   with settings as (
     select s.main_currency from public.space_settings s where s.space_id = target_space_id
   ),
-  -- Una conversión por tipo, moneda y día, como en category_totals.
+  -- Una conversión por tipo, moneda, día y alcance, como en category_totals.
   grouped as (
-    select t.type, t.currency, t.date, sum(t.amount)::bigint as amount
+    select
+      t.type,
+      t.currency,
+      t.date,
+      -- Lo que category_totals deja fuera. La cuenta privada de otro no se ve (sin fila), pero
+      -- de ella solo se ve lo incluido.
+      not coalesce(t.include_in_space or a.visibility = 'shared', false) as outside,
+      sum(t.amount)::bigint as amount
     from public.search_transactions(
       target_space_id, from_date, to_date, search_terms, search_amount, filter_account_ids,
       filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
     ) t
+    left join public.accounts a on a.id = t.account_id
     where t.type in ('expense', 'income')
       and (coalesce(cardinality(filter_statuses), 0) > 0 or t.status = 'confirmed')
-    group by t.type, t.currency, t.date
+    group by t.type, t.currency, t.date, outside
   ),
   converted as (
     select
       g.type,
       g.currency,
+      g.outside,
       private.convert_minor(g.amount, g.currency, st.main_currency, target_space_id, g.date)
         as amount
     from grouped g
@@ -157,6 +171,10 @@ as $$
     select
       coalesce(sum(cv.amount) filter (where cv.type = 'income'), 0) as income,
       coalesce(sum(cv.amount) filter (where cv.type = 'expense'), 0) as expense,
+      coalesce(sum(cv.amount) filter (where cv.type = 'income' and cv.outside), 0)
+        as outside_income,
+      coalesce(sum(cv.amount) filter (where cv.type = 'expense' and cv.outside), 0)
+        as outside_expense,
       coalesce(
         array_agg(distinct cv.currency order by cv.currency) filter (where cv.amount is null),
         '{}'
@@ -167,6 +185,8 @@ as $$
     s.income::bigint,
     s.expense::bigint,
     (s.income - s.expense)::bigint,
+    s.outside_income::bigint,
+    s.outside_expense::bigint,
     st.main_currency,
     s.missing
   from sums s

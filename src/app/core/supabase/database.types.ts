@@ -887,6 +887,8 @@ export type Database = {
           income: number;
           missing_rate_currencies: string[];
           net: number;
+          outside_space_expense: number;
+          outside_space_income: number;
         }[];
       };
     };

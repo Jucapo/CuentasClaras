@@ -1,9 +1,10 @@
 -- Search: search_transactions lists what the caller sees (RLS, private accounts included) with
 -- search and filters, and transaction_totals adds up that set in the main currency: without a
--- status filter only what is confirmed, like category_totals.
+-- status filter only what is confirmed, like category_totals, and with how much of it comes from
+-- accounts outside the space.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(33);
+select plan(35);
 
 -- Ana owns "Hogar" (COP) with Beto (editor) and Dani (viewer). Caro owns her own space.
 insert into auth.users (id, email) values
@@ -388,7 +389,7 @@ select results_eq(
   'without dates the totals cover every movement'
 );
 
--- ── Same rule as category_totals ─────────────────────────────────────────────
+-- ── Outside the space, and the rule of category_totals ───────────────────────
 -- What was spent and received in the month by category (Inicio, Presupuesto): its top-level rows.
 set local request.jwt.claims to '{"sub": "d0000000-0000-4000-8000-000000000000"}';
 select results_eq(
@@ -408,25 +409,46 @@ select results_eq(
 );
 select results_eq(
   format(
-    $$select income, expense from public.transaction_totals(%L, '2026-11-01', '2026-11-30')$$,
+    $$select income, expense, outside_space_income, outside_space_expense from public.transaction_totals(%L, '2026-11-01', '2026-11-30')$$,
     current_setting('t.space')
   ),
-  $$values (3000000::bigint, 10420000::bigint)$$,
-  'and that month leaves out the pending movement and the private ones not included'
+  $$values (3000000::bigint, 10420000::bigint, 0::bigint, 0::bigint)$$,
+  'and that month leaves out the pending movement, with nothing from accounts outside the space'
 );
 
 set local request.jwt.claims to '{"sub": "b0000000-0000-4000-8000-000000000000"}';
 select results_eq(
   format(
-    $$select
-        (select expense from public.transaction_totals(%1$L, '2026-11-01', '2026-11-30'))
-        - (select sum(amount) filter (where kind = 'expense')::bigint
-             from public.category_totals(%1$L, '2026-11-01', '2026-11-30')
-             where parent_id is null)$$,
+    $$select outside_space_income, outside_space_expense from public.transaction_totals(%L, '2026-11-01', '2026-11-30')$$,
     current_setting('t.space')
   ),
-  $$values (40000::bigint)$$,
-  'for the owner of a private account the difference is exactly its movements not included in the space'
+  $$values (0::bigint, 40000::bigint)$$,
+  'the totals say how much of them comes from accounts outside the space'
+);
+select results_eq(
+  format(
+    $$select income - outside_space_income, expense - outside_space_expense from public.transaction_totals(%L, '2026-11-01', '2026-11-30')$$,
+    current_setting('t.space')
+  ),
+  format(
+    $$select
+        coalesce(sum(amount) filter (where kind = 'income'), 0)::bigint,
+        coalesce(sum(amount) filter (where kind = 'expense'), 0)::bigint
+      from public.category_totals(%L, '2026-11-01', '2026-11-30')
+      where parent_id is null$$,
+    current_setting('t.space')
+  ),
+  'without what comes from outside the space, the totals of the owner of a private account match category_totals'
+);
+
+set local request.jwt.claims to '{"sub": "a0000000-0000-4000-8000-000000000000"}';
+select results_eq(
+  format(
+    $$select expense, outside_space_expense from public.transaction_totals(%L, '2026-11-01', '2026-11-30', filter_account_ids => array[%L]::uuid[])$$,
+    current_setting('t.space'), current_setting('t.ana_private')
+  ),
+  $$values (50000::bigint, 30000::bigint)$$,
+  'what a private account includes in the space is not outside it'
 );
 
 select * from finish();
