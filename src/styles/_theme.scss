@@ -193,6 +193,13 @@ cc-fab {
   max-height: var(--cc-entry-sheet-max-height);
 }
 
+// The rounded outline of cc-text-field: Material makes the leading piece as wide as the radius, and
+// Chrome then paints a seam where it meets the rest of the border. The class name is Material's.
+// stylelint-disable-next-line selector-class-pattern
+cc-text-field.outline .mdc-notched-outline .mdc-notched-outline__leading {
+  width: calc(var(--cc-radius-md) + var(--cc-space-1));
+}
+
 // Toasts (ToastService) float above the bottom navigation instead of covering it; from the medium
 // window class on, the navigation is a side rail.
 .mat-mdc-snack-bar-container.cc-toast {

@@ -1,8 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { ActionResult } from '../../core/action-result';
-import { AuthService } from '../../core/auth/auth.service';
 import { ProfileService } from '../../core/profiles/profile.service';
 import {
   SpaceMembership,
@@ -25,26 +24,20 @@ describe('SettingsPage', () => {
   const updateActiveSettings = vi.fn<(patch: SpaceSettingsPatch) => Promise<ActionResult>>();
   const update = vi.fn<(patch: UserSettingsPatch) => Promise<ActionResult>>();
   const updateDisplayName = vi.fn<(name: string) => Promise<ActionResult>>();
-  const signOut = vi.fn<() => Promise<void>>();
   const show = vi.fn();
 
   async function setup(role: SpaceMembership['role'] = 'owner') {
     const home = membershipFixture('space-home', 'Hogar', role);
     active.set({ ...home, settings: { ...home.settings, month_start_day: 28 } });
-    settings.set(userSettingsFixture({ theme: 'dark' }));
+    settings.set(userSettingsFixture({ number_format: 'dot_comma' }));
     for (const mock of [updateActiveSpace, updateActiveSettings, update, updateDisplayName]) {
       mock.mockReset().mockResolvedValue({ ok: true });
     }
-    signOut.mockReset().mockResolvedValue();
     show.mockReset();
 
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        {
-          provide: AuthService,
-          useValue: { user: signal({ email: 'ana@example.com' }), signOut },
-        },
         {
           provide: SpaceService,
           useValue: {
@@ -92,9 +85,10 @@ describe('SettingsPage', () => {
     await setup();
 
     expect(spaceNameInput().value).toBe('Hogar');
-    const preferences = element().querySelector('form[aria-label="Preferencias"]');
-    expect(preferences?.textContent).toContain('Oscuro');
-    expect(element().textContent).toContain('Sesión iniciada como ana@example.com');
+    expect(element().querySelector('form[aria-label="Preferencias"]')).not.toBeNull();
+    // The theme and the session live in the side menu (spec §7).
+    expect(element().textContent).not.toContain('Tema');
+    expect(element().textContent).not.toContain('Cerrar sesión');
   });
 
   it('lets the owner rename the space and change its preferences', async () => {
@@ -218,29 +212,15 @@ describe('SettingsPage', () => {
     expect(element().querySelector('a[href="/bienvenida"]')).toBeNull();
   });
 
-  it('saves the theme and the number format of the user', async () => {
+  it('saves the home screen and the number format of the user, without the theme', async () => {
     await setup();
     await submit('Preferencias');
 
     expect(update).toHaveBeenCalledWith({
-      theme: 'dark',
       home_screen: 'categories',
-      number_format: 'comma_dot',
+      number_format: 'dot_comma',
       show_decimals: true,
     });
     expect(show).toHaveBeenCalledWith('Preferencias guardadas.');
-  });
-
-  it('signs out and goes to the login page', async () => {
-    await setup();
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-
-    Array.from(element().querySelectorAll('button'))
-      .find((button) => button.textContent?.includes('Cerrar sesión'))
-      ?.click();
-    await fixture.whenStable();
-
-    expect(signOut).toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith(['/', 'iniciar-sesion']);
   });
 });
