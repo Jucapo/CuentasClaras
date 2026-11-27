@@ -15,6 +15,8 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
 - `npm start` (http://localhost:4200) · `npm run lint` · `npm test` · `npm run test:watch` · `npm run build`
 - `npm run format` / `npm run format:check`: Prettier.
 - `npm run icons:build`: regenera el subset de Material Symbols (`public/fonts`) y `icon-codepoints.generated.ts` desde el catálogo de íconos. Correrlo al cambiar `icon-catalog.ts` y commitear ambos resultados; el build no lo ejecuta ni necesita red.
+- `npm run brand:build`: genera los PNG de la PWA, el `apple-touch-icon` y los favicons (`.ico` y `.svg`) desde los logos de `public/brand/`. Correrlo al cambiar un logo y commitear los resultados.
+- Tema: las paletas de `src/styles/_theme-colors.scss` salen del schematic `ng generate @angular/material:theme-color` con las semillas de marca (el comando exacto está en el archivo). Se regeneran, nunca se editan a mano.
 - `npm run e2e`: smoke tests de Playwright (`e2e/*.e2e.ts`) con el Chrome instalado (sin descargar navegadores). Reutiliza `ng serve` si está corriendo. Supabase siempre simulado (`e2e/support`). Screenshots en `e2e/screenshots/` (ignorada por git).
 - Base de datos local (requiere Docker Desktop):
   - `npm run db:start` / `npm run db:stop`: stack local (API `127.0.0.1:54321`, Studio `127.0.0.1:54323`, Mailpit `127.0.0.1:54324`). `ng serve` apunta a él.
