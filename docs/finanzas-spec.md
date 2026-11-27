@@ -261,7 +261,8 @@ Presupuesto por subcategoría (F1e):
   - Los montos que ya existen (los puso el asistente por categoría) quedan como "General", sin migrar datos.
 - **Por fila:** gastado, restante y excedido se calculan por fila (General y cada subcategoría) y se suman en la categoría.
   - Si la categoría tiene algún presupuesto, una fila sin monto pero con gasto se marca como excedida por lo gastado.
-  - Una categoría sin ningún presupuesto solo muestra lo gastado.
+  - Una categoría sin ningún presupuesto solo muestra lo gastado, sin marcar excedida ninguna fila.
+  - Solo aplica a gastos: en ingresos, una fila sin monto con lo recibido no es un exceso.
 - **En las burbujas del inicio:** el total de la categoría (§7).
 - **Ingresos esperados:** las mismas reglas, con lo recibido en lugar de lo gastado.
 
@@ -294,9 +295,13 @@ Pantalla Presupuesto (F1e):
   - **Filas:** "General" y cada subcategoría, con el monto editable en la fila, lo gastado y lo restante.
   - **"Ver transacciones":** abre Transacciones filtrado por la categoría, en el periodo actual.
   - **"Quitar presupuesto":** pone en 0 el General y las subcategorías, con confirmación y con el alcance elegido.
-  - Como un sheet no abre otro, en compacta el detalle se cierra devolviendo la intención (calculadora, quitar o ver transacciones), y la pantalla la atiende y lo vuelve a abrir si corresponde.
+  - **En compacta (y en mediana, como diálogo):** es un solo sheet (§13.5). La calculadora y la confirmación de "Quitar presupuesto" son vistas dentro de él, con ← para volver al detalle.
+    - Al confirmar, vuelve al detalle con la fila actualizada y el scroll donde estaba.
+    - Esc y el atrás del sistema también vuelven al detalle sin cerrar el sheet.
+    - "Ver transacciones" cierra el sheet y navega.
+  - **En expandida:** el detalle está en el panel, y la calculadora y la confirmación se abren como diálogo.
 - **Calculadora:**
-  - Cada fila editable suma un botón que abre el teclado del registro rápido (`cc-keypad` y `cc-amount-display`): sheet en compacta, diálogo en los demás tamaños.
+  - Cada fila editable suma un botón que abre el teclado del registro rápido (`cc-keypad` y `cc-amount-display`): una vista dentro del detalle en compacta y mediana, un diálogo en expandida.
   - Trae un encabezado de contexto: "Categoría › Subcategoría", el periodo, lo gastado, lo restante y el presupuesto actual.
   - El resultado vuelve a la fila y se guarda con el alcance elegido.
   - La edición sigue siendo en la fila ("Menos modales", §13.5).
@@ -525,6 +530,9 @@ Detalle (F1e):
   - "Persona" (quien registró) solo aparece si el espacio tiene más de un miembro.
   - Los filtros se recuerdan mientras la app está abierta, no en el dispositivo.
 - **Totales:** ingresos, gastos y neto de lo filtrado, en la moneda principal, con la tasa de la fecha de cada movimiento. Las transferencias y los ajustes no suman. Si falta una tasa, el aviso de siempre.
+  - Sin filtro de estado solo suma lo confirmado, la misma regla de `category_totals`: el gasto del mes coincide con el de Inicio y Presupuesto. Lo pendiente se lista, pero no suma.
+  - Con el filtro de estado suma exactamente los estados elegidos, pendientes incluidos.
+  - La única diferencia posible con Inicio y Presupuesto son los movimientos de las cuentas privadas propias no incluidos en el espacio, que llevan el candado.
 - **Editar:**
   - Tocar un movimiento lo abre en el registro rápido para editarlo o eliminarlo: en compacta como sheet, y en mediana como diálogo.
   - En expandida, lista y detalle van lado a lado (§13.5): el registro rápido se abre en línea en el panel de detalle. Si hay cambios sin guardar y se toca otro movimiento, se cierra el panel o se sale, pregunta "¿Descartar los cambios?".
@@ -691,7 +699,7 @@ recurring_templates (fase 3)
   - `save_exchange_rate(...)` reemplaza la tasa del mismo par y día.
 - RPCs de la F1e (Transacciones), con `SECURITY INVOKER`:
   - `search_transactions(space_id, from, to, search_terms, search_amount, filter_*)` devuelve las filas de `transactions` que quien llama ve, con la búsqueda y los filtros de §7. Así PostgREST embebe etiquetas, autor y diferido, y ordena y pagina.
-  - `transaction_totals(...)` toma los mismos argumentos y da ingresos, gastos y neto en la moneda principal, más las monedas sin tasa.
+  - `transaction_totals(...)` toma los mismos argumentos y da ingresos, gastos y neto en la moneda principal, más las monedas sin tasa. Sin `filter_statuses` solo suma lo confirmado, como `category_totals`.
   - La búsqueda sin tildes usa la extensión `unaccent` a través de `private.search_text`.
 - Triggers de la F1d:
   - la moneda e "incluir en el espacio" del movimiento;
@@ -803,8 +811,8 @@ Meta: un diseño visual excelente y muy personalizable, con estilos centralizado
 |---|---|---|---|
 | Tokens | Variables de diseño | Colores, tipografía, espaciado, radios, sombras, movimiento | `src/styles` |
 | Átomos | Piezas mínimas, sin lógica de negocio | `cc-button`, `cc-fab`, `cc-icon`, `cc-icon-badge`, `cc-text-field`, `cc-money-field`, `cc-select`, `cc-amount`, `cc-color-swatch`, `cc-tabs`, `cc-donut`, `cc-progress-bar` | `shared/ui/atoms` |
-| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row` | `shared/ui/molecules` |
-| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator`, `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
+| Moléculas | Combinaciones de átomos | `cc-appearance-picker`, `cc-field-row`, `cc-money-row`, `cc-option-panel`, `cc-confirm-panel` (y `cc-confirm-dialog`, su overlay), `cc-category-bubble`, `cc-account-row`, `cc-form-actions`, `cc-period-chip`, `cc-filter-chips`, `cc-stat-group`, `cc-budget-pill`, `cc-budget-row` | `shared/ui/molecules` |
+| Organismos | Secciones completas que reciben datos por inputs | `cc-category-grid`, `cc-account-editor`, `cc-quick-entry` (en línea) y `cc-quick-entry-sheet` (su overlay), `cc-account-list`, `cc-budget-list`, `cc-budget-detail` (y su sheet), `cc-amount-calculator` (y su overlay), `cc-transaction-list`, `cc-missing-rates-notice`, `cc-nav-rail` | `shared/ui/organisms` |
 | Plantillas | Layouts sin datos | Layout de auth, shell de la app, layout del asistente, flujo, lista-detalle | `shared/ui/templates` |
 | Páginas | Rutas: conectan servicios y estado con organismos | `features/*/…-page` | `features` |
 
@@ -925,6 +933,9 @@ Meta: flujos cortos, pensados primero para móvil, con layouts que se adaptan al
 **Sheets y diálogos**
 
 - Un sheet a la vez: un sheet nunca abre otro. Si necesita confirmar algo (archivar, eliminar), se cierra devolviendo la intención y la pantalla pregunta.
+- **Vistas dentro de un overlay (F1e):** cuando el paso siguiente es parte del mismo contexto (la calculadora o la confirmación dentro del detalle de Presupuesto), se muestra como una vista del mismo sheet, no como otro.
+  - La vista lleva ← ("Volver") en lugar de ✕. Esc y el atrás del sistema vuelven a la vista anterior sin cerrar el sheet.
+  - Al volver, la vista anterior conserva su scroll y el foco vuelve al control que abrió la vista.
 - El atrás del sistema (Android o el navegador) cierra solo el overlay abierto, sin navegar.
 - **Overlays con confirmación (F1d2):** los sheets y diálogos que se confirman (ícono y color, subcategoría, etiqueta, opciones de selección múltiple, tasa de cambio y monto) siguen un mismo patrón, igual en sheet y en diálogo:
   - Sin barra superior ni título visible: el contenido sube hasta el borde superior (en el selector, la vista previa del ícono).

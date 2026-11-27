@@ -63,9 +63,9 @@ Propias (se pasan a la spec en la parte 1):
       - Encabezado con periodo, gastado, restante y presupuestado.
       - Filas General y subcategorías, editables en la fila, con lo gastado y lo restante.
       - "Ver transacciones" y "Quitar presupuesto" (con confirmación y el alcance).
-  - **Calculadora:** cada fila editable tiene un botón que abre `cc-keypad` y `cc-amount-display` en un sheet o diálogo, con contexto ("Categoría › Subcategoría", periodo, gastado, restante, presupuesto). El resultado vuelve a la fila y se guarda con el alcance.
+  - **Calculadora:** cada fila editable tiene un botón que abre `cc-keypad` y `cc-amount-display` (una vista del detalle en compacta y mediana, un diálogo en expandida), con contexto ("Categoría › Subcategoría", periodo, gastado, restante, presupuesto). El resultado vuelve a la fila y se guarda con el alcance.
   - **Teclado:** `×` y `÷` con precedencia normal, el resultado redondeado a la unidad menor y la división por cero como error claro. También en el registro rápido.
-  - **Un sheet no abre otro:** en compacta, el detalle se cierra devolviendo la intención (calculadora, quitar, ver transacciones), y la página la atiende y lo reabre si corresponde.
+  - **Un solo sheet:** en compacta, la calculadora y la confirmación de "Quitar presupuesto" son vistas dentro del sheet del detalle, con ←. Al confirmar vuelve al detalle con la fila actualizada y el scroll donde estaba, y Esc y el atrás del sistema vuelven al detalle sin cerrarlo. Solo "Ver transacciones" cierra el sheet. En expandida, la calculadora y la confirmación son diálogos sobre el panel.
   - **Periodos:** Año suma los 12 meses en solo lectura. Día, Semana, Siempre y Rango muestran un aviso y "Ver este mes".
   - **Apagado y lector:** con `budgets_enabled` apagado, el destino sigue y muestra el aviso, con un interruptor para el propietario. El lector ve sin editar.
 - **Aviso de nueva versión:**
@@ -188,7 +188,9 @@ grant execute on function public.search_transactions(
 -- ── RPC: totales de lo filtrado ───────────────────────────────────────────────
 -- Ingresos, gastos y neto de lo que devuelve search_transactions con los mismos argumentos, en la
 -- moneda principal con la tasa de la fecha de cada movimiento (§4.6). Transferencias y ajustes no
--- suman. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es miembro.
+-- suman. Sin filtro de estado solo suma lo confirmado, como category_totals: lo pendiente se lista
+-- pero no suma. Lo que no tiene tasa no suma y su moneda sale aparte. Sin fila para quien no es
+-- miembro.
 create function public.transaction_totals(
   target_space_id uuid,
   from_date date default null,
@@ -225,6 +227,7 @@ as $$
       filter_category_ids, filter_tag_ids, filter_types, filter_author_ids, filter_statuses
     ) t
     where t.type in ('expense', 'income')
+      and (coalesce(cardinality(filter_statuses), 0) > 0 or t.status = 'confirmed')
     group by t.type, t.currency, t.date
   ),
   converted as (
@@ -391,6 +394,8 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
   - Sin transferencias ni ajustes, y siguiendo los filtros y la búsqueda.
   - EUR sale en `missing_rate_currencies` y no suma.
   - Para Ana suma su privado no incluido; para Beto no.
+  - Sin filtro de estado, lo pendiente no suma; con el filtro, sí.
+  - Para Dani (lector, sin cuentas privadas), el mes coincide con la suma de las filas principales de `category_totals`. Para Beto, la diferencia es exactamente su privado no incluido.
 - **`privileges.test.sql`:** `function_privs_are` de `search_transactions`, `transaction_totals` y `private.search_text` para `anon` (nada) y `authenticated` (execute).
 
 ## 1.2 Transacciones
@@ -452,9 +457,10 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
 **UI (`shared/ui`), cada pieza nueva al catálogo `/ui`**
 
 - `cc-filter-chips` (molécula, con botones propios y área táctil de 44 px; Material no trae un chip que abra opciones y se quite con ✕):
-  - Inputs: `filters: FilterChip[]` (`{ key, label, summary: string | null }`) y `label`.
-  - Outputs: `opened(key)` y `cleared(key)`.
+  - Inputs: `filters: FilterChip[]` (`{ key, label, summary: string | null }`), `label` y `expanded` (la clave del filtro con sus opciones abiertas).
+  - Outputs: `opened(key)`, `cleared(key)` y `clearedAll`.
   - Una fila con scroll, en orden fijo. Los activos muestran el resumen y ✕, y con dos o más activos aparece "Limpiar".
+  - Accesibilidad: cada chip lleva `aria-haspopup="dialog"` y `aria-expanded`; la ✕ se llama "Quitar filtro {filtro}". Solo tokens `--cc-*` y `--mat-sys-*`.
 - `cc-stat-group` (molécula): `items: StatItem[]` (`{ label, amount, currency, tone?, signed?, note? }`) en fila. La parte 2 lo reutiliza.
 - `cc-transaction-list` (extender):
   - Input `selectedId` (va a `cc-list-item [selected]`).
@@ -497,11 +503,11 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
     - La sección "Ingresos esperados", igual.
   - **Detalle:**
     - En expandida va en el panel: `cc-budget-detail`.
-    - En compacta, `cc-budget-detail-sheet`, que se cierra con la intención (`calculate`, `remove` o `transactions`): la página la atiende y lo reabre después de la calculadora o la confirmación.
+    - En compacta y mediana, `cc-budget-detail-sheet`: la calculadora y la confirmación son vistas dentro de él (`OverlayHandle.enterView` agrega la entrada de historial, así el atrás del sistema vuelve al detalle). Solo se cierra con `transactions`, y la página navega.
     - Los guardados de las filas van por `MonthlyAmounts.save` con el mes y el alcance.
   - **"Ver transacciones":** pone el filtro de categoría en `TransactionFiltersStore` y navega a Transacciones; el periodo es el global.
   - **"Quitar presupuesto":** confirma ("¿Quitar el presupuesto de {categoría}?", diciendo el alcance) y guarda 0 en el General y en cada subcategoría con monto en vigor.
-  - **Calculadora:** `cc-amount-calculator` por `OverlayService` (sheet o diálogo). Devuelve el monto y la página lo guarda.
+  - **Calculadora:** en el panel, `cc-amount-calculator-sheet` por `OverlayService` (diálogo). Devuelve el monto y la página lo guarda.
   - Rutas: `data: LIST_DETAIL` y `canDeactivate: [pendingSavesGuard]`. Estados de periodo, `budgets_enabled` y lector, como en Decisiones.
 - **UI** (al catálogo `/ui`; `cc-budget-progress` se elimina, porque lo reemplazan las piezas de abajo):
   - `cc-progress-bar` (átomo):
@@ -517,11 +523,13 @@ Nuevo `supabase/tests/database/transaction_search.test.sql`, con la estructura d
     - Suma la marca "Solo {mes}" y el hint de "y los siguientes".
     - El asistente sigue igual.
   - `cc-budget-detail` (organismo): el encabezado (`cc-budget-row` no accionable con el periodo), el `cc-budget-list` de la categoría y las acciones "Ver transacciones" y "Quitar presupuesto".
-  - `cc-budget-detail-sheet` (organismo): la envoltura de overlay del anterior. Lee sus datos como signals, para seguir los guardados.
-  - `cc-amount-calculator` (organismo, overlay):
+  - `cc-budget-detail-sheet` (organismo): el overlay del anterior, con sus vistas (calculadora y confirmación). Lee sus datos como signals, para seguir los guardados, y conserva el detalle oculto mientras una vista lo tapa.
+  - `cc-amount-calculator` (organismo, en línea; `cc-amount-calculator-sheet` es su overlay):
     - El encabezado de contexto, `cc-amount-display` ("Presupuesto para el mes") y `cc-keypad`.
     - Teclado físico como en el registro rápido.
-    - Devuelve las unidades menores.
+    - Emite las unidades menores; con `backButton` lleva ← para volver.
+  - `cc-confirm-panel` (molécula): la confirmación sin overlay, para usarla como vista; `cc-confirm-dialog` la envuelve para `ConfirmService`.
+  - `cc-overlay-panel` (se extiende): `backButton` pone ← ("Volver") en lugar de ✕.
   - `cc-keypad` (molécula): 5 columnas como en 1Money (÷ × − + a la izquierda, ⌫ y 000 a la derecha, ✓ alto). Sirve al registro rápido y a la calculadora.
 
 ## 1.4 Configuración
