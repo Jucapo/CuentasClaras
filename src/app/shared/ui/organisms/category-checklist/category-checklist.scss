@@ -1,0 +1,22 @@
+:host {
+  display: block;
+}
+
+.checklist,
+.children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.category {
+  padding-block: var(--cc-space-1);
+
+  & + & {
+    border-top: var(--cc-border-width) solid var(--mat-sys-outline-variant);
+  }
+}
+
+.children {
+  padding-inline-start: var(--cc-list-indent);
+}

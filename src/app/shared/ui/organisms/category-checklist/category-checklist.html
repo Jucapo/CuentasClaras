@@ -1,0 +1,28 @@
+<ul class="checklist" [attr.aria-label]="label()">
+  @for (node of nodes(); track node.id) {
+    <li class="category">
+      <cc-checkbox
+        [label]="node.name"
+        [icon]="node.icon"
+        [color]="node.color ?? null"
+        [checked]="checked().has(node.id)"
+        (checkedChange)="toggle(node.id, $event)"
+      />
+      @if (node.children.length > 0) {
+        <ul class="children" [attr.aria-label]="'Subcategorías de ' + node.name">
+          @for (child of node.children; track child.id) {
+            <li>
+              <cc-checkbox
+                [label]="child.name"
+                [icon]="child.icon"
+                [color]="child.color ?? node.color ?? null"
+                [checked]="checked().has(child.id)"
+                (checkedChange)="toggle(child.id, $event)"
+              />
+            </li>
+          }
+        </ul>
+      }
+    </li>
+  }
+</ul>

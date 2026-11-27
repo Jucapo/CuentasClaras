@@ -2,36 +2,24 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { Account } from '../../core/accounts/account.models';
 import { AccountsService } from '../../core/accounts/accounts.service';
-import {
-  ACCOUNT_GROUP_CHOICES,
-  ACCOUNT_GROUP_LABELS,
-  CreatableAccountGroup,
-} from '../../core/config/catalog.constants';
 import { SPACE_DEFAULTS } from '../../core/config/space.constants';
-import { ACCOUNT_QUERY_PARAMS, APP_PATHS, NEW_ITEM_PATH } from '../../core/routing/app-paths';
+import { APP_PATHS, NEW_ITEM_PATH } from '../../core/routing/app-paths';
 import { SpaceService } from '../../core/spaces/space.service';
-import {
-  ACCOUNT_KIND_GROUP,
-  accountsTotal,
-  groupAccounts,
-} from '../../domain/accounts/account-kinds';
+import { accountsTotal } from '../../domain/accounts/account-kinds';
 import { Button } from '../../shared/ui/atoms/button/button';
 import { IconButton } from '../../shared/ui/atoms/icon-button/icon-button';
 import { Icon } from '../../shared/ui/atoms/icon/icon';
 import { Message } from '../../shared/ui/atoms/message/message';
 import { Disclosure } from '../../shared/ui/molecules/disclosure/disclosure';
-import { OptionPanel, OptionPanelData } from '../../shared/ui/molecules/option-panel/option-panel';
 import { PageHeader } from '../../shared/ui/molecules/page-header/page-header';
 import { Section } from '../../shared/ui/molecules/section/section';
-import {
-  AccountList,
-  AccountListGroup,
-  AccountListItem,
-} from '../../shared/ui/organisms/account-list/account-list';
+import { AccountList } from '../../shared/ui/organisms/account-list/account-list';
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
 import { AccountEditPage } from './account-edit/account-edit-page';
+import { chooseAccountGroup, newAccountQueryParams } from './account-group-chooser';
+import { toAccountListGroups } from './account-list-groups';
 
 /**
  * Accounts of the active space grouped as in spec §4.1, with totals per currency. Creating and
@@ -102,61 +90,20 @@ export class AccountsPage {
     if (!this.canEdit()) {
       return;
     }
-    const groups = Object.keys(ACCOUNT_GROUP_CHOICES) as CreatableAccountGroup[];
-    const group = await this.overlay.open<
-      CreatableAccountGroup,
-      OptionPanelData<CreatableAccountGroup>
-    >(OptionPanel, {
-      label: '¿Qué vas a crear?',
-      data: {
-        title: '¿Qué vas a crear?',
-        mode: 'action',
-        prominent: true,
-        options: groups.map((value) => ({
-          value,
-          label: ACCOUNT_GROUP_CHOICES[value].label,
-          description: ACCOUNT_GROUP_CHOICES[value].example,
-          icon: ACCOUNT_GROUP_CHOICES[value].icon,
-          color: ACCOUNT_GROUP_CHOICES[value].color,
-        })),
-      },
-    });
+    const group = await chooseAccountGroup(this.overlay);
     if (group) {
       await this.router.navigate(['/', APP_PATHS.accounts, NEW_ITEM_PATH], {
-        queryParams: { [ACCOUNT_QUERY_PARAMS.group]: ACCOUNT_GROUP_CHOICES[group].param },
+        queryParams: newAccountQueryParams(group),
       });
     }
   }
 
-  private toGroups(accounts: readonly Account[]): AccountListGroup[] {
-    return groupAccounts(accounts, this.mainCurrency()).map((summary) => ({
-      id: summary.group,
-      label: ACCOUNT_GROUP_LABELS[summary.group],
-      totals: summary.totals,
-      accounts: summary.accounts.map((account) => this.toItem(account)),
-    }));
-  }
-
-  private toItem(account: Account): AccountListItem {
-    const notes = [
-      account.visibility === 'private' ? 'Privada' : null,
-      account.id === this.spaces.defaultAccountId() ? 'Predeterminada' : null,
-      // Only the Accounts group counts by default, so only an exception there is worth noting.
-      ACCOUNT_KIND_GROUP[account.kind] === 'accounts' && !account.include_in_total
-        ? 'No suma en el total'
-        : null,
-    ].filter(Boolean);
-    return {
-      id: account.id,
-      name: account.name,
-      icon: account.icon,
-      color: account.color,
-      balance: account.balance,
-      currency: account.currency,
-      notes: notes.join(' · ') || undefined,
-      link: ['/', APP_PATHS.accounts, account.id],
-      archived: !!account.archived_at,
-      selected: account.id === this.selectedId(),
-    };
+  private toGroups(accounts: readonly Account[]) {
+    return toAccountListGroups(accounts, {
+      mainCurrency: this.mainCurrency(),
+      defaultAccountId: this.spaces.defaultAccountId(),
+      selectedId: this.selectedId(),
+      linkFor: (id) => ['/', APP_PATHS.accounts, id],
+    });
   }
 }

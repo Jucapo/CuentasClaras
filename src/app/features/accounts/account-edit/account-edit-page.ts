@@ -1,13 +1,12 @@
 import { Component, computed, inject, input, linkedSignal, untracked } from '@angular/core';
 import { apply, disabled, form, submit } from '@angular/forms/signals';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Account } from '../../../core/accounts/account.models';
 import { AccountsService } from '../../../core/accounts/accounts.service';
 import { isInUse } from '../../../core/catalogs/catalog-result';
 import { ACCOUNT_GROUP_CHOICES } from '../../../core/config/catalog.constants';
 import { SPACE_DEFAULTS } from '../../../core/config/space.constants';
-import { APP_PATHS } from '../../../core/routing/app-paths';
 import { HasUnsavedChanges } from '../../../core/routing/unsaved-changes.guard';
 import { SpaceService } from '../../../core/spaces/space.service';
 import { Button } from '../../../shared/ui/atoms/button/button';
@@ -31,8 +30,8 @@ import { ToastService } from '../../../shared/ui/services/toast.service';
 import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout';
 
 /**
- * Creates an account (`/cuentas/nueva?grupo=…`) or edits, archives and deletes one
- * (`/cuentas/:id`), as a flow (spec §7, §13.5). The same screen for both.
+ * Creates an account (`…/nueva?grupo=…`) or edits, archives and deletes one (`…/:id`), as a flow
+ * (spec §7, §13.5), under Cuentas or a wizard step. The same screen for both.
  */
 @Component({
   selector: 'app-account-edit-page',
@@ -50,10 +49,10 @@ export class AccountEditPage implements HasUnsavedChanges {
   private readonly spaces = inject(SpaceService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
-  private readonly listLink = ['/', APP_PATHS.accounts];
   protected readonly existing = computed(() => {
     const id = this.id();
     return id ? (this.accounts.accounts().find((account) => account.id === id) ?? null) : null;
@@ -142,7 +141,7 @@ export class AccountEditPage implements HasUnsavedChanges {
   }
 
   protected async close(): Promise<void> {
-    await this.router.navigate(this.listLink);
+    await this.backToList();
   }
 
   protected async toggleArchived(): Promise<void> {
@@ -162,7 +161,7 @@ export class AccountEditPage implements HasUnsavedChanges {
     void this.toast.show(account.archived_at ? 'Cuenta restaurada.' : 'Cuenta archivada.');
     if (!account.archived_at) {
       this.markSaved();
-      await this.router.navigate(this.listLink);
+      await this.backToList();
     }
   }
 
@@ -191,7 +190,7 @@ export class AccountEditPage implements HasUnsavedChanges {
     }
     void this.toast.show('Cuenta eliminada.');
     this.markSaved();
-    await this.router.navigate(this.listLink);
+    await this.backToList();
   }
 
   private async save(): Promise<void> {
@@ -209,7 +208,12 @@ export class AccountEditPage implements HasUnsavedChanges {
     }
     void this.toast.show(account ? 'Cuenta guardada.' : 'Cuenta creada.');
     this.markSaved();
-    await this.router.navigate(this.listLink);
+    await this.backToList();
+  }
+
+  /** Back to the list the screen hangs from: Cuentas, or the wizard step (spec §13.5). */
+  private async backToList(): Promise<void> {
+    await this.router.navigate(['..'], { relativeTo: this.route });
   }
 
   /** Leaving after saving, archiving or deleting needs no confirmation. */

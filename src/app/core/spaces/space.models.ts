@@ -25,6 +25,7 @@ export type SpaceSettingsPatch = Pick<
   | 'default_period'
   | 'onboarding_step'
   | 'onboarding_completed_at'
+  | 'onboarding_postponed_at'
 >;
 
 /** Per-user preferences (row of `user_settings`). */
