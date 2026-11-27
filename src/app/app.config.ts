@@ -17,7 +17,6 @@ import { AuthService } from './core/auth/auth.service';
 import { AppTitleStrategy } from './core/routing/app-title-strategy';
 import { ThemeService } from './core/theme/theme.service';
 import { provideMoneyFormat } from './core/user-settings/money-format.provider';
-import { provideUi } from './shared/ui/ui.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -34,7 +33,6 @@ export const appConfig: ApplicationConfig = {
       withRouterConfig({ canceledNavigationResolution: 'computed' }),
     ),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
-    provideUi(),
     provideMoneyFormat(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

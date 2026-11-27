@@ -1,0 +1,40 @@
+<cc-overlay-panel [title]="data.title" (closed)="close()">
+  <cc-button
+    ccOverlayHeaderAction
+    loadingLabel="Guardando"
+    [loading]="form().submitting()"
+    (click)="done()"
+  >
+    {{ text.done }}
+  </cc-button>
+
+  <cc-form label="Tasa de cambio" [form]="form">
+    @if (data.reason; as reason) {
+      <p class="reason">{{ reason }}</p>
+    }
+    <cc-decimal-field
+      label="Tasa"
+      [prefix]="prefix"
+      [suffix]="suffix"
+      [decimals]="decimals"
+      [formField]="form.rate"
+    />
+    <cc-date-field
+      label="Desde"
+      hint="Aplica a los movimientos de esa fecha en adelante."
+      [formField]="form.date"
+    />
+
+    @if (error(); as error) {
+      <cc-message>{{ error }}</cc-message>
+    }
+
+    @if (data.canDelete) {
+      <cc-form-actions align="start">
+        <cc-button variant="text" icon="delete" [danger]="true" (click)="remove()">
+          Eliminar
+        </cc-button>
+      </cc-form-actions>
+    }
+  </cc-form>
+</cc-overlay-panel>

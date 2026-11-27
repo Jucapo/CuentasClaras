@@ -79,11 +79,37 @@
         </ng-template>
       </app-catalog-entry>
 
-      <app-catalog-entry name="cc-donut" description="Anillo con contenido al centro (sin montos)">
+      <app-catalog-entry name="cc-donut" description="Vacío y segmentado por categoría">
         <ng-template>
           <div class="donut-demo">
             <cc-donut><strong>Gastos</strong></cc-donut>
           </div>
+          <div class="donut-demo">
+            <cc-donut [segments]="donutSegments"><strong>Gastos</strong></cc-donut>
+          </div>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-decimal-field"
+        description="Tasa de cambio y tasa mensual"
+        layout="column"
+      >
+        <ng-template>
+          <cc-decimal-field
+            label="Tasa"
+            prefix="1 US$ ="
+            suffix="$"
+            [decimals]="6"
+            [(value)]="rateDemo"
+          />
+          <cc-decimal-field
+            label="Tasa mensual"
+            suffix="%"
+            [decimals]="4"
+            hint="0 = sin interés"
+            [(value)]="percentDemo"
+          />
         </ng-template>
       </app-catalog-entry>
 
@@ -132,6 +158,7 @@
           <cc-amount [amount]="-50000000" currency="COP" />
           <cc-amount [amount]="125050" currency="USD" />
           <cc-amount [amount]="-1500" currency="COP" tone="neutral" />
+          <cc-amount [amount]="650000000" currency="COP" tone="neutral" [signed]="true" />
         </ng-template>
       </app-catalog-entry>
 
@@ -507,6 +534,94 @@
       </app-catalog-entry>
 
       <app-catalog-entry
+        name="cc-category-bubble · montos"
+        description="Sin presupuesto, a medias y pasado"
+      >
+        <ng-template>
+          <div class="bubbles-demo">
+            <cc-category-bubble
+              name="Transporte"
+              icon="directions_car"
+              color="blue"
+              currency="COP"
+              [amount]="2500000"
+            />
+            <cc-category-bubble
+              name="Mercado"
+              icon="shopping_cart"
+              color="green"
+              currency="COP"
+              [amount]="32050000"
+              [remaining]="87950000"
+              [progress]="0.27"
+            />
+            <cc-category-bubble
+              name="Ocio"
+              icon="sports_esports"
+              color="purple"
+              currency="COP"
+              [amount]="61000000"
+              [remaining]="-11000000"
+              [progress]="1.22"
+            />
+          </div>
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-keypad" description="Con y sin tecla decimal" layout="column">
+        <ng-template>
+          <cc-keypad submitLabel="Guardar" decimalSeparator="," />
+          <cc-keypad submitLabel="Guardar" [showDecimal]="false" [submitDisabled]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-amount-display"
+        description="Monto, con operaciones, dos montos y error"
+        layout="column"
+      >
+        <ng-template>
+          <cc-amount-display label="Monto" result="$ 25,000.00" />
+          <cc-amount-display label="Monto" expression="12,000 + 3,500" result="$ 15,500.00" />
+          <div class="amounts-demo">
+            <cc-amount-display
+              label="Sale · Bancolombia"
+              result="$ 410,000.00"
+              [interactive]="true"
+              [active]="false"
+            />
+            <cc-amount-display label="Llega · DollarApp" result="US$ 100.00" [interactive]="true" />
+          </div>
+          <cc-amount-display
+            label="Monto"
+            result="$ 0.00"
+            error="Escribe un monto mayor que cero."
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-chip-choice"
+        description="Una sola opción, en una fila que se desplaza"
+        layout="column"
+      >
+        <ng-template>
+          <cc-chip-choice
+            label="Subcategoría"
+            [options]="subcategoryChips"
+            [(value)]="chipChoice"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry name="cc-period-chip" description="Mes, Siempre (sin flechas)">
+        <ng-template>
+          <cc-period-chip title="Diciembre" range="28 nov – 27 dic" />
+          <cc-period-chip title="Siempre" [canShift]="false" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
         name="cc-chip-select"
         description="Selección múltiple con color y vacía"
         layout="column"
@@ -664,6 +779,47 @@
       >
         <ng-template>
           <cc-category-grid label="Categorías de gasto" centerLabel="Gastos" [items]="gridItems" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-category-grid · montos"
+        description="Gastado, restante, donut segmentado y totales del periodo"
+        layout="column"
+      >
+        <ng-template>
+          <cc-category-grid
+            label="Categorías de gasto"
+            centerLabel="Gastos"
+            currency="COP"
+            [items]="gridItemsWithAmounts"
+            [totals]="gridTotals"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-transaction-list"
+        description="Por día, con «Ver más»"
+        layout="column"
+      >
+        <ng-template>
+          <cc-transaction-list label="Movimientos" [groups]="transactionGroups" [hasMore]="true" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-quick-entry-sheet · cc-period-panel · cc-exchange-rate-sheet"
+        description="Sheet en compacta y diálogo en los demás tamaños"
+      >
+        <ng-template>
+          <cc-button variant="tonal" (click)="openQuickEntry('expense')">Gasto</cc-button>
+          <cc-button variant="tonal" (click)="openQuickEntry('transfer')">Transferencia</cc-button>
+          <cc-button variant="tonal" (click)="openQuickEntry('adjustment')"
+            >Ajuste (editar)</cc-button
+          >
+          <cc-button variant="tonal" (click)="openPeriodPanel()">Periodo</cc-button>
+          <cc-button variant="tonal" (click)="openRate()">Tasa de cambio</cc-button>
         </ng-template>
       </app-catalog-entry>
 

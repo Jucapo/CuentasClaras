@@ -28,8 +28,11 @@ export interface OverlayOptions<D> {
   readonly data: D;
   /** Accessible name of the dialog or sheet. */
   readonly label: string;
-  /** `picker` is wide enough for grids; `confirm` is a short question. */
-  readonly size?: 'picker' | 'confirm';
+  /**
+   * `picker` is wide enough for grids; `confirm` is a short question; `entry` is the quick entry,
+   * a tall sheet on phones and a two-column dialog elsewhere.
+   */
+  readonly size?: 'picker' | 'confirm' | 'entry';
   /** What gets the focus: the title by default, or a CSS selector, e.g. `input` for a new item. */
   readonly autoFocus?: string;
 }

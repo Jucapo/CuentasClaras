@@ -1,0 +1,30 @@
+<mat-form-field class="field" floatLabel="always">
+  <mat-label>{{ label() }}</mat-label>
+  @if (prefix()) {
+    <span matTextPrefix class="affix">{{ prefix() }}&nbsp;</span>
+  }
+  <input
+    #input
+    matInput
+    class="number"
+    type="text"
+    inputmode="decimal"
+    autocomplete="off"
+    [id]="controlId"
+    [value]="text()"
+    [disabled]="disabled()"
+    [required]="required()"
+    [errorStateMatcher]="errorStateMatcher"
+    [attr.name]="name() || null"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+  />
+  @if (suffix()) {
+    <span matTextSuffix class="affix">&nbsp;{{ suffix() }}</span>
+  }
+  @if (errorMessage(); as message) {
+    <mat-error>{{ message }}</mat-error>
+  } @else if (hint(); as hint) {
+    <mat-hint>{{ hint }}</mat-hint>
+  }
+</mat-form-field>

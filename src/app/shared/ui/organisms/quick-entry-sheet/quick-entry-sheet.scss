@@ -1,0 +1,81 @@
+@use 'breakpoints';
+
+// Taller than the other sheets: the keypad stays at the bottom with the fields above it.
+:host {
+  --cc-picker-panel-max-height: var(--cc-entry-sheet-max-height);
+
+  display: block;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-3);
+  min-width: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--cc-space-2);
+}
+
+.date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cc-space-2);
+}
+
+.date-field {
+  flex: 1 1 auto;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  padding-top: var(--cc-space-2);
+}
+
+.danger-zone {
+  display: flex;
+}
+
+// Amount and keypad: pinned under the fields in the sheet, the left column of the dialog.
+.pad {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  min-width: 0;
+}
+
+.two-amounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--cc-space-2);
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--cc-entry-column-min-width), 1fr);
+  gap: var(--cc-space-5);
+  align-items: start;
+}
+
+.fields {
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--cc-space-2);
+}

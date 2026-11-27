@@ -17,10 +17,13 @@ export class Amount {
   readonly amount = input.required<number>();
   readonly currency = input.required<string>();
   readonly tone = input<AmountTone>('auto');
+  /** Shows a plus sign before positive amounts, e.g. money coming into an account. */
+  readonly signed = input(false);
 
   private readonly format = inject(MONEY_FORMAT);
 
-  protected readonly text = computed(() =>
-    formatMoney(this.amount(), this.currency(), this.format()),
-  );
+  protected readonly text = computed(() => {
+    const text = formatMoney(this.amount(), this.currency(), this.format());
+    return this.signed() && this.amount() > 0 ? `+${text}` : text;
+  });
 }

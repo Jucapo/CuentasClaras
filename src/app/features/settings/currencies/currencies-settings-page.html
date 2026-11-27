@@ -1,0 +1,42 @@
+<cc-page-header title="Monedas" [backLink]="backLink" backLabel="Volver a Configuración" />
+
+<div class="content">
+  <p class="intro">
+    Los totales se muestran en {{ mainSymbol() }}. Cada movimiento en otra moneda usa la tasa más
+    reciente de su fecha o antes.
+  </p>
+
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else if (isEmpty()) {
+    <cc-section
+      title="Todo está en la moneda principal"
+      description="Cuando tengas cuentas en otra moneda, aquí defines sus tasas de cambio."
+    />
+  } @else {
+    @for (section of sections(); track section.currency) {
+      <cc-section [title]="section.title" [description]="section.description">
+        @if (section.rows.length > 0) {
+          <div role="list">
+            @for (row of section.rows; track row.rate.id) {
+              <cc-list-item
+                role="listitem"
+                [title]="row.title"
+                [subtitle]="row.subtitle"
+                [actionable]="canEdit()"
+                (activate)="openRate(section.currency, row.rate)"
+              />
+            }
+          </div>
+        }
+        @if (canEdit()) {
+          <cc-form-actions align="start">
+            <cc-button variant="tonal" icon="add" (click)="add(section.currency)">
+              Nueva tasa
+            </cc-button>
+          </cc-form-actions>
+        }
+      </cc-section>
+    }
+  }
+</div>

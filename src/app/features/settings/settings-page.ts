@@ -82,6 +82,7 @@ export class SettingsPage {
     accounts: ['/', APP_PATHS.accounts],
     categories: ['/', APP_PATHS.categories, CATEGORY_PATHS.edit],
     tags: ['/', APP_PATHS.settings, SETTINGS_PATHS.tags],
+    currencies: ['/', APP_PATHS.settings, SETTINGS_PATHS.currencies],
   };
 
   /** The setup wizard: complete it while pending, review it afterwards (spec §7). */

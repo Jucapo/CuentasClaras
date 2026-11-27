@@ -1,4 +1,12 @@
-import { Component, computed, inject, input, linkedSignal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  resource,
+  untracked,
+} from '@angular/core';
 import { apply, disabled, form, submit } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -7,8 +15,10 @@ import { AccountsService } from '../../../core/accounts/accounts.service';
 import { isInUse } from '../../../core/catalogs/catalog-result';
 import { ACCOUNT_GROUP_CHOICES } from '../../../core/config/catalog.constants';
 import { SPACE_DEFAULTS } from '../../../core/config/space.constants';
+import { ROUTE_DATA_KEYS } from '../../../core/routing/app-paths';
 import { HasUnsavedChanges } from '../../../core/routing/unsaved-changes.guard';
 import { SpaceService } from '../../../core/spaces/space.service';
+import { TransactionsService } from '../../../core/transactions/transactions.service';
 import { Button } from '../../../shared/ui/atoms/button/button';
 import { Message } from '../../../shared/ui/atoms/message/message';
 import { FALLBACK_COLOR } from '../../../shared/ui/colors/color-palette';
@@ -28,10 +38,12 @@ import { ConfirmService } from '../../../shared/ui/services/confirm.service';
 import { useShortcuts } from '../../../shared/ui/services/keyboard-shortcuts';
 import { ToastService } from '../../../shared/ui/services/toast.service';
 import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout';
+import { AccountPane } from '../account-pane';
 
 /**
- * Creates an account (`…/nueva?grupo=…`) or edits, archives and deletes one (`…/:id`), as a flow
- * (spec §7, §13.5), under Cuentas or a wizard step. The same screen for both.
+ * Creates an account (`…/nueva?grupo=…`) or edits, archives and deletes one (`…/:id/editar`, or
+ * `…/:id` in the wizard), as a flow (spec §7, §13.5). The same screen for both. Kind and currency
+ * stay locked once the account has movements (spec §4.1).
  */
 @Component({
   selector: 'app-account-edit-page',
@@ -39,7 +51,7 @@ import { FlowLayout } from '../../../shared/ui/templates/flow-layout/flow-layout
   templateUrl: './account-edit-page.html',
   styleUrl: './account-edit-page.scss',
 })
-export class AccountEditPage implements HasUnsavedChanges {
+export class AccountEditPage implements HasUnsavedChanges, AccountPane {
   /** Route param; absent when creating. */
   readonly id = input<string>();
   /** `grupo` query param of a new account, from "¿Qué vas a crear?". */
@@ -52,6 +64,10 @@ export class AccountEditPage implements HasUnsavedChanges {
   private readonly route = inject(ActivatedRoute);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly transactions = inject(TransactionsService);
+
+  /** The account in the detail pane of Cuentas; null while creating one. */
+  readonly accountId = computed(() => this.id() ?? null);
 
   protected readonly existing = computed(() => {
     const id = this.id();
@@ -68,6 +84,18 @@ export class AccountEditPage implements HasUnsavedChanges {
     return ACCOUNT_GROUP_CHOICES[accountGroupFromParam(this.grupo())].newTitle;
   });
   protected readonly archived = computed(() => !!this.existing()?.archived_at);
+  private readonly movements = resource({
+    params: () => {
+      const id = this.id();
+      return id ? { id, revision: this.transactions.revision() } : undefined;
+    },
+    loader: async ({ params }) => {
+      const result = await this.transactions.hasAny(params.id);
+      return result.ok && result.value;
+    },
+  });
+  /** Kind and currency of an account with movements do not change (spec §4.1). */
+  protected readonly locked = computed(() => this.movements.hasValue() && this.movements.value());
   /** Private accounts are writable only by their owner; shared ones by owners and editors. */
   protected readonly canEdit = computed(() => {
     const account = this.existing();
@@ -119,6 +147,8 @@ export class AccountEditPage implements HasUnsavedChanges {
       // Only the owner may hide an account from the other members (spec §3.2).
       disabled(path.isPrivate, () => !this.ownsAccount());
       disabled(path.isDefault, () => this.archived());
+      disabled(path.kind, () => this.locked());
+      disabled(path.currency, () => this.locked());
     },
     { submission: { action: () => this.save() } },
   );
@@ -190,7 +220,10 @@ export class AccountEditPage implements HasUnsavedChanges {
     }
     void this.toast.show('Cuenta eliminada.');
     this.markSaved();
-    await this.backToList();
+    // Under Cuentas the edit screen hangs from the account's detail, which no longer exists.
+    const afterDelete = this.route.snapshot.data[ROUTE_DATA_KEYS.afterDelete] as
+      string[] | undefined;
+    await this.router.navigate(afterDelete ?? ['..'], { relativeTo: this.route });
   }
 
   private async save(): Promise<void> {
@@ -211,7 +244,7 @@ export class AccountEditPage implements HasUnsavedChanges {
     await this.backToList();
   }
 
-  /** Back to the list the screen hangs from: Cuentas, or the wizard step (spec §13.5). */
+  /** Back to where the screen hangs from: the account's detail, Cuentas, or the wizard step. */
   private async backToList(): Promise<void> {
     await this.router.navigate(['..'], { relativeTo: this.route });
   }

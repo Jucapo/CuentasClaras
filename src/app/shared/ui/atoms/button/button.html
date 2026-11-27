@@ -7,7 +7,9 @@
     [attr.aria-keyshortcuts]="shortcut() ?? null"
   >
     @if (glyph(); as glyph) {
-      <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
+      <mat-icon [fontSet]="iconFont" aria-hidden="true" [attr.data-icon]="icon()">{{
+        glyph
+      }}</mat-icon>
     }
     <ng-container [ngTemplateOutlet]="label" />
   </a>
@@ -21,7 +23,9 @@
     [attr.aria-keyshortcuts]="shortcut() ?? null"
   >
     @if (glyph(); as glyph) {
-      <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph }}</mat-icon>
+      <mat-icon [fontSet]="iconFont" aria-hidden="true" [attr.data-icon]="icon()">{{
+        glyph
+      }}</mat-icon>
     }
     <ng-container [ngTemplateOutlet]="label" />
   </button>

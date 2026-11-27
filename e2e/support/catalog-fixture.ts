@@ -9,6 +9,46 @@ export interface CatalogFixture {
   readonly defaultTags: readonly Record<string, unknown>[];
   readonly defaultAccountId: string | null;
   readonly budgets?: readonly Record<string, unknown>[];
+  /** Movements, with their tag ids and card deferral inline as the mock stores them. */
+  readonly transactions?: readonly Record<string, unknown>[];
+  readonly exchangeRates?: readonly Record<string, unknown>[];
+}
+
+function movement(
+  id: string,
+  type: string,
+  date: string,
+  amount: number,
+  accountId: string,
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    id,
+    space_id: SPACE_ID,
+    type,
+    date,
+    amount,
+    currency: 'COP',
+    account_id: accountId,
+    to_account_id: null,
+    to_amount: null,
+    category_id: null,
+    adjustment_direction: null,
+    note: null,
+    include_in_space: false,
+    operation_id: null,
+    financing_plan_id: null,
+    source: 'manual',
+    status: 'confirmed',
+    external_id: null,
+    created_by: OWNER_ID,
+    created_at: `${date}T12:00:00Z`,
+    updated_at: `${date}T12:00:00Z`,
+    tag_ids: [],
+    installments: 1,
+    rate: 0,
+    ...overrides,
+  };
 }
 
 function account(
@@ -115,4 +155,54 @@ export const HOUSEHOLD: CatalogFixture = {
   ],
   defaultTags: [{ space_id: SPACE_ID, category_id: 'cat-rent', tag_id: 'tag-fixed' }],
   defaultAccountId: 'acc-bank',
+  exchangeRates: [
+    {
+      id: 'rate-usd',
+      space_id: SPACE_ID,
+      date: '2026-11-01',
+      base: 'USD',
+      quote: 'COP',
+      rate: 4100,
+      source: 'manual',
+    },
+  ],
+};
+
+/** The same household with a few movements in November 2026 and monthly budgets. */
+export const HOUSEHOLD_WITH_MOVEMENTS: CatalogFixture = {
+  ...HOUSEHOLD,
+  budgets: [
+    {
+      id: 'budget-market',
+      space_id: SPACE_ID,
+      category_id: 'cat-market',
+      amount: 120000000,
+      currency: 'COP',
+      effective_from: '2026-11-01',
+    },
+    {
+      id: 'budget-home',
+      space_id: SPACE_ID,
+      category_id: 'cat-home',
+      amount: 200000000,
+      currency: 'COP',
+      effective_from: '2026-11-01',
+    },
+  ],
+  transactions: [
+    movement('tx-rent', 'expense', '2026-11-05', 180000000, 'acc-bank', {
+      category_id: 'cat-rent',
+      tag_ids: ['tag-fixed'],
+    }),
+    movement('tx-market', 'expense', '2026-11-20', 32050000, 'acc-bank', {
+      category_id: 'cat-market',
+      note: 'Mercado de la semana',
+    }),
+    movement('tx-salary', 'income', '2026-11-25', 650000000, 'acc-bank', {
+      category_id: 'cat-salary',
+    }),
+    movement('tx-taxi', 'expense', '2026-11-24', 2500000, 'acc-cash', {
+      category_id: 'cat-transport',
+    }),
+  ],
 };

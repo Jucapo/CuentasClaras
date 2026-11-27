@@ -1,0 +1,33 @@
+@if (interactive()) {
+  <button
+    type="button"
+    class="display"
+    [attr.aria-pressed]="active()"
+    [attr.aria-describedby]="error() ? labelId + '-error' : null"
+    (click)="activate.emit()"
+  >
+    <ng-container [ngTemplateOutlet]="content" />
+  </button>
+} @else {
+  <!-- Focusable so the keyboard can type into it; the keypad owner listens for the keys. -->
+  <div
+    class="display"
+    tabindex="0"
+    role="group"
+    [attr.aria-labelledby]="labelId"
+    [attr.aria-describedby]="error() ? labelId + '-error' : null"
+  >
+    <ng-container [ngTemplateOutlet]="content" />
+  </div>
+}
+@if (error(); as error) {
+  <p class="error" role="alert" [id]="labelId + '-error'">{{ error }}</p>
+}
+
+<ng-template #content>
+  <span class="label" [id]="labelId">{{ label() }}</span>
+  @if (expression(); as expression) {
+    <span class="expression">{{ expression }}</span>
+  }
+  <output class="result" aria-live="polite">{{ result() }}</output>
+</ng-template>

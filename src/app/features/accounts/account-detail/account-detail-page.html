@@ -1,0 +1,39 @@
+@if (account(); as account) {
+  <cc-page-header [title]="account.name" [backLink]="['..']" backLabel="Volver a Cuentas">
+    <cc-icon-button icon="edit" label="Editar cuenta" [link]="editLink" />
+  </cc-page-header>
+
+  <section class="summary" aria-label="Saldo">
+    <cc-icon-badge size="lg" [icon]="account.icon" [color]="account.color" />
+    <div class="balance">
+      <span class="balance-label">{{ isDebt() ? 'Lo que debes' : 'Saldo' }}</span>
+      <cc-amount
+        class="balance-amount"
+        [amount]="displayedBalance()"
+        [currency]="account.currency"
+        [tone]="isDebt() ? 'neutral' : 'auto'"
+      />
+    </div>
+  </section>
+
+  @if (canWrite() && !account.archived_at) {
+    <cc-form-actions align="start">
+      <cc-button variant="tonal" icon="swap_horiz" (click)="transfer()">Transferir</cc-button>
+      <cc-button variant="outlined" icon="tune" (click)="adjust()">Ajustar al saldo real</cc-button>
+    </cc-form-actions>
+  }
+
+  @if (movementsError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  } @else {
+    <cc-transaction-list
+      [label]="listLabel()"
+      [groups]="groups()"
+      emptyText="Esta cuenta todavía no tiene movimientos."
+      [hasMore]="hasMore()"
+      [loading]="loadingMovements()"
+      (opened)="open($event)"
+      (more)="loadMore()"
+    />
+  }
+}

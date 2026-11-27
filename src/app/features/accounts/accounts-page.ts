@@ -17,13 +17,13 @@ import { AccountList } from '../../shared/ui/organisms/account-list/account-list
 import { useShortcuts } from '../../shared/ui/services/keyboard-shortcuts';
 import { OverlayService } from '../../shared/ui/services/overlay.service';
 import { ListDetailLayout } from '../../shared/ui/templates/list-detail-layout/list-detail-layout';
-import { AccountEditPage } from './account-edit/account-edit-page';
 import { chooseAccountGroup, newAccountQueryParams } from './account-group-chooser';
+import { AccountPane, isAccountPane } from './account-pane';
 import { toAccountListGroups } from './account-list-groups';
 
 /**
- * Accounts of the active space grouped as in spec §4.1, with totals per currency. Creating and
- * editing open next to the list (expanded) or over it (spec §13.5).
+ * Accounts of the active space grouped as in spec §4.1, with totals per currency. An account's
+ * detail, and creating or editing one, open next to the list (expanded) or over it (spec §13.5).
  */
 @Component({
   selector: 'app-accounts-page',
@@ -52,9 +52,9 @@ export class AccountsPage {
   protected readonly loaded = this.accountsService.loaded;
   protected readonly loadError = this.accountsService.loadError;
   /** The account screen open in the detail pane, if any. */
-  private readonly detail = signal<AccountEditPage | null>(null);
+  private readonly detail = signal<AccountPane | null>(null);
   protected readonly detailOpen = computed(() => this.detail() !== null);
-  private readonly selectedId = computed(() => this.detail()?.id() ?? null);
+  private readonly selectedId = computed(() => this.detail()?.accountId() ?? null);
 
   private readonly mainCurrency = computed(
     () => this.spaces.activeSettings()?.main_currency ?? SPACE_DEFAULTS.mainCurrency,
@@ -78,7 +78,7 @@ export class AccountsPage {
   }
 
   protected onActivate(component: unknown): void {
-    this.detail.set(component instanceof AccountEditPage ? component : null);
+    this.detail.set(isAccountPane(component) ? component : null);
   }
 
   protected onDeactivate(): void {

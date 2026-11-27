@@ -1,16 +1,21 @@
-<!-- TODO: real accounts total and the period selector with its bottom sheet (F1d). -->
 <cc-app-shell
   [navItems]="navItems"
   navLabel="Navegación principal"
   totalLabel="Total"
-  total="—"
+  [total]="total()"
   periodLabel="Periodo"
   [immersive]="routeFlags().flow"
   [wideContent]="routeFlags().listDetail"
 >
-  <cc-icon-button ccShellPeriod icon="chevron_left" label="Periodo anterior" [disabled]="true" />
-  <cc-button ccShellPeriod variant="tonal" [disabled]="true">Este mes</cc-button>
-  <cc-icon-button ccShellPeriod icon="chevron_right" label="Periodo siguiente" [disabled]="true" />
+  <cc-period-chip
+    ccShellPeriod
+    [title]="periods.title()"
+    [range]="periods.rangeText()"
+    [canShift]="periods.canShift()"
+    (previous)="periods.previous()"
+    (next)="periods.next()"
+    (opened)="choosePeriod()"
+  />
   <cc-icon-button
     ccShellActions
     icon="settings"

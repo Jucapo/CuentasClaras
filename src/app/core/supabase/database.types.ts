@@ -214,6 +214,114 @@ export type Database = {
           },
         ];
       };
+      exchange_rates: {
+        Row: {
+          base: string;
+          created_at: string;
+          date: string;
+          id: string;
+          quote: string;
+          rate: number;
+          source: Database['public']['Enums']['exchange_rate_source'];
+          space_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          base: string;
+          created_at?: string;
+          date: string;
+          id?: string;
+          quote: string;
+          rate: number;
+          source?: Database['public']['Enums']['exchange_rate_source'];
+          space_id?: string | null;
+        };
+        Update: {
+          base?: string;
+          created_at?: string;
+          date?: string;
+          id?: string;
+          quote?: string;
+          rate?: number;
+          source?: Database['public']['Enums']['exchange_rate_source'];
+          space_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'exchange_rates_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      installment_plans: {
+        Row: {
+          account_id: string;
+          created_at: string;
+          id: string;
+          installments: number;
+          kind: Database['public']['Enums']['installment_plan_kind'];
+          rate: number;
+          source_transaction_id: string | null;
+          space_id: string;
+          start_date: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          created_at?: string;
+          id?: string;
+          installments: number;
+          kind: Database['public']['Enums']['installment_plan_kind'];
+          rate?: number;
+          source_transaction_id?: string | null;
+          space_id: string;
+          start_date: string;
+        };
+        Update: {
+          account_id?: string;
+          created_at?: string;
+          id?: string;
+          installments?: number;
+          kind?: Database['public']['Enums']['installment_plan_kind'];
+          rate?: number;
+          source_transaction_id?: string | null;
+          space_id?: string;
+          start_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'installment_plans_space_id_account_id_fkey';
+            columns: ['space_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'account_balances';
+            referencedColumns: ['space_id', 'account_id'];
+          },
+          {
+            foreignKeyName: 'installment_plans_space_id_account_id_fkey';
+            columns: ['space_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'installment_plans_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'installment_plans_space_id_source_transaction_id_fkey';
+            columns: ['space_id', 'source_transaction_id'];
+            isOneToOne: false;
+            referencedRelation: 'transactions';
+            referencedColumns: ['space_id', 'id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -407,6 +515,170 @@ export type Database = {
           },
         ];
       };
+      transaction_tags: {
+        Row: {
+          space_id: string;
+          tag_id: string;
+          transaction_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          space_id: string;
+          tag_id: string;
+          transaction_id: string;
+        };
+        Update: {
+          space_id?: string;
+          tag_id?: string;
+          transaction_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'transaction_tags_space_id_tag_id_fkey';
+            columns: ['space_id', 'tag_id'];
+            isOneToOne: false;
+            referencedRelation: 'tags';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'transaction_tags_space_id_transaction_id_fkey';
+            columns: ['space_id', 'transaction_id'];
+            isOneToOne: false;
+            referencedRelation: 'transactions';
+            referencedColumns: ['space_id', 'id'];
+          },
+        ];
+      };
+      transactions: {
+        Row: {
+          account_id: string;
+          adjustment_direction: Database['public']['Enums']['adjustment_direction'] | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          date: string;
+          external_id: string | null;
+          financing_plan_id: string | null;
+          id: string;
+          include_in_space: boolean;
+          note: string | null;
+          operation_id: string | null;
+          source: Database['public']['Enums']['transaction_source'];
+          space_id: string;
+          status: Database['public']['Enums']['transaction_status'];
+          to_account_id: string | null;
+          to_amount: number | null;
+          type: Database['public']['Enums']['transaction_type'];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          adjustment_direction?: Database['public']['Enums']['adjustment_direction'] | null;
+          amount: number;
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency: string;
+          date: string;
+          external_id?: string | null;
+          financing_plan_id?: string | null;
+          id?: string;
+          include_in_space: boolean;
+          note?: string | null;
+          operation_id?: string | null;
+          source?: Database['public']['Enums']['transaction_source'];
+          space_id: string;
+          status?: Database['public']['Enums']['transaction_status'];
+          to_account_id?: string | null;
+          to_amount?: number | null;
+          type: Database['public']['Enums']['transaction_type'];
+          updated_at?: string;
+        };
+        Update: {
+          account_id?: string;
+          adjustment_direction?: Database['public']['Enums']['adjustment_direction'] | null;
+          amount?: number;
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          date?: string;
+          external_id?: string | null;
+          financing_plan_id?: string | null;
+          id?: string;
+          include_in_space?: boolean;
+          note?: string | null;
+          operation_id?: string | null;
+          source?: Database['public']['Enums']['transaction_source'];
+          space_id?: string;
+          status?: Database['public']['Enums']['transaction_status'];
+          to_account_id?: string | null;
+          to_amount?: number | null;
+          type?: Database['public']['Enums']['transaction_type'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'transactions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'transactions_financing_plan_fkey';
+            columns: ['space_id', 'financing_plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'installment_plans';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_account_id_fkey';
+            columns: ['space_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'account_balances';
+            referencedColumns: ['space_id', 'account_id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_account_id_fkey';
+            columns: ['space_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_category_id_fkey';
+            columns: ['space_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['space_id', 'id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_fkey';
+            columns: ['space_id'];
+            isOneToOne: false;
+            referencedRelation: 'spaces';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_to_account_id_fkey';
+            columns: ['space_id', 'to_account_id'];
+            isOneToOne: false;
+            referencedRelation: 'account_balances';
+            referencedColumns: ['space_id', 'account_id'];
+          },
+          {
+            foreignKeyName: 'transactions_space_id_to_account_id_fkey';
+            columns: ['space_id', 'to_account_id'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['space_id', 'id'];
+          },
+        ];
+      };
       user_settings: {
         Row: {
           home_screen: Database['public']['Enums']['home_screen'];
@@ -455,29 +727,13 @@ export type Database = {
       account_balances: {
         Row: {
           account_id: string;
-          balance: number;
+          balance: number | null;
           currency: string;
           initial_balance: number;
           movements_total: number | null;
           space_id: string;
         };
         ComputedFields: never;
-        Insert: {
-          account_id?: string | null;
-          balance?: number | null;
-          currency?: string | null;
-          initial_balance?: number | null;
-          movements_total?: never;
-          space_id?: string | null;
-        };
-        Update: {
-          account_id?: string | null;
-          balance?: number | null;
-          currency?: string | null;
-          initial_balance?: number | null;
-          movements_total?: never;
-          space_id?: string | null;
-        };
         Relationships: [
           {
             foreignKeyName: 'accounts_space_id_fkey';
@@ -490,6 +746,31 @@ export type Database = {
       };
     };
     Functions: {
+      accounts_total: {
+        Args: { on_date: string; target_space_id: string };
+        Returns: {
+          currency: string;
+          missing_rate_currencies: string[];
+          total: number;
+        }[];
+      };
+      category_totals: {
+        Args: {
+          budget_months?: string[];
+          from_date: string;
+          target_space_id: string;
+          to_date: string;
+        };
+        Returns: {
+          amount: number;
+          budget: number;
+          category_id: string;
+          kind: Database['public']['Enums']['category_kind'];
+          missing_rate_currencies: string[];
+          parent_id: string;
+          remaining: number;
+        }[];
+      };
       create_category_tree: {
         Args: {
           category_kind: Database['public']['Enums']['category_kind'];
@@ -508,6 +789,36 @@ export type Database = {
         Returns: string;
       };
       reorder_categories: { Args: { category_ids: string[] }; Returns: undefined };
+      save_exchange_rate: {
+        Args: {
+          base_currency: string;
+          quote_currency: string;
+          rate_date: string;
+          rate_value: number;
+          target_space_id: string;
+        };
+        Returns: undefined;
+      };
+      save_transaction: {
+        Args: {
+          entry_account_id: string;
+          entry_adjustment_direction?: Database['public']['Enums']['adjustment_direction'];
+          entry_amount: number;
+          entry_category_id?: string;
+          entry_date: string;
+          entry_include_in_space?: boolean;
+          entry_installments?: number;
+          entry_monthly_rate?: number;
+          entry_note?: string;
+          entry_tag_ids?: string[];
+          entry_to_account_id?: string;
+          entry_to_amount?: number;
+          entry_type: Database['public']['Enums']['transaction_type'];
+          target_id: string;
+          target_space_id: string;
+        };
+        Returns: string;
+      };
       set_default_account: {
         Args: { target_account_id: string; target_space_id: string };
         Returns: undefined;
@@ -526,12 +837,18 @@ export type Database = {
         | 'receivable'
         | 'asset';
       account_visibility: 'shared' | 'private';
+      adjustment_direction: 'increase' | 'decrease';
       category_kind: 'expense' | 'income';
+      exchange_rate_source: 'manual' | 'trm';
       home_screen: 'accounts' | 'categories' | 'transactions' | 'budget' | 'summary';
+      installment_plan_kind: 'loan_schedule' | 'debt_plan' | 'card_deferral';
       member_role: 'owner' | 'editor' | 'viewer';
       number_format: 'comma_dot' | 'dot_comma' | 'space_comma';
       period_kind: 'day' | 'week' | 'month' | 'year' | 'all';
       theme_preference: 'system' | 'light' | 'dark';
+      transaction_source: 'manual' | 'recurring' | 'email' | 'shortcut' | 'import';
+      transaction_status: 'confirmed' | 'pending';
+      transaction_type: 'expense' | 'income' | 'transfer' | 'adjustment';
       weekday: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
     };
     CompositeTypes: {
@@ -657,12 +974,18 @@ export const Constants = {
         'asset',
       ],
       account_visibility: ['shared', 'private'],
+      adjustment_direction: ['increase', 'decrease'],
       category_kind: ['expense', 'income'],
+      exchange_rate_source: ['manual', 'trm'],
       home_screen: ['accounts', 'categories', 'transactions', 'budget', 'summary'],
+      installment_plan_kind: ['loan_schedule', 'debt_plan', 'card_deferral'],
       member_role: ['owner', 'editor', 'viewer'],
       number_format: ['comma_dot', 'dot_comma', 'space_comma'],
       period_kind: ['day', 'week', 'month', 'year', 'all'],
       theme_preference: ['system', 'light', 'dark'],
+      transaction_source: ['manual', 'recurring', 'email', 'shortcut', 'import'],
+      transaction_status: ['confirmed', 'pending'],
+      transaction_type: ['expense', 'income', 'transfer', 'adjustment'],
       weekday: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
     },
   },

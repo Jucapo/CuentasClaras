@@ -78,8 +78,10 @@ test('an account gets a new color and becomes the default one', async ({ page, i
   const api = await mockDataApi(page, { withSpace: true, catalog: HOUSEHOLD });
   await page.goto('/cuentas');
   await page.getByRole('link', { name: /Efectivo/ }).click();
-
   await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
+  await page.getByRole('link', { name: 'Editar cuenta' }).click();
+
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash\/editar$/);
   await expect(page.getByRole('heading', { name: 'Efectivo', level: 1 })).toBeVisible();
   // Editing an existing account: back instead of close, and no cursor in the name.
   await expect(page.getByRole('button', { name: 'Volver' })).toBeVisible();
@@ -101,7 +103,8 @@ test('an account gets a new color and becomes the default one', async ({ page, i
   await page.getByRole('switch', { name: 'Cuenta predeterminada' }).click();
   await page.getByRole('button', { name: 'Guardar' }).click();
 
-  await expect(page).toHaveURL(/\/cuentas$/);
+  // Saving goes back to the account's detail.
+  await expect(page).toHaveURL(/\/cuentas\/acc-cash$/);
   const saved = api.writes().find((write) => write.table === 'accounts');
   expect(saved).toMatchObject({
     method: 'PATCH',
@@ -110,5 +113,6 @@ test('an account gets a new color and becomes the default one', async ({ page, i
   expect(api.rpcCalls('set_default_account')).toEqual([
     { target_space_id: '00000000-0000-4000-8000-00000000005e', target_account_id: 'acc-cash' },
   ]);
+  await page.goto('/cuentas');
   await expect(page.getByRole('link', { name: /Efectivo/ })).toContainText('Predeterminada');
 });

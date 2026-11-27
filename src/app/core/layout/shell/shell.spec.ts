@@ -2,6 +2,10 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { ExchangeRateFlow } from '../../exchange-rates/exchange-rate-flow';
+import { PeriodService } from '../../periods/period.service';
+import { SpaceService } from '../../spaces/space.service';
+import { TotalsService } from '../../totals/totals.service';
 import { Shell } from './shell';
 
 describe('Shell', () => {
@@ -12,7 +16,24 @@ describe('Shell', () => {
     isAuthenticated.set(true);
     await TestBed.configureTestingModule({
       imports: [Shell],
-      providers: [provideRouter([]), { provide: AuthService, useValue: { isAuthenticated } }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { isAuthenticated } },
+        { provide: SpaceService, useValue: { canEdit: signal(false) } },
+        {
+          provide: TotalsService,
+          useValue: { accountsTotal: signal(null), missingRateCurrencies: signal([]) },
+        },
+        {
+          provide: PeriodService,
+          useValue: {
+            title: signal('Noviembre'),
+            rangeText: signal('1 nov – 30 nov'),
+            canShift: signal(true),
+          },
+        },
+        { provide: ExchangeRateFlow, useValue: { open: vi.fn() } },
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(Shell);
     await fixture.whenStable();

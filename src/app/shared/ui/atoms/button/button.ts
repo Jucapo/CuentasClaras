@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Params, RouterLink } from '@angular/router';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
-import { BUTTON_SPINNER_DIAMETER } from '../../ui.constants';
+import { BUTTON_SPINNER_DIAMETER, ICON_FONT_CLASS } from '../../ui.constants';
 
 /** Visual emphasis of a button, from highest to lowest. */
 export type ButtonVariant = 'filled' | 'tonal' | 'outlined' | 'text';
@@ -22,6 +22,9 @@ export type LinkCommands = string | readonly unknown[];
   host: { '[class.full-width]': 'fullWidth()', '[class.danger]': 'danger()' },
 })
 export class Button {
+  /** Font of the self-hosted Material Symbols subset (src/styles/_fonts.scss). */
+  protected readonly iconFont = ICON_FONT_CLASS;
+
   readonly variant = input<ButtonVariant>('filled');
   readonly type = input<'button' | 'submit'>('button');
   /** Navigates instead of acting: renders an anchor with `routerLink`. */

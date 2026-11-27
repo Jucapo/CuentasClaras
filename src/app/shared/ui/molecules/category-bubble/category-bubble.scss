@@ -47,6 +47,59 @@
   white-space: nowrap;
 }
 
+// Amounts keep their line even when empty, so every bubble lines up.
+.remaining,
+.spent {
+  display: block;
+  max-width: 100%;
+  min-height: 1lh;
+  overflow: hidden;
+  font: var(--mat-sys-label-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remaining {
+  color: var(--mat-sys-on-surface-variant);
+
+  &.over {
+    color: var(--mat-sys-error);
+  }
+}
+
+.spent {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+// The ring fills clockwise with the share of the budget used; over budget it is all error color.
+.ring {
+  position: relative;
+  display: inline-flex;
+  padding: var(--cc-bubble-ring-width);
+  border-radius: var(--cc-radius-full);
+
+  &.with-progress {
+    background: conic-gradient(
+      var(--cc-bubble-color) calc(var(--cc-bubble-progress) * 1turn),
+      var(--mat-sys-surface-container-highest) 0
+    );
+  }
+
+  &.over {
+    background: var(--mat-sys-error);
+  }
+}
+
+.over-mark {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-radius: var(--cc-radius-full);
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-error);
+}
+
 .add-circle {
   display: inline-flex;
   align-items: center;

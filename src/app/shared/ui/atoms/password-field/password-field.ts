@@ -5,7 +5,7 @@ import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/m
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { iconGlyph } from '../../icons/icon-glyphs';
-import { UI_TEXT } from '../../ui.constants';
+import { ICON_FONT_CLASS, UI_TEXT } from '../../ui.constants';
 import { FormControlBase } from '../form-control-base';
 
 /** Password input with a show/hide toggle; binds to Signal Forms with [formField]. */
@@ -16,6 +16,9 @@ import { FormControlBase } from '../form-control-base';
   styleUrl: './password-field.scss',
 })
 export class PasswordField extends FormControlBase implements FormValueControl<string> {
+  /** Font of the self-hosted Material Symbols subset (src/styles/_fonts.scss). */
+  protected readonly iconFont = ICON_FONT_CLASS;
+
   readonly value = model('');
   /** `current-password` for sign-in, `new-password` when choosing one. */
   readonly autocomplete = input<'current-password' | 'new-password'>('current-password');

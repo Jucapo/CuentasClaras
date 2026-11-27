@@ -20,11 +20,18 @@ App de finanzas personales (PWA) que reemplaza 1Money. **Al iniciar cada fase, l
   - `npm run db:start` / `npm run db:stop`: stack local (API `127.0.0.1:54321`, Studio `127.0.0.1:54323`, Mailpit `127.0.0.1:54324`). `ng serve` apunta a él.
   - `npx supabase migration new <nombre>` → editar el SQL → `npm run db:reset` (migraciones + `supabase/seed.sql`) → `npm run db:test` (pgTAP) → `npm run supabase:types`.
   - Usuario dev del seed: `dev@cuentasclaras.test` / `cuentas-claras-dev`.
-- Producción: en CLI 3 `db push`, `db reset`, `gen types` y `test db` van a **local** por defecto. A producción solo con ref explícito (`--remote=ryuknhuvydlwtbgruqdt`) y con aprobación. Nunca `test db` ni `db reset` contra producción.
+  - `npm run db:backup`: respalda producción (roles, esquema, datos e historial de migraciones) en `~/Backups/CuentasClaras/<fecha-hora>` (o `CC_BACKUP_DIR`), fuera del repo; el script se niega a escribir dentro. Solo lee producción.
+  - `npm run db:restore-local -- <carpeta del respaldo> [--yes] [--no-migrate]`: resetea el **local** a la migración que tenía producción, carga los datos (`public`, `auth.users` y `auth.identities`) y aplica las migraciones pendientes del repo. `npm run db:reset` vuelve al seed.
+- Producción: en CLI 3 `db push`, `db reset`, `gen types` y `test db` van a **local** por defecto. A producción solo con ref explícito (`--remote=ryuknhuvydlwtbgruqdt`) y con aprobación. Desde la F1d hay datos reales:
+  - Antes de cada `db push` a producción, `npm run db:backup`.
+  - Las migraciones nunca borran ni renombran tablas o columnas con datos sin migrar esos datos en la misma migración.
+  - Una migración que transforma datos se prueba antes en local con `npm run db:restore-local`.
+  - Nunca `db reset`, seed ni `test db` contra producción. Los arreglos de datos van como migraciones, no como ediciones a mano.
+  - Nunca se commitea un respaldo.
 
 ## Estructura
 
-- `src/app/core`: servicios globales (supabase, auth, spaces, user-settings, onboarding, catálogos, budgets, theme, routing, layout, config).
+- `src/app/core`: servicios globales (supabase, auth, spaces, user-settings, onboarding, catálogos, budgets, transactions, periods, totals, exchange-rates, theme, routing, layout, config).
 - `src/app/shared/ui`: sistema de diseño (`atoms`, `molecules`, `organisms`, `templates`, `services`). Fuentes únicas: `icons/icon-catalog.ts` (catálogo de íconos e íconos de la interfaz) y `colors/color-palette.ts` (paleta con variante clara y oscura).
 - `src/app/domain`: lógica pura sin Angular, con pruebas.
 - `src/app/features/<feature>`: pantallas. `ui-catalog` (ruta `/ui`) solo existe en desarrollo (`dev.routes.ts`).

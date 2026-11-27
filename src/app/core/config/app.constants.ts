@@ -12,5 +12,11 @@ export const THEME_STORAGE_KEY = 'cc-theme';
 /** localStorage key of the single-key keyboard shortcuts preference (per device, spec §13.5). */
 export const SHORTCUTS_STORAGE_KEY = 'cc-shortcuts';
 
+/** localStorage key of the selected period (per device, spec §4.5). */
+export const PERIOD_STORAGE_KEY = 'cc-period';
+
 /** How long snack bar notifications stay visible. */
 export const SNACK_BAR_DURATION_MS = 4000;
+
+/** How long a notification with an action (e.g. "Deshacer") stays visible. */
+export const SNACK_BAR_ACTION_DURATION_MS = 6000;

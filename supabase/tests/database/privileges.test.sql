@@ -2,7 +2,7 @@
 -- These assertions catch a grant that goes missing or one that is too broad.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(76);
+select plan(119);
 
 -- ── anon gets nothing ────────────────────────────────────────────────────────
 select table_privs_are('public', 'profiles', 'anon', array[]::text[], 'anon has no access to profiles');
@@ -151,6 +151,98 @@ select ok(
   not has_schema_privilege('anon', 'private', 'USAGE'),
   'the private schema is not reachable for anon'
 );
+
+-- ── F1d: movements, deferrals and exchange rates ─────────────────────────────
+select table_privs_are('public', 'transactions', 'anon', array[]::text[], 'anon has no access to transactions');
+select table_privs_are('public', 'transaction_tags', 'anon', array[]::text[], 'anon has no access to transaction_tags');
+select table_privs_are('public', 'installment_plans', 'anon', array[]::text[], 'anon has no access to installment_plans');
+select table_privs_are('public', 'exchange_rates', 'anon', array[]::text[], 'anon has no access to exchange_rates');
+
+select table_privs_are('public', 'transactions', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes transactions (RLS decides which)');
+select table_privs_are('public', 'transaction_tags', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and removes transaction tags (RLS decides which)');
+select table_privs_are('public', 'installment_plans', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes installment plans (RLS decides which)');
+select table_privs_are('public', 'exchange_rates', 'authenticated', array['SELECT', 'DELETE'],
+  'authenticated reads and deletes exchange rates (RLS decides which)');
+
+select table_privs_are('public', 'transactions', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on transactions');
+select table_privs_are('public', 'transaction_tags', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on transaction_tags');
+select table_privs_are('public', 'installment_plans', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on installment_plans');
+select table_privs_are('public', 'exchange_rates', 'service_role', array['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+  'service_role has CRUD on exchange_rates');
+
+select column_privs_are('public', 'transactions', 'id', 'authenticated', array['SELECT', 'INSERT'],
+  'the client picks the id of a new movement, so a retry does not duplicate it');
+select column_privs_are('public', 'transactions', 'amount', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the amount is set on insert and editable');
+select column_privs_are('public', 'transactions', 'space_id', 'authenticated', array['SELECT', 'INSERT'],
+  'a movement never moves to another space');
+select column_privs_are('public', 'transactions', 'currency', 'authenticated', array['SELECT'],
+  'the currency of a movement comes from its account');
+select column_privs_are('public', 'transactions', 'created_by', 'authenticated', array['SELECT'],
+  'nobody picks the author of a movement');
+select column_privs_are('public', 'transactions', 'source', 'authenticated', array['SELECT'],
+  'the source is set by automation, never by the client');
+select column_privs_are('public', 'transactions', 'status', 'authenticated', array['SELECT'],
+  'the client only records confirmed movements');
+select column_privs_are('public', 'transactions', 'external_id', 'authenticated', array['SELECT'],
+  'external ids belong to imports and automation');
+select column_privs_are('public', 'transactions', 'financing_plan_id', 'authenticated', array['SELECT'],
+  'financing links arrive with debts (F2)');
+select column_privs_are('public', 'transaction_tags', 'tag_id', 'authenticated', array['SELECT', 'INSERT'],
+  'transaction tags are never edited in place');
+select column_privs_are('public', 'installment_plans', 'installments', 'authenticated', array['SELECT', 'INSERT', 'UPDATE'],
+  'the installments of a deferral are editable');
+select column_privs_are('public', 'installment_plans', 'kind', 'authenticated', array['SELECT', 'INSERT'],
+  'the kind of a plan is set once');
+select column_privs_are('public', 'installment_plans', 'source_transaction_id', 'authenticated', array['SELECT', 'INSERT'],
+  'a deferral never moves to another purchase');
+select column_privs_are('public', 'exchange_rates', 'rate', 'authenticated', array['SELECT', 'INSERT'],
+  'rates are replaced, never edited in place');
+select column_privs_are('public', 'exchange_rates', 'source', 'authenticated', array['SELECT'],
+  'the client only writes manual rates');
+
+select function_privs_are('public', 'save_transaction',
+  array['uuid', 'uuid', 'transaction_type', 'date', 'bigint', 'uuid', 'uuid', 'uuid', 'bigint',
+        'adjustment_direction', 'text', 'boolean', 'uuid[]', 'integer', 'numeric'],
+  'anon', array[]::text[], 'anon cannot call save_transaction');
+select function_privs_are('public', 'save_transaction',
+  array['uuid', 'uuid', 'transaction_type', 'date', 'bigint', 'uuid', 'uuid', 'uuid', 'bigint',
+        'adjustment_direction', 'text', 'boolean', 'uuid[]', 'integer', 'numeric'],
+  'authenticated', array['EXECUTE'], 'authenticated calls save_transaction');
+select function_privs_are('public', 'category_totals', array['uuid', 'date', 'date', 'date[]'], 'anon',
+  array[]::text[], 'anon cannot call category_totals');
+select function_privs_are('public', 'category_totals', array['uuid', 'date', 'date', 'date[]'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls category_totals');
+select function_privs_are('public', 'accounts_total', array['uuid', 'date'], 'anon',
+  array[]::text[], 'anon cannot call accounts_total');
+select function_privs_are('public', 'accounts_total', array['uuid', 'date'], 'authenticated',
+  array['EXECUTE'], 'authenticated calls accounts_total');
+select function_privs_are('public', 'save_exchange_rate', array['uuid', 'date', 'text', 'text', 'numeric'], 'anon',
+  array[]::text[], 'anon cannot call save_exchange_rate');
+select function_privs_are('public', 'save_exchange_rate', array['uuid', 'date', 'text', 'text', 'numeric'],
+  'authenticated', array['EXECUTE'], 'authenticated calls save_exchange_rate');
+select function_privs_are('private', 'can_write_account', array['uuid'], 'anon',
+  array[]::text[], 'anon cannot call the account write helper');
+select function_privs_are('private', 'exchange_rate', array['uuid', 'text', 'text', 'date'], 'anon',
+  array[]::text[], 'anon cannot call the exchange rate helper');
+select function_privs_are('private', 'convert_minor', array['bigint', 'text', 'text', 'uuid', 'date'], 'anon',
+  array[]::text[], 'anon cannot call the conversion helper');
+select function_privs_are('private', 'prepare_transaction', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the transaction trigger function directly');
+select function_privs_are('private', 'lock_account_with_transactions', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the account lock directly');
+select function_privs_are('private', 'check_installment_plan', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the deferral check directly');
+select function_privs_are('private', 'sync_card_deferral', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the deferral sync directly');
+select function_privs_are('private', 'delete_space_transactions', array[]::text[], 'authenticated',
+  array[]::text[], 'nobody calls the space cleanup directly');
 
 select * from finish();
 rollback;

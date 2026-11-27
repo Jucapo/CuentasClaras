@@ -1,0 +1,24 @@
+<cc-icon-button
+  icon="chevron_left"
+  [label]="text.previousPeriod"
+  [disabled]="!canShift()"
+  (click)="previous.emit()"
+/>
+<button
+  type="button"
+  class="chip"
+  aria-haspopup="dialog"
+  [attr.aria-label]="text.choosePeriod + ': ' + title() + (range() ? ', ' + range() : '')"
+  (click)="opened.emit()"
+>
+  <span class="title">{{ title() }}</span>
+  @if (range(); as range) {
+    <span class="range">{{ range }}</span>
+  }
+</button>
+<cc-icon-button
+  icon="chevron_right"
+  [label]="text.nextPeriod"
+  [disabled]="!canShift()"
+  (click)="next.emit()"
+/>

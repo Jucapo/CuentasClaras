@@ -1,8 +1,19 @@
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
-import { afterRenderEffect, Component, ElementRef, inject, input, output } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { moveItem } from '../../../../domain/categories/category-tree';
-import { Donut } from '../../atoms/donut/donut';
+import { formatMoney } from '../../../../domain/money/money';
+import { Amount } from '../../atoms/amount/amount';
+import { Donut, DonutSegment } from '../../atoms/donut/donut';
 import { CategoryBubble } from '../../molecules/category-bubble/category-bubble';
+import { MONEY_FORMAT } from '../../money/money-format';
 import { TOUCH_DRAG_DELAY_MS, UI_TEXT } from '../../ui.constants';
 
 /** A top-level category as the grid shows it. */
@@ -11,6 +22,18 @@ export interface CategoryGridItem {
   readonly name: string;
   readonly icon: string;
   readonly color: string | null;
+  /** Spent or received in the period, in the grid's currency (view mode). */
+  readonly amount?: number | null;
+  /** What remains of its budget; null without one. */
+  readonly remaining?: number | null;
+  /** Share of the budget used; null without one. */
+  readonly progress?: number | null;
+}
+
+/** A total in the middle of the donut, e.g. Gastos $ 1.250.000. */
+export interface CategoryGridTotal {
+  readonly label: string;
+  readonly amount: number;
 }
 
 const MOVE_KEYS: Readonly<Record<string, -1 | 1>> = {
@@ -30,7 +53,7 @@ let nextGridId = 0;
  */
 @Component({
   selector: 'cc-category-grid',
-  imports: [CdkDropList, CdkDrag, CategoryBubble, Donut],
+  imports: [CdkDropList, CdkDrag, CategoryBubble, Donut, Amount],
   templateUrl: './category-grid.html',
   styleUrl: './category-grid.scss',
 })
@@ -44,20 +67,39 @@ export class CategoryGrid {
   /** Label of the "+" bubble of the edit mode; none without it. */
   readonly addLabel = input<string | null>(null);
   readonly reorderable = input(false);
+  /** Currency of the amounts and totals; without it the bubbles show no amounts. */
+  readonly currency = input<string | null>(null);
+  /** Totals in the middle of the donut, the first one larger; `centerLabel` shows without them. */
+  readonly totals = input<readonly CategoryGridTotal[]>([]);
   /** Category whose screen is open next to the grid. */
   readonly selectedId = input<string | null>(null);
-  /** A category was chosen in edit mode. */
+  /** A category was chosen: its screen in edit mode, the quick entry in view mode. */
   readonly opened = output<string>();
   readonly add = output<void>();
   /** Ids in their new order after a move. */
   readonly reorder = output<readonly string[]>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly format = inject(MONEY_FORMAT);
   private focusAfterMove: string | null = null;
 
   protected readonly helpId = `cc-category-grid-help-${nextGridId++}`;
   protected readonly keyboardHelp = UI_TEXT.gridEditHelpKeyboard;
   protected readonly dragDelay = { touch: TOUCH_DRAG_DELAY_MS, mouse: 0 };
+  /** The totals drawn in the donut, read out before the bubbles. */
+  protected readonly totalsText = computed(() => {
+    const currency = this.currency();
+    return currency
+      ? this.totals()
+          .map((total) => `${total.label}: ${formatMoney(total.amount, currency, this.format())}`)
+          .join('. ')
+      : '';
+  });
+  protected readonly segments = computed<DonutSegment[]>(() =>
+    this.mode() === 'view'
+      ? this.items().map((item) => ({ value: item.amount ?? 0, color: item.color }))
+      : [],
+  );
 
   constructor() {
     // Moving a bubble moves its element, which drops the focus; give it back after the move.

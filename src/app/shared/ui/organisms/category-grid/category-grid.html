@@ -1,3 +1,6 @@
+@if (totalsText(); as text) {
+  <p class="cc-visually-hidden">{{ text }}</p>
+}
 <div
   class="grid"
   role="list"
@@ -7,8 +10,22 @@
   [cdkDropListDisabled]="!reorderable()"
   (cdkDropListDropped)="dropped($event)"
 >
-  <cc-donut class="donut" aria-hidden="true">
-    <span class="center-label">{{ centerLabel() }}</span>
+  <cc-donut class="donut" aria-hidden="true" [segments]="segments()">
+    @if (currency() && totals().length > 0) {
+      @for (total of totals(); track total.label; let first = $first) {
+        <span class="total" [class.main]="first">
+          <span class="total-label">{{ total.label }}</span>
+          <cc-amount
+            class="total-amount"
+            [amount]="total.amount"
+            [currency]="currency() ?? ''"
+            tone="neutral"
+          />
+        </span>
+      }
+    } @else {
+      <span class="center-label">{{ centerLabel() }}</span>
+    }
   </cc-donut>
 
   @for (item of items(); track item.id; let index = $index) {
@@ -25,6 +42,10 @@
         [icon]="item.icon"
         [color]="item.color"
         [variant]="mode()"
+        [amount]="item.amount ?? null"
+        [remaining]="item.remaining ?? null"
+        [progress]="item.progress ?? null"
+        [currency]="mode() === 'view' ? currency() : null"
         [selected]="item.id === selectedId()"
         [describedBy]="reorderable() ? helpId : null"
         [keyShortcuts]="reorderable() ? 'Alt+ArrowLeft Alt+ArrowRight' : null"
