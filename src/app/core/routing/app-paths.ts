@@ -12,6 +12,8 @@ export const APP_PATHS = {
   settings: 'configuracion',
   /** Setup wizard (spec §7). */
   welcome: 'bienvenida',
+  /** Accepting an invitation to a space, also before signing in (spec §3.3). */
+  invitation: 'invitacion',
   /** Design system catalog; only routed in development builds. */
   uiCatalog: 'ui',
 } as const;
@@ -20,6 +22,18 @@ export const APP_PATHS = {
 export const SETTINGS_PATHS = {
   tags: 'etiquetas',
   currencies: 'monedas',
+  members: 'miembros',
+} as const;
+
+/**
+ * Query params of `/invitacion`: the invitation token (the link), Auth's token hash and type (the
+ * email to a new account) and the invitation id (the in-app notice). Spec §3.3.
+ */
+export const INVITATION_QUERY_PARAMS = {
+  token: 'token',
+  tokenHash: 'token_hash',
+  type: 'type',
+  id: 'id',
 } as const;
 
 /** Child path of an account: its screen to edit it, under its detail. */

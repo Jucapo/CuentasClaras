@@ -60,6 +60,16 @@ export class AuthService {
     return error ? failure(error) : SUCCESS;
   }
 
+  /** Signs in with the token hash of an invitation email (spec §3.3), confirming the email. */
+  async verifyInvite(tokenHash: string): Promise<AuthResult> {
+    const { data, error } = await this.auth.verifyOtp({ token_hash: tokenHash, type: 'invite' });
+    if (error) {
+      return failure(error);
+    }
+    this.currentSession.set(data.session);
+    return SUCCESS;
+  }
+
   /** Sets a new password for the current (or recovery) session. */
   async updatePassword(password: string): Promise<AuthResult> {
     const { error } = await this.auth.updateUser({ password });

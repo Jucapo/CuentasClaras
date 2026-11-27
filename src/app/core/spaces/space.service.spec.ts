@@ -69,6 +69,17 @@ describe('SpaceService', () => {
     expect(api.fetchMemberships).toHaveBeenCalledTimes(1);
   });
 
+  it('reloads the memberships after joining or leaving a space', async () => {
+    await service.ensureLoaded();
+    service.select('space-personal');
+    api.fetchMemberships.mockResolvedValue({ ok: true, value: [home] });
+
+    expect(await service.reload()).toEqual({ ok: true });
+    expect(api.fetchMemberships).toHaveBeenCalledTimes(2);
+    // The selected space is gone, so the active one falls back to a space the user still has.
+    expect(service.activeSpace()?.id).toBe('space-home');
+  });
+
   it('reports a failed load and stays empty', async () => {
     api.fetchMemberships.mockResolvedValue({ ok: false, message: 'Sin conexión' });
 

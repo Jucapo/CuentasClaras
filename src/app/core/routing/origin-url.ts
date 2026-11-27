@@ -8,6 +8,7 @@ const OUTSIDE_SHELL_PATHS: readonly string[] = [
   APP_PATHS.forgotPassword,
   APP_PATHS.resetPassword,
   APP_PATHS.welcome,
+  APP_PATHS.invitation,
 ];
 
 /** Whether `url` is a screen of the signed-in app, so "back" may return to it. */
