@@ -13,6 +13,27 @@ function overlay(page: Page, isMobile: boolean) {
   return page.locator(isMobile ? '.mat-bottom-sheet-container' : 'mat-dialog-container');
 }
 
+test('a color of the first palette keeps showing as its equivalent of the grid', async ({
+  page,
+}, testInfo) => {
+  // Spec §13.3: "navy" is no longer a palette key; it shows as indigo-dark, never the fallback.
+  const catalog = {
+    ...HOUSEHOLD,
+    categories: HOUSEHOLD.categories.map((category) =>
+      category['id'] === 'cat-transport' ? { ...category, color: 'navy' } : category,
+    ),
+  };
+  await mockDataApi(page, { withSpace: true, catalog });
+  await page.goto('/categorias');
+
+  const badge = page
+    .locator('cc-category-bubble')
+    .filter({ hasText: 'Transporte' })
+    .locator('cc-icon-badge');
+  const dark = testInfo.project.use.colorScheme === 'dark';
+  await expect(badge).toHaveCSS('background-color', dark ? 'rgb(40, 53, 147)' : 'rgb(26, 35, 126)');
+});
+
 test('the categories tab shows the grid and the pencil opens the edit mode', async ({
   page,
   isMobile,
