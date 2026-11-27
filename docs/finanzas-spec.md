@@ -496,7 +496,7 @@ Rediseño (F1e2), como en 1Money; aplica al crear y al editar, desde cualquier p
 - **Fecha:** una línea ("Hoy, 27 nov"). Tocarla abre una vista con Hoy, Ayer y Elegir día. Periodicidad y recordatorio llegan con los recurrentes (F3).
 - **Al crear:** el teclado siempre visible.
 - **Al editar:**
-  - El teclado aparece al tocar el monto.
+  - En el sheet, el teclado aparece al tocar el monto. En el diálogo y el panel hay espacio y se ve siempre.
   - Abajo van las acciones Borrar, Fecha y Duplicar.
   - Borrar confirma en una vista del mismo overlay; al confirmar, borra y cierra.
   - Duplicar abre un movimiento nuevo con los datos guardados del original y la fecha de hoy. Si hay cambios sin guardar, primero pregunta "¿Descartar los cambios?".

@@ -1216,7 +1216,8 @@ Arriba de todo, `cc-missing-rates-notice` cuando falta una tasa.
   - `role="img"` con un aria-label que resume el periodo, el total y la categoría mayor ("Gastos de Diciembre: $ X; la mayor es Mercado, $ Y"). El tooltip no es la única forma de leer los datos: la lista los tiene todos.
 - **ECharts** en un chunk diferido:
   - `npm i echarts ngx-echarts` (`ngx-echarts@22`, peer `@angular/core >=22`; `echarts@6`, import modular).
-  - `provideEchartsCore({ echarts: () => import('./echarts-setup') })` va en los `providers` de la ruta `resumen`. El setup registra solo `BarChart`, `GridComponent`, `TooltipComponent` y `CanvasRenderer`.
+  - `provideEchartsCore({ echarts: () => import('./echarts-setup') })` va en los `providers` de `cc-bar-chart`, así el átomo carga ECharts por su cuenta (también en `/ui`). El setup registra solo `BarChart`, `GridComponent`, `TooltipComponent` y `CanvasRenderer`.
+  - `getComputedStyle` devuelve `light-dark(a, b)` sin resolver, y el canvas no lo entiende: el átomo elige el lado según el `color-scheme` de la sonda (o el del sistema).
   - La página envuelve el gráfico en `@defer (on viewport)` con un placeholder del mismo alto.
   - **Tema:** los colores salen de la paleta (`paletteColor`, que es `light-dark()`) y de `--mat-sys-*`. Se resuelven con un elemento sonda: `getComputedStyle(probe).color`.
   - Se redibuja al cambiar el tema o el esquema del sistema, y respeta `prefers-reduced-motion` (sin animación).
@@ -1372,7 +1373,7 @@ Como en 1Money (capturas de transacciones y categorías). Aplica al crear y al e
   - Periodicidad y recordatorio llegan con los recurrentes (F3): no se muestran.
 - **Al crear:** el teclado sigue visible como hoy.
 - **Al editar:**
-  - el teclado aparece al tocar el monto;
+  - en el sheet, el teclado aparece al tocar el monto; en el diálogo y el panel hay espacio y se ve siempre (y el teclado físico escribe ahí);
   - abajo van las acciones Borrar, Fecha y Duplicar;
   - **Borrar** confirma en una vista del mismo overlay y, al confirmar, borra y cierra. Hoy el sheet se cierra y abre otra confirmación; `QuickEntryFlow.finish('delete')` deja de preguntar.
   - **Duplicar** (`closed('duplicate')` → `duplicateSession(tx)`) abre un movimiento nuevo con los datos guardados del original, un id nuevo y la fecha de hoy. Si hay cambios sin guardar, primero pregunta "¿Descartar los cambios?".
