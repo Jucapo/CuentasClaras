@@ -49,12 +49,12 @@ describe('spaceAmount', () => {
   it('subtracts expenses, adds incomes and follows the direction of adjustments', () => {
     expect(spaceAmount(movement({ type: 'expense' }))).toBe(-1_000);
     expect(spaceAmount(movement({ type: 'income' }))).toBe(1_000);
-    expect(
-      spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'decrease' })),
-    ).toBe(-1_000);
-    expect(
-      spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'increase' })),
-    ).toBe(1_000);
+    expect(spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'decrease' }))).toBe(
+      -1_000,
+    );
+    expect(spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'increase' }))).toBe(
+      1_000,
+    );
   });
 
   it('leaves transfers without a sign', () => {

@@ -1,8 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
+  afterNextRender,
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   input,
   linkedSignal,
@@ -280,8 +282,7 @@ export class QuickEntry {
   protected readonly detailsLabel = computed(() => {
     const { tagIds, note } = this.model();
     const names = this.data()
-      .tags
-      .filter((tag) => tagIds.includes(tag.value))
+      .tags.filter((tag) => tagIds.includes(tag.value))
       .map((tag) => tag.label);
     const summary = [...names, ...(note.trim() ? [note.trim()] : [])].join(' · ');
     const base = this.isCategorized() ? QUICK_ENTRY_TEXT.details : QUICK_ENTRY_TEXT.noteOnly;
@@ -289,6 +290,13 @@ export class QuickEntry {
   });
 
   constructor() {
+    // In a pane the keyboard types the amount right away, as the overlays focus it (spec §7).
+    const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+    afterNextRender(() => {
+      if (this.layout() === 'pane') {
+        host.querySelector<HTMLElement>('cc-amount-display .display')?.focus();
+      }
+    });
     // Until the user picks tags, they follow the chosen category or subcategory (spec §4.3).
     effect(() => {
       const categoryId = this.form.categoryId().value();

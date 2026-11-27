@@ -74,9 +74,7 @@ export class AmountCalculator {
   protected readonly decimalSeparator = computed(
     () => NUMBER_FORMAT_SEPARATORS[this.format().numberFormat].decimal,
   );
-  protected readonly showDecimal = computed(
-    () => this.format().showDecimals && this.exponent > 0,
-  );
+  protected readonly showDecimal = computed(() => this.format().showDecimals && this.exponent > 0);
   protected readonly display = computed(() => {
     const expression = this.expression();
     const format = this.format();

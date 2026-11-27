@@ -1,10 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
-import {
-  budgetFill,
-  BudgetFigures,
-  budgetStanding,
-} from '../../../../domain/budgets/budget-lines';
+import { budgetFill, BudgetFigures, budgetStanding } from '../../../../domain/budgets/budget-lines';
 import { Amount } from '../../atoms/amount/amount';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
 import { ProgressBar } from '../../atoms/progress-bar/progress-bar';

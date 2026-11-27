@@ -102,7 +102,8 @@ export class BudgetsService {
 
   private save(spaceId: string, categoryId: string, write: BudgetWrite): Promise<ActionResult> {
     const existing = this.budgets().find(
-      (budget) => budget.category_id === categoryId && budget.effective_from === write.effectiveFrom,
+      (budget) =>
+        budget.category_id === categoryId && budget.effective_from === write.effectiveFrom,
     );
     return existing
       ? this.api.update(existing.id, write.amount, write.currency)

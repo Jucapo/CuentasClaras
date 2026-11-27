@@ -8,7 +8,10 @@ describe('budgetStanding', () => {
   });
 
   it('marks a counted row without a budget as over by what it spent', () => {
-    expect(budgetStanding({ spent: 300, budget: null }, true)).toEqual({ kind: 'over', amount: 300 });
+    expect(budgetStanding({ spent: 300, budget: null }, true)).toEqual({
+      kind: 'over',
+      amount: 300,
+    });
     expect(budgetStanding({ spent: 0, budget: null }, true)).toEqual({ kind: 'none' });
     expect(budgetStanding({ spent: 300, budget: null })).toEqual({ kind: 'none' });
   });

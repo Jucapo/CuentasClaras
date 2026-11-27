@@ -41,8 +41,7 @@ export interface TransactionLookups {
  * whole space (Transacciones).
  */
 export type TransactionPerspective =
-  | { readonly accountId: string; readonly currency: string }
-  | 'space';
+  { readonly accountId: string; readonly currency: string } | 'space';
 
 const SEPARATOR = ' · ';
 
@@ -55,7 +54,9 @@ export function injectTransactionLookups(): Signal<TransactionLookups> {
   const spaces = inject(SpaceService);
   return computed(() => {
     const accountById = new Map(accounts.accounts().map((account) => [account.id, account]));
-    const categoryById = new Map(categories.categories().map((category) => [category.id, category]));
+    const categoryById = new Map(
+      categories.categories().map((category) => [category.id, category]),
+    );
     const tagList = tags.tags();
     return {
       account: (id) => accountById.get(id) ?? null,

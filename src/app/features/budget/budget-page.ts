@@ -53,12 +53,17 @@ import {
   monthOnlyMark,
   removeConfirm,
   scopeLabels,
+  scopeNote,
 } from './budget-texts';
 import { BudgetCategoryView, BudgetLineView } from './budget-views';
 import { BudgetEdit, MonthlyAmounts } from './monthly-amounts';
 
 /** What the screen shows for the selected period and the budget switch (spec §4.7). */
 type BudgetView = 'off' | 'month' | 'year' | 'none';
+
+// Amounts from the calculator or "Quitar presupuesto" have no row text to put back: the row reads
+// the saved amount.
+const NOTHING_TO_REVERT = (): void => undefined;
 
 /**
  * Presupuesto (spec §4.7, §7), like 1Money: each category with its total, the bar behind its row
@@ -221,7 +226,10 @@ export class BudgetPage {
       },
     });
     if (value !== undefined) {
-      await this.amounts.save({ categoryId: line.id, amount: value, currency, revert: () => {} }, edit);
+      await this.amounts.save(
+        { categoryId: line.id, amount: value, currency, revert: NOTHING_TO_REVERT },
+        edit,
+      );
     }
   }
 
@@ -243,7 +251,12 @@ export class BudgetPage {
     for (const line of category.lines) {
       if (line.amount && line.amount.amount > 0) {
         const saved = await this.amounts.save(
-          { categoryId: line.id, amount: 0, currency: line.amount.currency, revert: () => {} },
+          {
+            categoryId: line.id,
+            amount: 0,
+            currency: line.amount.currency,
+            revert: NOTHING_TO_REVERT,
+          },
           edit,
         );
         if (!saved.ok) {
@@ -328,7 +341,7 @@ export class BudgetPage {
   }
 
   private lineTitle(category: BudgetCategoryView, line: BudgetLineView): string {
-    return line.id === category.id ? category.name : `${category.name} › ${line.name}`;
+    return `${category.name} › ${line.name}`;
   }
 
   private detailFor(categoryId: string): BudgetDetailData | null {
@@ -349,7 +362,12 @@ export class BudgetPage {
       counted: category.counted,
       currency: this.currency(),
       readonly: !editable,
-      note: editable && labels ? labels[this.scope()] : this.view() === 'year' ? BUDGET_TEXT.yearNote : undefined,
+      note:
+        editable && labels
+          ? scopeNote(labels[this.scope()])
+          : this.view() === 'year'
+            ? BUDGET_TEXT.yearNote
+            : undefined,
       lines: category.lines.map((line): BudgetListEntry => {
         const keeps = this.scope() === 'onward' && line.keepsOwnFrom;
         return {

@@ -63,7 +63,9 @@
     <cc-icon name="receipt_long" size="xl" />
     <p class="empty-text">{{ text.pickOne }}</p>
     @if (canEdit()) {
-      <cc-button icon="add" variant="tonal" shortcut="N" (click)="create()">{{ text.add }}</cc-button>
+      <cc-button icon="add" variant="tonal" shortcut="N" (click)="create()">{{
+        text.add
+      }}</cc-button>
     }
   </div>
 </cc-list-detail-layout>

@@ -75,9 +75,7 @@ describe('quick entry rules', () => {
   });
 
   it('tells a division by zero apart from a missing amount', () => {
-    expect(errors({ expression: '100/0' })).toEqual([
-      AMOUNT_EXPRESSION_MESSAGES.division_by_zero,
-    ]);
+    expect(errors({ expression: '100/0' })).toEqual([AMOUNT_EXPRESSION_MESSAGES.division_by_zero]);
     expect(errors({ expression: '100*3/2' })).toEqual([]);
   });
 

@@ -4,11 +4,7 @@ import { Button } from '../../atoms/button/button';
 import { BudgetKind } from '../../molecules/budget-pill/budget-pill';
 import { BudgetRow } from '../../molecules/budget-row/budget-row';
 import { OverlayPanel } from '../../molecules/overlay-panel/overlay-panel';
-import {
-  BudgetAmountChange,
-  BudgetList,
-  BudgetListEntry,
-} from '../budget-list/budget-list';
+import { BudgetAmountChange, BudgetList, BudgetListEntry } from '../budget-list/budget-list';
 
 /** What the detail of a category shows (spec §4.7). */
 export interface BudgetDetailData {

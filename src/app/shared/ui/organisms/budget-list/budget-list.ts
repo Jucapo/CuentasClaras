@@ -1,10 +1,6 @@
 import { Component, input, output, signal, viewChildren } from '@angular/core';
 import { currencyLabel, SUPPORTED_CURRENCIES } from '../../../../core/config/space.constants';
-import {
-  budgetFill,
-  BudgetFigures,
-  budgetStanding,
-} from '../../../../domain/budgets/budget-lines';
+import { budgetFill, BudgetFigures, budgetStanding } from '../../../../domain/budgets/budget-lines';
 import { CurrencyAmount } from '../../../../domain/money/money';
 import { Amount } from '../../atoms/amount/amount';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';

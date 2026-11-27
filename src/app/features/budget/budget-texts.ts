@@ -46,6 +46,11 @@ export function scopeLabels(month: IsoDate, today: IsoDate) {
   return { month: `Solo ${name}`, onward: `${capitalized(name)} y los siguientes` };
 }
 
+/** Under the header of a detail: which scope the edits take. */
+export function scopeNote(scopeLabel: string): string {
+  return `Los cambios rigen: ${scopeLabel.toLowerCase()}`;
+}
+
 /** The mark of a row whose amount is only for its month. */
 export function monthOnlyMark(month: IsoDate, today: IsoDate): string {
   return `Solo ${monthLabel(month, today)}`;

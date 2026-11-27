@@ -106,7 +106,9 @@ describe('budgetWrites', () => {
   });
 
   it('takes a new currency as a change', () => {
-    expect(budgetWrites(entries, 'home', '2026-12-01', 50_000_000, 'USD', 'onward')).toHaveLength(1);
+    expect(budgetWrites(entries, 'home', '2026-12-01', 50_000_000, 'USD', 'onward')).toHaveLength(
+      1,
+    );
   });
 });
 

@@ -682,7 +682,11 @@
         layout="column"
       >
         <ng-template>
-          <cc-filter-chips label="Filtros" [filters]="filterChips()" (cleared)="clearChip($event)" />
+          <cc-filter-chips
+            label="Filtros"
+            [filters]="filterChips()"
+            (cleared)="clearChip($event)"
+          />
         </ng-template>
       </app-catalog-entry>
 

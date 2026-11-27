@@ -26,7 +26,10 @@ import {
   OptionPanelData,
   PanelOption,
 } from '../../shared/ui/molecules/option-panel/option-panel';
-import { QuickEntryData, QuickEntryResult } from '../../shared/ui/organisms/quick-entry/quick-entry';
+import {
+  QuickEntryData,
+  QuickEntryResult,
+} from '../../shared/ui/organisms/quick-entry/quick-entry';
 import {
   defaultTagIds,
   includeInSpaceDefault,
@@ -126,7 +129,9 @@ export class QuickEntryFlow {
     const categories = this.categories
       .categories()
       .filter((category) => !category.parent_id && !category.archived_at)
-      .sort((a, b) => (a.kind === b.kind ? a.sort_order - b.sort_order : a.kind === 'expense' ? -1 : 1));
+      .sort((a, b) =>
+        a.kind === b.kind ? a.sort_order - b.sort_order : a.kind === 'expense' ? -1 : 1,
+      );
     const options: PanelOption<string>[] = [
       {
         value: TRANSFER_CHOICE,

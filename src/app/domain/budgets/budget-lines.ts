@@ -9,8 +9,7 @@ export interface BudgetFigures {
  * `over` it (or came in on top), or `none` without a budget.
  */
 export type BudgetStanding =
-  | { readonly kind: 'none' }
-  | { readonly kind: 'left' | 'over'; readonly amount: number };
+  { readonly kind: 'none' } | { readonly kind: 'left' | 'over'; readonly amount: number };
 
 /**
  * The standing of a row. `counted` rows without a budget (the lines of an expense category that has

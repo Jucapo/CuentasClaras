@@ -584,7 +584,13 @@ export class UiCatalogPage {
       icon: 'shopping_cart',
       color: 'green',
       amount: { currency: 'COP', amount: 20000000 },
-      progress: { spent: 5000000, budget: 20000000, currency: 'COP', kind: 'expense', counted: true },
+      progress: {
+        spent: 5000000,
+        budget: 20000000,
+        currency: 'COP',
+        kind: 'expense',
+        counted: true,
+      },
     },
     {
       id: 'c5',
@@ -592,7 +598,13 @@ export class UiCatalogPage {
       icon: 'store',
       color: 'green',
       amount: { currency: 'COP', amount: 60000000 },
-      progress: { spent: 65000000, budget: 60000000, currency: 'COP', kind: 'expense', counted: true },
+      progress: {
+        spent: 65000000,
+        budget: 60000000,
+        currency: 'COP',
+        kind: 'expense',
+        counted: true,
+      },
       mark: 'Solo diciembre',
     },
     {
@@ -825,57 +837,57 @@ export class UiCatalogPage {
     };
     return {
       mode: type === 'adjustment' ? 'edit' : 'create',
-        title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
-        accounts: [
-          {
-            id: 'a1',
-            name: 'Bancolombia',
-            currency: 'COP',
-            isCard: false,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Cuentas',
-          },
-          {
-            id: 'a2',
-            name: 'Nequi',
-            currency: 'COP',
-            isCard: false,
-            isPrivate: true,
-            includeInSpaceByDefault: true,
-            group: 'Cuentas',
-          },
-          {
-            id: 'a3',
-            name: 'DollarApp',
-            currency: 'USD',
-            isCard: false,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Ahorros',
-          },
-          {
-            id: 'a4',
-            name: 'Tarjeta Visa',
-            currency: 'COP',
-            isCard: true,
-            isPrivate: false,
-            includeInSpaceByDefault: false,
-            group: 'Deudas',
-          },
-        ],
-        category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
-        subcategories:
-          type === 'expense'
-            ? [
-                { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
-                { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
-              ]
-            : [],
-        tags: this.tagOptions,
-        today: '2026-11-26',
-        value,
-        save: async () => ACTION_OK,
+      title: type === 'expense' ? 'Hogar' : type === 'transfer' ? 'Transferencia' : 'Ajuste',
+      accounts: [
+        {
+          id: 'a1',
+          name: 'Bancolombia',
+          currency: 'COP',
+          isCard: false,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Cuentas',
+        },
+        {
+          id: 'a2',
+          name: 'Nequi',
+          currency: 'COP',
+          isCard: false,
+          isPrivate: true,
+          includeInSpaceByDefault: true,
+          group: 'Cuentas',
+        },
+        {
+          id: 'a3',
+          name: 'DollarApp',
+          currency: 'USD',
+          isCard: false,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Ahorros',
+        },
+        {
+          id: 'a4',
+          name: 'Tarjeta Visa',
+          currency: 'COP',
+          isCard: true,
+          isPrivate: false,
+          includeInSpaceByDefault: false,
+          group: 'Deudas',
+        },
+      ],
+      category: type === 'expense' ? { id: 'c1', name: 'Hogar', defaultTagIds: [] } : null,
+      subcategories:
+        type === 'expense'
+          ? [
+              { id: 'c2', name: 'Arriendo', defaultTagIds: ['t1'] },
+              { id: 'c3', name: 'Servicios públicos', defaultTagIds: [] },
+            ]
+          : [],
+      tags: this.tagOptions,
+      today: '2026-11-26',
+      value,
+      save: async () => ACTION_OK,
     };
   }
 

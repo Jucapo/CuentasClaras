@@ -35,7 +35,12 @@ function first<T>(value: Embedded<T>): T | null {
   return (value as T | null) ?? null;
 }
 
-function toTransaction({ transaction_tags, author, deferral, ...row }: TransactionRow): Transaction {
+function toTransaction({
+  transaction_tags,
+  author,
+  deferral,
+  ...row
+}: TransactionRow): Transaction {
   const plan = first(deferral);
   return {
     ...row,

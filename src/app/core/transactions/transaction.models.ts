@@ -1,9 +1,6 @@
 import { IsoDate } from '../../domain/dates/local-date';
 import { DateRange } from '../../domain/periods/periods';
-import {
-  SearchArguments,
-  TransactionFilters,
-} from '../../domain/transactions/transaction-filters';
+import { SearchArguments, TransactionFilters } from '../../domain/transactions/transaction-filters';
 import { Tables } from '../supabase/database.types';
 
 /** A movement as lists show it: the row, its tags, who recorded it and its card deferral. */

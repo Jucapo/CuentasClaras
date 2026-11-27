@@ -22,7 +22,10 @@ import {
 import { ExchangeRateFlow } from '../../core/exchange-rates/exchange-rate-flow';
 import { ExchangeRatesService } from '../../core/exchange-rates/exchange-rates.service';
 import { PeriodService } from '../../core/periods/period.service';
-import { HasUnsavedChanges, UNSAVED_CHANGES_CONFIRM } from '../../core/routing/unsaved-changes.guard';
+import {
+  HasUnsavedChanges,
+  UNSAVED_CHANGES_CONFIRM,
+} from '../../core/routing/unsaved-changes.guard';
 import { SpaceMembersService } from '../../core/spaces/space-members.service';
 import { SpaceService } from '../../core/spaces/space.service';
 import { TotalsService } from '../../core/totals/totals.service';
@@ -122,11 +125,7 @@ export class TransactionsPage implements HasUnsavedChanges {
   private readonly settledQuery = signal(this.store.query());
   private readonly transactionQuery = computed<TransactionQuery>(() => ({
     range: this.periods.range(),
-    search: searchArguments(
-      this.settledQuery(),
-      this.format().numberFormat,
-      this.mainCurrency(),
-    ),
+    search: searchArguments(this.settledQuery(), this.format().numberFormat, this.mainCurrency()),
     filters: this.store.filters(),
   }));
 
@@ -203,7 +202,12 @@ export class TransactionsPage implements HasUnsavedChanges {
       return [];
     }
     return [
-      { label: TRANSACTIONS_TEXT.income, amount: totals.income, currency: totals.currency, signed: true },
+      {
+        label: TRANSACTIONS_TEXT.income,
+        amount: totals.income,
+        currency: totals.currency,
+        signed: true,
+      },
       { label: TRANSACTIONS_TEXT.expense, amount: -totals.expense, currency: totals.currency },
       {
         label: TRANSACTIONS_TEXT.net,
@@ -231,7 +235,9 @@ export class TransactionsPage implements HasUnsavedChanges {
   }));
   /** "Persona" only makes sense with more than one member (spec §7). */
   private readonly filterKeys = computed(() =>
-    TRANSACTION_FILTER_KEYS.filter((key) => key !== 'authorIds' || this.members.members().length > 1),
+    TRANSACTION_FILTER_KEYS.filter(
+      (key) => key !== 'authorIds' || this.members.members().length > 1,
+    ),
   );
   protected readonly chips = computed<FilterChip[]>(() => {
     const filters = this.store.filters();
