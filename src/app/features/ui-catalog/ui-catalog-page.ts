@@ -511,15 +511,19 @@ export class UiCatalogPage {
   protected readonly transactionGroups: readonly TransactionListGroup[] = [
     {
       title: 'Hoy',
+      total: { amount: -40050000, currency: 'COP' },
       items: [
         {
           id: 't1',
-          title: 'Mercado',
-          subtitle: 'Mercado de la semana',
+          title: 'Mercado (Supermercado)',
+          subtitle: 'Bancolombia · Fijos',
+          subtitleIcon: 'account_balance',
+          note: 'Mercado de la semana',
           icon: 'shopping_cart',
           color: 'green',
           amount: -32050000,
           currency: 'COP',
+          tone: 'expense',
           editable: true,
         },
         {
@@ -556,19 +560,23 @@ export class UiCatalogPage {
     },
     {
       title: 'Ayer',
+      total: { amount: 470000000, currency: 'COP' },
       items: [
         {
           id: 't3',
           title: 'Salario',
+          subtitle: 'Bancolombia',
+          subtitleIcon: 'account_balance',
           icon: 'work',
           color: 'teal',
           amount: 650000000,
           currency: 'COP',
+          tone: 'income',
           editable: true,
         },
         {
           id: 't4',
-          title: 'Hogar › Arriendo',
+          title: 'Hogar (Arriendo)',
           subtitle: 'Fijos · 3 cuotas',
           icon: 'key',
           color: 'orange',

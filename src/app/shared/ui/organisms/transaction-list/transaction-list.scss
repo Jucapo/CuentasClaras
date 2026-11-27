@@ -3,10 +3,19 @@
 }
 
 .day {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--cc-space-2);
   margin: var(--cc-stack-gap) 0 var(--cc-space-1);
   padding: 0 var(--cc-space-2);
   font: var(--mat-sys-title-small);
   color: var(--mat-sys-on-surface-variant);
+}
+
+// The net of the day: positive in the tone of incomes; cc-amount paints the negative one.
+.day-total.positive {
+  color: var(--cc-tone-income);
 }
 
 .items {
@@ -19,6 +28,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--cc-space-1);
+}
+
+.expense {
+  color: var(--cc-tone-expense);
+}
+
+.income {
+  color: var(--cc-tone-income);
 }
 
 .lock {

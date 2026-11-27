@@ -1,12 +1,26 @@
 <section class="list" [attr.aria-label]="label()">
   @for (group of groups(); track group.title) {
-    <h3 class="day">{{ group.title }}</h3>
+    <h3 class="day">
+      <span>{{ group.title }}</span>
+      @if (group.total; as total) {
+        <cc-amount
+          class="day-total"
+          tone="auto"
+          [class.positive]="total.amount > 0"
+          [signed]="true"
+          [amount]="total.amount"
+          [currency]="total.currency"
+        />
+      }
+    </h3>
     <ul class="items">
       @for (item of group.items; track item.id) {
         <li>
           <cc-list-item
             [title]="item.title"
             [subtitle]="item.subtitle"
+            [subtitleIcon]="item.subtitleIcon"
+            [note]="item.note"
             [actionable]="item.editable"
             [selected]="item.id === selectedId()"
             (activate)="opened.emit(item.id)"
@@ -18,6 +32,7 @@
               }
               <cc-amount
                 tone="neutral"
+                [class]="item.tone ?? 'neutral'"
                 [signed]="item.signed ?? true"
                 [amount]="item.amount"
                 [currency]="item.currency"

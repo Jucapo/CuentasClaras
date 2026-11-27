@@ -133,7 +133,7 @@ test('a transfer to another currency records both amounts', async ({ page, isMob
   await page.goto('/cuentas/acc-bank');
 
   await expect(page.getByRole('heading', { name: 'Bancolombia', level: 1 })).toBeVisible();
-  await expect(page.getByRole('list').getByText('Hogar › Arriendo')).toBeVisible();
+  await expect(page.getByRole('list').getByText('Hogar (Arriendo)')).toBeVisible();
   await capture(page, 'cuenta-detalle');
 
   await page.getByRole('button', { name: 'Transferir' }).click();

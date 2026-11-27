@@ -113,12 +113,21 @@ function title(
   if (!category) {
     return TRANSACTION_TYPE_LABELS[movement.type];
   }
-  return parent ? `${parent.name} › ${category.name}` : category.name;
+  return parent ? `${parent.name} (${category.name})` : category.name;
 }
 
+const TYPE_TONES: Readonly<Record<Transaction['type'], TransactionListItem['tone']>> = {
+  expense: 'expense',
+  income: 'income',
+  transfer: 'neutral',
+  adjustment: 'neutral',
+};
+
 /**
- * A movement as `cc-transaction-list` shows it. Seen from the space, the subtitle starts with its
- * account, transfers read "Efectivo → Nequi" without a sign, and private accounts get a lock.
+ * A movement as `cc-transaction-list` shows it (spec §7): "Categoría (Subcategoría)", then a line
+ * with its tags and installments and the note on its own. Seen from the space, that line starts
+ * with its account and its icon, the amount takes the tone of its type, transfers read "Efectivo →
+ * Nequi" without a sign, and private accounts get a lock.
  */
 export function toTransactionListItem(
   movement: Transaction,
@@ -126,13 +135,11 @@ export function toTransactionListItem(
   perspective: TransactionPerspective,
 ): TransactionListItem {
   const fromSpace = perspective === 'space';
+  const withAccount = fromSpace && movement.type !== 'transfer';
   const details = [
-    ...(fromSpace && movement.type !== 'transfer'
-      ? [accountName(movement.account_id, movement, lookups)]
-      : []),
+    ...(withAccount ? [accountName(movement.account_id, movement, lookups)] : []),
     ...lookups.tagNames(movement.tag_ids),
     ...(movement.installments > 1 ? [`${movement.installments} cuotas`] : []),
-    ...(movement.note ? [movement.note] : []),
   ];
   const source = lookups.account(movement.account_id);
   return {
@@ -140,9 +147,12 @@ export function toTransactionListItem(
     title: title(movement, lookups, perspective),
     ...look(movement, lookups),
     subtitle: details.join(SEPARATOR) || undefined,
+    subtitleIcon: withAccount ? (source?.icon ?? 'lock') : undefined,
+    note: movement.note || undefined,
     amount: fromSpace ? spaceAmount(movement) : balanceDelta(movement, perspective.accountId),
     currency: fromSpace ? movement.currency : perspective.currency,
     signed: !fromSpace || movement.type !== 'transfer',
+    tone: fromSpace ? TYPE_TONES[movement.type] : 'neutral',
     private: fromSpace && isPrivateMovement(movement, lookups.account),
     // Editing needs write access to the source account (spec §8).
     editable:
@@ -152,15 +162,31 @@ export function toTransactionListItem(
   };
 }
 
-/** Movements grouped by day for `cc-transaction-list`, titled "Hoy", "Ayer" or the date. */
+/** What each day adds up to, in one currency, e.g. the net of Transacciones (spec §7). */
+export interface DayTotals {
+  readonly byDate: ReadonlyMap<IsoDate, number>;
+  readonly currency: string;
+}
+
+/**
+ * Movements grouped by day for `cc-transaction-list`, titled "Hoy", "Ayer" or the date, with the
+ * total of each day when `totals` has it.
+ */
 export function toTransactionGroups(
   movements: readonly Transaction[],
   lookups: TransactionLookups,
   perspective: TransactionPerspective,
   today: IsoDate,
+  totals: DayTotals | null = null,
 ): TransactionListGroup[] {
-  return groupByDay(movements, (movement) => movement.date).map((day) => ({
-    title: dayTitle(day.date, today),
-    items: day.items.map((movement) => toTransactionListItem(movement, lookups, perspective)),
-  }));
+  return groupByDay(movements, (movement) => movement.date).map((day) => {
+    const total = totals?.byDate.get(day.date);
+    return {
+      title: dayTitle(day.date, today),
+      ...(total !== undefined && totals
+        ? { total: { amount: total, currency: totals.currency } }
+        : {}),
+      items: day.items.map((movement) => toTransactionListItem(movement, lookups, perspective)),
+    };
+  });
 }

@@ -33,6 +33,15 @@ export interface TransactionTotals {
   readonly missingRateCurrencies: readonly string[];
 }
 
+/** Incomes, expenses and net of one day of what Transacciones lists (spec §7). */
+export interface TransactionDayTotal {
+  readonly date: string;
+  readonly income: number;
+  readonly expense: number;
+  readonly net: number;
+  readonly missingRateCurrencies: readonly string[];
+}
+
 /** Balance of the accounts included in the total, in the main currency. */
 export interface AccountsTotal {
   readonly total: number;

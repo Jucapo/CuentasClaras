@@ -23,6 +23,9 @@
       />
     </div>
 
+    @if (balanceItems().length > 0) {
+      <cc-stat-group variant="tiles" [label]="text.balances" [items]="balanceItems()" />
+    }
     @if (statItems().length > 0) {
       <cc-stat-group
         class="totals"
