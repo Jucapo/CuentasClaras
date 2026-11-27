@@ -1,0 +1,61 @@
+@if (link(); as shown) {
+  <cc-overlay-panel
+    title="Link de invitación"
+    [confirmLabel]="text.done"
+    (closed)="close()"
+    (confirmed)="close()"
+  >
+    <div class="body">
+      <h2 class="heading">Ya tiene una cuenta</h2>
+      <p class="lead">
+        A {{ shown.email }} no le llega correo: verá la invitación cuando entre a la app.
+      </p>
+      <p class="help">
+        También puedes enviarle este link. Sirve una vez, durante 7 días; si lo reenvías, el anterior
+        deja de servir.
+      </p>
+      <p class="link" data-testid="invitation-link">{{ shown.link }}</p>
+      <div class="actions">
+        <cc-button variant="tonal" [icon]="copied() ? 'check' : 'content_copy'" (click)="copy(shown.link)">
+          {{ copied() ? 'Link copiado' : 'Copiar link' }}
+        </cc-button>
+        @if (share.canShare) {
+          <cc-button variant="outlined" icon="share" (click)="shareLink(shown)">Compartir</cc-button>
+        }
+      </div>
+    </div>
+  </cc-overlay-panel>
+} @else {
+  <cc-overlay-panel
+    title="Invitar"
+    confirmLabel="Invitar"
+    confirmingLabel="Invitando"
+    [confirming]="form().submitting()"
+    (closed)="close()"
+    (confirmed)="done()"
+  >
+    <cc-form label="Invitar" [form]="form">
+      <div class="body">
+        <h2 class="heading">Invitar a {{ data.spaceName }}</h2>
+        <p class="help">Si la persona no tiene cuenta, le llega un correo para crearla.</p>
+        <cc-text-field
+          label="Correo"
+          type="email"
+          autocomplete="email"
+          inputMode="email"
+          [formField]="form.email"
+        />
+        <cc-segmented-control
+          label="Rol"
+          [options]="data.roles"
+          [fullWidth]="true"
+          [formField]="form.role"
+        />
+        <p class="help" aria-live="polite">{{ roleDescription() }}</p>
+        @if (error(); as error) {
+          <cc-message>{{ error }}</cc-message>
+        }
+      </div>
+    </cc-form>
+  </cc-overlay-panel>
+}

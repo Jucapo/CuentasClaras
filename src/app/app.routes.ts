@@ -64,6 +64,13 @@ export const routes: Routes = [
             (m) => m.ResetPasswordPage,
           ),
       },
+      {
+        // No guard: it opens from the email in any browser, with or without a session (spec §3.3).
+        path: APP_PATHS.invitation,
+        title: 'Invitación',
+        loadComponent: () =>
+          import('./features/invitation/invitation-page').then((m) => m.InvitationPage),
+      },
     ],
   },
   {
@@ -197,6 +204,14 @@ export const routes: Routes = [
         title: 'Etiquetas',
         loadComponent: () =>
           import('./features/settings/tags/tags-settings-page').then((m) => m.TagsSettingsPage),
+      },
+      {
+        path: `${APP_PATHS.settings}/${SETTINGS_PATHS.members}`,
+        title: 'Miembros',
+        loadComponent: () =>
+          import('./features/settings/members/members-settings-page').then(
+            (m) => m.MembersSettingsPage,
+          ),
       },
     ],
   },

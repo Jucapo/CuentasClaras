@@ -1,0 +1,55 @@
+<cc-page-header title="Miembros" [backLink]="backLink" backLabel="Volver a Configuración">
+  @if (canConfigure()) {
+    <cc-icon-button icon="person_add" label="Invitar" shortcut="N" (click)="invite()" />
+  }
+</cc-page-header>
+
+<div class="content">
+  @if (loadError(); as error) {
+    <cc-message>{{ error }}</cc-message>
+  }
+
+  <cc-section [title]="membersTitle()" [description]="membersDescription()">
+    <cc-member-list
+      [members]="memberEntries()"
+      (roleRequested)="openRole($event)"
+      (removeRequested)="remove($event)"
+    />
+  </cc-section>
+
+  @if (canConfigure()) {
+    <cc-section
+      title="Invitaciones pendientes"
+      [description]="
+        invitationEntries().length === 0
+          ? 'No hay invitaciones pendientes.'
+          : 'Cada invitación sirve una sola vez, durante 7 días.'
+      "
+    >
+      @if (invitationEntries().length > 0) {
+        <cc-invitation-list
+          [invitations]="invitationEntries()"
+          (resendRequested)="resend($event)"
+          (revokeRequested)="revoke($event)"
+        />
+      }
+      <div class="actions">
+        <cc-button variant="tonal" icon="person_add" (click)="invite()">Invitar a alguien</cc-button>
+      </div>
+    </cc-section>
+  }
+
+  <cc-section title="Salir del espacio" [description]="leaveDescription()">
+    <div class="actions">
+      <cc-button
+        variant="outlined"
+        icon="logout"
+        [danger]="true"
+        [disabled]="!canLeave()"
+        (click)="leave()"
+      >
+        Salir de {{ spaceName() }}
+      </cc-button>
+    </div>
+  </cc-section>
+</div>

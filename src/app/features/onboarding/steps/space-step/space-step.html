@@ -1,5 +1,46 @@
 <cc-form [form]="stepForm">
   <cc-wizard-step [title]="step.title" [help]="step.help">
+    @if (invitations().length > 0) {
+      <cc-section
+        variant="highlight"
+        title="Te invitaron a un espacio"
+        description="Únete a ese espacio, o crea el tuyo con el formulario de abajo."
+      >
+        <div class="invitations">
+          @for (invitation of invitations(); track invitation.id) {
+            <cc-invitation-card
+              [spaceName]="invitation.spaceName"
+              [spaceIcon]="invitation.spaceIcon"
+              [spaceColor]="invitation.spaceColor"
+              [inviterName]="invitation.inviterName"
+              [roleLabel]="roleLabels[invitation.role]"
+            />
+            <div class="invitation-actions">
+              <cc-button
+                loadingLabel="Aceptando"
+                [loading]="answering() === invitation.id"
+                [disabled]="answering() !== null"
+                (click)="accept(invitation)"
+              >
+                Aceptar invitación
+              </cc-button>
+              <cc-button
+                variant="text"
+                [danger]="true"
+                [disabled]="answering() !== null"
+                (click)="decline(invitation)"
+              >
+                Rechazar
+              </cc-button>
+            </div>
+          }
+          @if (invitationError(); as error) {
+            <cc-message>{{ error }}</cc-message>
+          }
+        </div>
+      </cc-section>
+    }
+
     <cc-space-preferences-form [fields]="stepForm.space" />
     <cc-number-format-form [fields]="stepForm.numberFormat" />
 

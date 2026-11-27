@@ -987,6 +987,40 @@
           />
         </ng-template>
       </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-invitation-card"
+        description="Quién invita, a qué espacio y con qué rol (con y sin nombre de quien invita)"
+        layout="column"
+      >
+        <ng-template>
+          <cc-invitation-card
+            spaceName="Hogar"
+            spaceIcon="home"
+            spaceColor="green"
+            inviterName="Juan"
+            roleLabel="Editor"
+          />
+          <cc-invitation-card
+            spaceName="Viaje a la costa"
+            spaceIcon="beach_access"
+            spaceColor="cyan"
+            roleLabel="Lector"
+          />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-install-steps"
+        description="Cómo instalar la app: iPhone, Android sin el aviso del navegador y con él"
+        layout="column"
+      >
+        <ng-template>
+          <cc-install-steps platform="ios" email="pareja@example.com" />
+          <cc-install-steps platform="android" email="pareja@example.com" />
+          <cc-install-steps platform="other" email="pareja@example.com" [canPrompt]="true" />
+        </ng-template>
+      </app-catalog-entry>
     </div>
   </cc-section>
 
@@ -1239,6 +1273,27 @@
       <app-catalog-entry name="cc-tag-list" description="Activa y archivada" layout="column">
         <ng-template>
           <cc-tag-list [tags]="tagEntries" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-member-list · cc-invitation-list"
+        description="Miembros como los ve el propietario (rol y Quitar) e invitaciones pendientes, una vencida"
+        layout="column"
+      >
+        <ng-template>
+          <cc-member-list [members]="memberEntries" />
+          <cc-invitation-list [invitations]="invitationEntries" />
+        </ng-template>
+      </app-catalog-entry>
+
+      <app-catalog-entry
+        name="cc-invite-sheet"
+        description="Invitar (correo y rol) y el link para una cuenta existente"
+      >
+        <ng-template>
+          <cc-button variant="tonal" (click)="openInvite()">Invitar</cc-button>
+          <cc-button variant="tonal" (click)="openInviteLink()">Link de invitación</cc-button>
         </ng-template>
       </app-catalog-entry>
 

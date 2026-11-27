@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.list {
+  padding: var(--cc-space-1);
+  border-radius: var(--cc-radius-md);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.role {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}

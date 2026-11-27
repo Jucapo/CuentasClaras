@@ -1,0 +1,26 @@
+<div class="list" role="list">
+  @for (invitation of invitations(); track invitation.id) {
+    <cc-list-item
+      role="listitem"
+      [title]="invitation.email"
+      [subtitle]="invitation.roleLabel + ' · ' + invitation.statusLabel"
+      [subtitleIcon]="invitation.expired ? 'warning' : 'schedule'"
+    >
+      <cc-icon ccListItemLeading name="mail" />
+      <cc-icon-button
+        ccListItemEnd
+        icon="send"
+        [label]="'Reenviar a ' + invitation.email"
+        [tooltip]="true"
+        (click)="resendRequested.emit(invitation.id)"
+      />
+      <cc-icon-button
+        ccListItemEnd
+        icon="close"
+        [label]="'Revocar la invitación de ' + invitation.email"
+        [tooltip]="true"
+        (click)="revokeRequested.emit(invitation.id)"
+      />
+    </cc-list-item>
+  }
+</div>

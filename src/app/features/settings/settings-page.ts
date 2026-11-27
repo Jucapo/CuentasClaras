@@ -24,7 +24,9 @@ import { OnboardingService } from '../../core/onboarding/onboarding.service';
 import { ProfileService } from '../../core/profiles/profile.service';
 import { APP_PATHS, CATEGORY_PATHS, SETTINGS_PATHS } from '../../core/routing/app-paths';
 import { SpaceMembership, ThemePreference } from '../../core/spaces/space.models';
+import { SpaceMembersService } from '../../core/spaces/space-members.service';
 import { SpaceService } from '../../core/spaces/space.service';
+import { InvitationsService } from '../../core/invitations/invitations.service';
 import { Enums } from '../../core/supabase/database.types';
 import { UserSettingsService } from '../../core/user-settings/user-settings.service';
 import { Button } from '../../shared/ui/atoms/button/button';
@@ -96,6 +98,8 @@ export class SettingsPage {
   private readonly toast = inject(ToastService);
   private readonly onboarding = inject(OnboardingService);
   private readonly profiles = inject(ProfileService);
+  private readonly members = inject(SpaceMembersService);
+  private readonly invitations = inject(InvitationsService);
   protected readonly layout = inject(LayoutService);
   protected readonly shortcuts = inject(KeyboardShortcuts);
 
@@ -116,6 +120,17 @@ export class SettingsPage {
 
   /** The setup wizard: complete it while pending, review it afterwards (spec §7). */
   protected readonly onboardingLink = ['/', APP_PATHS.welcome];
+
+  /** Configuración → Miembros, with how many members and pending invitations (spec §7). */
+  protected readonly membersLink = ['/', APP_PATHS.settings, SETTINGS_PATHS.members];
+  protected readonly membersSummary = computed(() => {
+    const members = this.members.members().length;
+    const pending = this.invitations.pending().length;
+    const membersText = `${members} ${members === 1 ? 'miembro' : 'miembros'}`;
+    return pending === 0
+      ? membersText
+      : `${membersText} · ${pending} ${pending === 1 ? 'invitación pendiente' : 'invitaciones pendientes'}`;
+  });
   protected readonly onboardingRow = computed(() =>
     this.onboarding.isComplete()
       ? {

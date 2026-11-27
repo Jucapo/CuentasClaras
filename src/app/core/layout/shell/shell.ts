@@ -11,11 +11,17 @@ import {
   PeriodPanelData,
 } from '../../../shared/ui/organisms/period-panel/period-panel';
 import { OverlayService } from '../../../shared/ui/services/overlay.service';
+import { ToastService } from '../../../shared/ui/services/toast.service';
+import { OptionPanel, OptionPanelData } from '../../../shared/ui/molecules/option-panel/option-panel';
+import { iconOrFallback } from '../../../shared/ui/icons/icon-glyphs';
+import { MEMBER_ROLE_LABELS } from '../../config/member.constants';
+import { ReceivedInvitation } from '../../invitations/invitation.models';
+import { InvitationsService } from '../../invitations/invitations.service';
 import { AppShell } from '../../../shared/ui/templates/app-shell/app-shell';
 import { AuthService } from '../../auth/auth.service';
 import { ExchangeRateFlow } from '../../exchange-rates/exchange-rate-flow';
 import { PeriodService } from '../../periods/period.service';
-import { APP_PATHS, ROUTE_DATA_KEYS } from '../../routing/app-paths';
+import { APP_PATHS, INVITATION_QUERY_PARAMS, ROUTE_DATA_KEYS } from '../../routing/app-paths';
 import { activeRouteData } from '../../routing/route-chain';
 import { SpaceService } from '../../spaces/space.service';
 import { TotalsService } from '../../totals/totals.service';
@@ -43,8 +49,12 @@ export class Shell {
 
   protected readonly navItems = NAV_ITEMS;
   protected readonly paths = APP_PATHS;
+  private readonly invitations = inject(InvitationsService);
+  private readonly toast = inject(ToastService);
   /** Currencies whose rate was already asked for in this visit. */
   private readonly askedRates = new Set<string>();
+  /** Invitations already announced in this visit. */
+  private readonly announcedInvitations = new Set<string>();
 
   /** `ROUTE_DATA_KEYS` flags set anywhere in the active route chain. */
   protected readonly routeFlags = computed(() => {
@@ -74,6 +84,15 @@ export class Shell {
         void this.router.navigate(['/', APP_PATHS.login]);
       }
     });
+    // An invitation to another space shows once per visit, outside flows.
+    effect(() => {
+      const invitation = this.invitations.mine()[0];
+      if (!invitation || this.routeFlags().flow || this.announcedInvitations.has(invitation.id)) {
+        return;
+      }
+      this.announcedInvitations.add(invitation.id);
+      untracked(() => void this.announceInvitation(invitation));
+    });
     // The first time a total needs a rate, ask for it; never in the middle of a flow.
     effect(() => {
       const missing = this.totals.missingRateCurrencies();
@@ -90,6 +109,54 @@ export class Shell {
         );
       }
     });
+  }
+
+  /** Icon of the space selector; only with more than one space (spec §3.1 and §7). */
+  protected readonly spaceIcon = computed(() =>
+    this.spaces.memberships().length > 1 ? iconOrFallback(this.spaces.activeSpace()?.icon) : null,
+  );
+  protected readonly spaceLabel = computed(
+    () => `Espacio: ${this.spaces.activeSpace()?.name ?? ''}. Cambiar de espacio`,
+  );
+
+  protected async chooseSpace(): Promise<void> {
+    const current = this.spaces.activeSpace()?.id;
+    const spaceId = await this.overlay.open<string, OptionPanelData<string>>(OptionPanel, {
+      label: 'Espacio',
+      data: {
+        title: 'Espacio',
+        mode: 'single',
+        selected: current,
+        prominent: true,
+        options: this.spaces.memberships().map((membership) => ({
+          value: membership.space.id,
+          label: membership.space.name,
+          description: MEMBER_ROLE_LABELS[membership.role],
+          icon: membership.space.icon,
+          color: membership.space.color,
+        })),
+      },
+    });
+    if (!spaceId || spaceId === current) {
+      return;
+    }
+    await this.spaces.select(spaceId);
+    // Screens of the other space (an account, a category) do not exist here: start at home.
+    await this.router.navigateByUrl('/');
+  }
+
+  /** Once per visit, the invitations for the user to other spaces (spec §3.3). */
+  private async announceInvitation(invitation: ReceivedInvitation): Promise<void> {
+    const open = await this.toast.showWithAction(
+      `Te invitaron a ${invitation.spaceName}.`,
+      'Ver',
+      { persistent: true },
+    );
+    if (open) {
+      await this.router.navigate(['/', APP_PATHS.invitation], {
+        queryParams: { [INVITATION_QUERY_PARAMS.id]: invitation.id },
+      });
+    }
   }
 
   protected async choosePeriod(): Promise<void> {

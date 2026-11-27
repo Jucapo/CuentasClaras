@@ -1,0 +1,180 @@
+@switch (stage()) {
+  @case ('loading') {
+    <cc-page-header title="Invitación" subtitle="Cargando la invitación…" />
+  }
+
+  @case ('invalid') {
+    <cc-page-header title="Invitación" />
+    <cc-message>
+      Este link de invitación no es válido o está incompleto. Ábrelo de nuevo desde el correo o pide
+      que te lo envíen otra vez.
+    </cc-message>
+    <cc-form-actions>
+      <cc-button ccSecondaryAction variant="text" (click)="openApp()">Ir a la app</cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('closed') {
+    <cc-page-header title="Invitación" />
+    @if (details(); as invitation) {
+      <cc-invitation-card
+        [spaceName]="invitation.spaceName"
+        [spaceIcon]="invitation.spaceIcon"
+        [spaceColor]="invitation.spaceColor"
+        [inviterName]="invitation.inviterName"
+        [roleLabel]="roleLabel()"
+      />
+    }
+    <cc-message tone="info">{{ closedMessage() }}</cc-message>
+    <cc-form-actions>
+      <cc-button ccSecondaryAction variant="text" (click)="openApp()">Ir a la app</cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('new-account') {
+    @if (details(); as invitation) {
+      <cc-page-header title="Únete a Cuentas Claras" />
+      <cc-invitation-card
+        [spaceName]="invitation.spaceName"
+        [spaceIcon]="invitation.spaceIcon"
+        [spaceColor]="invitation.spaceColor"
+        [inviterName]="invitation.inviterName"
+        [roleLabel]="roleLabel()"
+      />
+      <p class="lead">
+        Tu cuenta es <strong>{{ invitation.email }}</strong>. Elige tu nombre y una contraseña: con
+        ella entras después a la app.
+      </p>
+      <cc-form label="Crear tu cuenta" [form]="accountForm">
+        <cc-text-field
+          label="Tu nombre"
+          hint="Es el que ven los demás miembros."
+          autocomplete="given-name"
+          [formField]="accountForm.displayName"
+        />
+        <cc-password-field
+          label="Contraseña"
+          autocomplete="new-password"
+          [formField]="accountForm.password"
+        />
+        <cc-password-field
+          label="Confirmar contraseña"
+          autocomplete="new-password"
+          [formField]="accountForm.confirmPassword"
+        />
+        <cc-form-actions [error]="error()">
+          <cc-button
+            type="submit"
+            loadingLabel="Aceptando"
+            [fullWidth]="true"
+            [loading]="accountForm().submitting()"
+          >
+            Aceptar invitación
+          </cc-button>
+        </cc-form-actions>
+      </cc-form>
+    }
+  }
+
+  @case ('sign-in') {
+    <cc-page-header title="Invitación" />
+    @if (details(); as invitation) {
+      <cc-invitation-card
+        [spaceName]="invitation.spaceName"
+        [spaceIcon]="invitation.spaceIcon"
+        [spaceColor]="invitation.spaceColor"
+        [inviterName]="invitation.inviterName"
+        [roleLabel]="roleLabel()"
+      />
+    }
+    @if (linkUsed()) {
+      <cc-message tone="info">
+        El link del correo ya se usó o venció. Si ya elegiste tu contraseña, inicia sesión para
+        aceptar. Si no, pide que te reenvíen la invitación.
+      </cc-message>
+    } @else {
+      <p class="lead">
+        @if (details(); as invitation) {
+          Inicia sesión con <strong>{{ invitation.email }}</strong> para aceptarla o rechazarla.
+        } @else {
+          Inicia sesión para ver tu invitación.
+        }
+      </p>
+    }
+    <cc-form-actions>
+      <cc-button [fullWidth]="true" (click)="signIn()">Iniciar sesión</cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('wrong-account') {
+    <cc-page-header title="Invitación" />
+    @if (details(); as invitation) {
+      <cc-invitation-card
+        [spaceName]="invitation.spaceName"
+        [spaceIcon]="invitation.spaceIcon"
+        [spaceColor]="invitation.spaceColor"
+        [inviterName]="invitation.inviterName"
+        [roleLabel]="roleLabel()"
+      />
+      <cc-message tone="info">
+        Esta invitación es para {{ invitation.email }}, pero entraste con otra cuenta. Cierra sesión
+        y entra con ese correo.
+      </cc-message>
+    }
+    <cc-form-actions>
+      <cc-button variant="outlined" icon="logout" (click)="signOut()">Cerrar sesión</cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('answer') {
+    <cc-page-header title="Invitación" />
+    @if (details(); as invitation) {
+      <cc-invitation-card
+        [spaceName]="invitation.spaceName"
+        [spaceIcon]="invitation.spaceIcon"
+        [spaceColor]="invitation.spaceColor"
+        [inviterName]="invitation.inviterName"
+        [roleLabel]="roleLabel()"
+      />
+    }
+    <cc-form-actions [error]="error()">
+      <cc-button [loading]="answering()" loadingLabel="Aceptando" (click)="accept()">
+        Aceptar invitación
+      </cc-button>
+      <cc-button
+        ccSecondaryAction
+        variant="text"
+        [danger]="true"
+        [disabled]="answering()"
+        (click)="decline()"
+      >
+        Rechazar
+      </cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('accepted') {
+    @if (details(); as invitation) {
+      <cc-page-header title="¡Listo!" [subtitle]="'Ya eres parte de ' + invitation.spaceName + '.'" />
+      <cc-install-steps
+        [platform]="install.platform"
+        [email]="invitation.email"
+        [canPrompt]="install.canPrompt()"
+        (install)="installApp()"
+      />
+    }
+    <cc-form-actions>
+      <cc-button ccSecondaryAction variant="text" (click)="openApp()">
+        Seguir en el navegador
+      </cc-button>
+    </cc-form-actions>
+  }
+
+  @case ('declined') {
+    <cc-page-header title="Invitación rechazada" />
+    <cc-message tone="info">Rechazaste la invitación. Nadie más puede usar ese link.</cc-message>
+    <cc-form-actions>
+      <cc-button ccSecondaryAction variant="text" (click)="openApp()">Ir a la app</cc-button>
+    </cc-form-actions>
+  }
+}

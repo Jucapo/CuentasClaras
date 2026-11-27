@@ -86,6 +86,19 @@
     </cc-form>
   </cc-section>
 
+  <cc-section title="Miembros" description="Quién está en el espacio y con qué rol.">
+    <div role="list">
+      <cc-list-item
+        role="listitem"
+        title="Miembros e invitaciones"
+        [subtitle]="membersSummary()"
+        [link]="membersLink"
+      >
+        <cc-icon ccListItemLeading name="group" />
+      </cc-list-item>
+    </div>
+  </cc-section>
+
   @if (canConfigure()) {
     <cc-section
       title="Configuración inicial"
