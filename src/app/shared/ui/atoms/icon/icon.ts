@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
+import { ICON_FONT_CLASS } from '../../ui.constants';
 
 /** Icon sizes, mapped to the --cc-icon-size-* tokens. */
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -21,6 +22,9 @@ export type IconSize = 'sm' | 'md' | 'lg' | 'xl';
   },
 })
 export class Icon {
+  /** Font of the self-hosted Material Symbols subset (src/styles/_fonts.scss). */
+  protected readonly iconFont = ICON_FONT_CLASS;
+
   /** Icon of the font subset, e.g. `savings`. */
   readonly name = input.required<IconName>();
   readonly size = input<IconSize>('md');

@@ -3,6 +3,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { iconGlyph, IconName } from '../../icons/icon-glyphs';
+import { ICON_FONT_CLASS } from '../../ui.constants';
 import { LinkCommands } from '../button/button';
 
 /** Icon-only button; `label` is its accessible name. Renders a link when it gets `link`. */
@@ -13,6 +14,9 @@ import { LinkCommands } from '../button/button';
   styleUrl: './icon-button.scss',
 })
 export class IconButton {
+  /** Font of the self-hosted Material Symbols subset (src/styles/_fonts.scss). */
+  protected readonly iconFont = ICON_FONT_CLASS;
+
   readonly icon = input.required<IconName>();
   readonly label = input.required<string>();
   readonly link = input<LinkCommands>();

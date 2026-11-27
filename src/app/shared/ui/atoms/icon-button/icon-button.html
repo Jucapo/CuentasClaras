@@ -8,7 +8,9 @@
     [attr.aria-keyshortcuts]="shortcut() ?? null"
     [attr.title]="title()"
   >
-    <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph() }}</mat-icon>
+    <mat-icon [fontSet]="iconFont" aria-hidden="true" [attr.data-icon]="icon()">{{
+      glyph()
+    }}</mat-icon>
   </a>
 } @else {
   <button
@@ -19,6 +21,8 @@
     [attr.aria-keyshortcuts]="shortcut() ?? null"
     [attr.title]="title()"
   >
-    <mat-icon aria-hidden="true" [attr.data-icon]="icon()">{{ glyph() }}</mat-icon>
+    <mat-icon [fontSet]="iconFont" aria-hidden="true" [attr.data-icon]="icon()">{{
+      glyph()
+    }}</mat-icon>
   </button>
 }

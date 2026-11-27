@@ -52,3 +52,6 @@ export const WINDOW_BREAKPOINTS = { medium: 600, expanded: 840 } as const;
 
 /** Diameter of the spinner shown inside a loading button; matches --cc-icon-size-sm. */
 export const BUTTON_SPINNER_DIAMETER = 20;
+
+/** Class of the self-hosted icon font, defined in src/styles/_fonts.scss; set on every mat-icon. */
+export const ICON_FONT_CLASS = 'cc-symbols';
