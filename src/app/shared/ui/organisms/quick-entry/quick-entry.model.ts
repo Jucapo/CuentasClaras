@@ -26,7 +26,7 @@ export interface QuickEntryCategory {
   readonly defaultTagIds: readonly string[];
 }
 
-/** Values edited by `cc-quick-entry-sheet`. */
+/** Values edited by `cc-quick-entry`. */
 export interface QuickEntryValue {
   type: TransactionType;
   /** What was typed on the keypad for the amount of the source account. */
@@ -205,4 +205,16 @@ export function defaultTagIds(
 /** "Incluir en el espacio" a new movement of an account starts with (spec §3.2). */
 export function includeInSpaceDefault(account: QuickEntryAccount | null): boolean {
   return !!account?.isPrivate && account.includeInSpaceByDefault;
+}
+
+/** Whether two sets of values are the same entry; the order of the tags does not matter. */
+export function sameQuickEntry(first: QuickEntryValue, second: QuickEntryValue): boolean {
+  const keys = Object.keys(first) as (keyof QuickEntryValue)[];
+  return keys.every((key) => {
+    if (key === 'tagIds') {
+      const tags = new Set(first.tagIds);
+      return tags.size === new Set(second.tagIds).size && second.tagIds.every((id) => tags.has(id));
+    }
+    return first[key] === second[key];
+  });
 }

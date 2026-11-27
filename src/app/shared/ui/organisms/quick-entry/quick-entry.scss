@@ -7,6 +7,23 @@
   display: block;
 }
 
+// In the detail pane it takes the height of the pane, and its columns stack while it is narrow.
+:host(.pane) {
+  --cc-picker-panel-max-height: none;
+
+  container-type: inline-size;
+
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @include breakpoints.container-entry-columns {
+    .columns {
+      grid-template-columns: minmax(0, 1fr) minmax(var(--cc-entry-column-min-width), 1fr);
+    }
+  }
+}
+
 .form {
   display: flex;
   flex-direction: column;

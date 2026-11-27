@@ -9,6 +9,7 @@ import {
   QuickEntryContext,
   quickEntrySchema,
   QuickEntryValue,
+  sameQuickEntry,
   toTransactionEntry,
 } from './quick-entry.model';
 
@@ -205,5 +206,16 @@ describe('defaults', () => {
     expect(includeInSpaceDefault(account({ isPrivate: true }))).toBe(false);
     expect(includeInSpaceDefault(account({ includeInSpaceByDefault: true }))).toBe(false);
     expect(includeInSpaceDefault(null)).toBe(false);
+  });
+});
+
+describe('sameQuickEntry', () => {
+  it('tells unsaved changes apart, whatever the order of the tags', () => {
+    const opened = value({ tagIds: ['fixed', 'home'] });
+    expect(sameQuickEntry(opened, value({ tagIds: ['home', 'fixed'] }))).toBe(true);
+    expect(sameQuickEntry(opened, value({ tagIds: ['fixed'] }))).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, expression: '25000+1' })).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, note: 'Almuerzo' })).toBe(false);
+    expect(sameQuickEntry(opened, { ...opened, date: '2026-11-25' })).toBe(false);
   });
 });

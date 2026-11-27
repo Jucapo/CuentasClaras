@@ -1,5 +1,12 @@
 import { toStoredBalance } from '../accounts/account-kinds';
-import { adjustmentFor, balanceDelta, BalanceMovement } from './transactions';
+import {
+  adjustmentFor,
+  balanceDelta,
+  BalanceMovement,
+  isPrivateMovement,
+  spaceAmount,
+  VisibleAccount,
+} from './transactions';
 
 const movement = (overrides: Partial<BalanceMovement>): BalanceMovement => ({
   type: 'expense',
@@ -35,6 +42,51 @@ describe('balanceDelta', () => {
 
   it('is zero for other accounts', () => {
     expect(balanceDelta(movement({}), 'bank')).toBe(0);
+  });
+});
+
+describe('spaceAmount', () => {
+  it('subtracts expenses, adds incomes and follows the direction of adjustments', () => {
+    expect(spaceAmount(movement({ type: 'expense' }))).toBe(-1_000);
+    expect(spaceAmount(movement({ type: 'income' }))).toBe(1_000);
+    expect(
+      spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'decrease' })),
+    ).toBe(-1_000);
+    expect(
+      spaceAmount(movement({ type: 'adjustment', adjustment_direction: 'increase' })),
+    ).toBe(1_000);
+  });
+
+  it('leaves transfers without a sign', () => {
+    expect(spaceAmount(movement({ type: 'transfer', to_account_id: 'bank' }))).toBe(1_000);
+  });
+});
+
+describe('isPrivateMovement', () => {
+  const accounts: Record<string, VisibleAccount> = {
+    cash: { visibility: 'shared' },
+    bank: { visibility: 'shared' },
+    mine: { visibility: 'private' },
+  };
+  const accountOf = (id: string) => accounts[id] ?? null;
+
+  it('marks movements of the private accounts of the user and of those they cannot see', () => {
+    expect(isPrivateMovement(movement({}), accountOf)).toBe(false);
+    expect(isPrivateMovement(movement({ account_id: 'mine' }), accountOf)).toBe(true);
+    expect(isPrivateMovement(movement({ account_id: 'theirs' }), accountOf)).toBe(true);
+  });
+
+  it('also looks at the destination of a transfer', () => {
+    const transfer = { type: 'transfer' as const };
+    expect(isPrivateMovement(movement({ ...transfer, to_account_id: 'bank' }), accountOf)).toBe(
+      false,
+    );
+    expect(isPrivateMovement(movement({ ...transfer, to_account_id: 'mine' }), accountOf)).toBe(
+      true,
+    );
+    expect(isPrivateMovement(movement({ ...transfer, to_account_id: 'theirs' }), accountOf)).toBe(
+      true,
+    );
   });
 });
 

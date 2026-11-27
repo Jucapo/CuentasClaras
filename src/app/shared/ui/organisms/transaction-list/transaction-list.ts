@@ -2,6 +2,7 @@ import { Component, input, output } from '@angular/core';
 import { Amount } from '../../atoms/amount/amount';
 import { Button } from '../../atoms/button/button';
 import { IconBadge } from '../../atoms/icon-badge/icon-badge';
+import { Icon } from '../../atoms/icon/icon';
 import { ListItem } from '../../molecules/list-item/list-item';
 import { UI_TEXT } from '../../ui.constants';
 
@@ -14,9 +15,13 @@ export interface TransactionListItem {
   readonly subtitle?: string;
   readonly icon: string;
   readonly color: string | null;
-  /** Signed effect on the account, in minor units of `currency`. */
+  /** Signed effect on the account (or the space), in minor units of `currency`. */
   readonly amount: number;
   readonly currency: string;
+  /** Shows the sign of `amount`; false for transfers seen from the space. */
+  readonly signed?: boolean;
+  /** Touches a private account: a small lock explains why space totals may differ (spec §7). */
+  readonly private?: boolean;
   /** Can be opened to edit it. */
   readonly editable: boolean;
 }
@@ -30,11 +35,11 @@ export interface TransactionListGroup {
 
 /**
  * Movements grouped by day, newest first (spec §7), with "Ver más" when there are more. Tapping an
- * editable one emits `opened`.
+ * editable one emits `opened`; `selectedId` marks the one open beside the list.
  */
 @Component({
   selector: 'cc-transaction-list',
-  imports: [ListItem, IconBadge, Amount, Button],
+  imports: [ListItem, IconBadge, Icon, Amount, Button],
   templateUrl: './transaction-list.html',
   styleUrl: './transaction-list.scss',
 })
@@ -45,8 +50,9 @@ export class TransactionList {
   readonly emptyText = input('');
   readonly hasMore = input(false);
   readonly loading = input(false);
+  readonly selectedId = input<string | null>(null);
   readonly opened = output<string>();
   readonly more = output<void>();
 
-  protected readonly loadMoreLabel = UI_TEXT.loadMore;
+  protected readonly text = UI_TEXT;
 }

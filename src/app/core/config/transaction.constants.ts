@@ -1,3 +1,4 @@
+import { TransactionStatus } from '../../domain/transactions/transaction-filters';
 import { TransactionType } from '../../domain/transactions/transactions';
 
 /** Limits of what a movement can hold (spec §4.2, §5.1 c). */
@@ -13,8 +14,29 @@ export const TRANSACTION_LIMITS = {
   noteMaxLength: 500,
 } as const;
 
-/** Movements per page in the account detail. */
+/** Movements per page in the account detail and in Transacciones. */
 export const TRANSACTION_PAGE_SIZE = 50;
+
+/** Pause after the last key before the search of Transacciones runs. */
+export const TRANSACTION_SEARCH_DEBOUNCE_MS = 300;
+
+/** Names of the states of a movement (spec §4.2). */
+export const TRANSACTION_STATUS_LABELS: Readonly<Record<TransactionStatus, string>> = {
+  confirmed: 'Confirmado',
+  pending: 'Pendiente',
+};
+
+/** Icon and color of the movements without a category. */
+export const UNCATEGORIZED_LOOK = {
+  transfer: { icon: 'swap_horiz', color: null },
+  adjustment: { icon: 'tune', color: null },
+} as const;
+
+/** "¿Qué vas a registrar?" in Transacciones (spec §7). */
+export const NEW_TRANSACTION_CHOICE = {
+  title: '¿Qué vas a registrar?',
+  transferHint: 'Entre tus cuentas',
+} as const;
 
 /** Names of the kinds of movement. */
 export const TRANSACTION_TYPE_LABELS: Readonly<Record<TransactionType, string>> = {

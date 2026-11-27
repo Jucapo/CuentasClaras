@@ -29,6 +29,9 @@ export const UI_TEXT = {
   nextPeriod: 'Periodo siguiente',
   choosePeriod: 'Elegir periodo',
   loadMore: 'Ver más',
+  privateAccount: 'Cuenta privada',
+  clearFilters: 'Limpiar',
+  removeFilter: 'Quitar filtro',
 } as const;
 
 /** Labels of the quick-entry keypad keys (spec §7). */

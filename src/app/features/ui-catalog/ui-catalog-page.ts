@@ -47,11 +47,9 @@ import {
   ExchangeRateSheetData,
 } from '../../shared/ui/organisms/exchange-rate-sheet/exchange-rate-sheet';
 import { PeriodPanel, PeriodPanelData } from '../../shared/ui/organisms/period-panel/period-panel';
-import {
-  QuickEntrySheet,
-  QuickEntrySheetData,
-} from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
-import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry.model';
+import { QuickEntrySheet } from '../../shared/ui/organisms/quick-entry-sheet/quick-entry-sheet';
+import { QuickEntryData } from '../../shared/ui/organisms/quick-entry/quick-entry';
+import { QuickEntryValue } from '../../shared/ui/organisms/quick-entry/quick-entry.model';
 import {
   TransactionList,
   TransactionListGroup,
@@ -669,7 +667,7 @@ export class UiCatalogPage {
       monthlyRatePercent: 0,
       adjustmentDirection: 'increase',
     };
-    void this.overlay.open<unknown, QuickEntrySheetData>(QuickEntrySheet, {
+    void this.overlay.open<unknown, QuickEntryData>(QuickEntrySheet, {
       label: 'Registro rápido',
       size: 'entry',
       autoFocus: 'cc-amount-display .display',

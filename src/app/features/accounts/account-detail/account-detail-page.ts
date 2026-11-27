@@ -2,12 +2,9 @@ import { Component, computed, effect, inject, input, resource, signal } from '@a
 import { ActivatedRoute, Router } from '@angular/router';
 import { AccountsService } from '../../../core/accounts/accounts.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CategoriesService } from '../../../core/categories/categories.service';
-import { TagsService } from '../../../core/categories/tags.service';
 import {
   TRANSACTION_PAGE_SIZE,
   TRANSACTION_SAVED_TEXT,
-  TRANSACTION_TYPE_LABELS,
 } from '../../../core/config/transaction.constants';
 import { PeriodService } from '../../../core/periods/period.service';
 import { ACCOUNT_PATHS } from '../../../core/routing/app-paths';
@@ -19,9 +16,7 @@ import {
   toDisplayedBalance,
   toStoredBalance,
 } from '../../../domain/accounts/account-kinds';
-import { effectiveColor } from '../../../domain/categories/category-tree';
-import { dayTitle } from '../../../domain/periods/period-labels';
-import { adjustmentFor, balanceDelta } from '../../../domain/transactions/transactions';
+import { adjustmentFor } from '../../../domain/transactions/transactions';
 import { Amount } from '../../../shared/ui/atoms/amount/amount';
 import { Button } from '../../../shared/ui/atoms/button/button';
 import { IconBadge } from '../../../shared/ui/atoms/icon-badge/icon-badge';
@@ -37,18 +32,15 @@ import { PageHeader } from '../../../shared/ui/molecules/page-header/page-header
 import {
   TransactionList,
   TransactionListGroup,
-  TransactionListItem,
 } from '../../../shared/ui/organisms/transaction-list/transaction-list';
 import { OverlayService } from '../../../shared/ui/services/overlay.service';
 import { ToastService } from '../../../shared/ui/services/toast.service';
 import { QuickEntryFlow } from '../../transactions/quick-entry-flow';
+import {
+  injectTransactionLookups,
+  toTransactionGroups,
+} from '../../transactions/transaction-items';
 import { AccountPane } from '../account-pane';
-
-/** Icon and color of the movements without a category. */
-const UNCATEGORIZED = {
-  transfer: { icon: 'swap_horiz', color: null },
-  adjustment: { icon: 'tune', color: null },
-} as const;
 
 /**
  * An account (spec §7): its balance and its movements by day, newest first. A movement opens in the
@@ -76,8 +68,7 @@ export class AccountDetailPage implements AccountPane {
 
   private readonly accounts = inject(AccountsService);
   private readonly auth = inject(AuthService);
-  private readonly categories = inject(CategoriesService);
-  private readonly tags = inject(TagsService);
+  private readonly lookups = injectTransactionLookups();
   private readonly spaces = inject(SpaceService);
   private readonly periods = inject(PeriodService);
   private readonly transactions = inject(TransactionsService);
@@ -141,14 +132,16 @@ export class AccountDetailPage implements AccountPane {
   protected readonly listLabel = computed(() => `Movimientos de ${this.account()?.name ?? ''}`);
 
   protected readonly groups = computed<TransactionListGroup[]>(() => {
-    const today = this.periods.today();
-    const groups = new Map<string, TransactionListItem[]>();
-    for (const movement of this.movements()) {
-      const items = groups.get(movement.date) ?? [];
-      items.push(this.toItem(movement));
-      groups.set(movement.date, items);
+    const account = this.account();
+    if (!account) {
+      return [];
     }
-    return [...groups].map(([date, items]) => ({ title: dayTitle(date, today), items }));
+    return toTransactionGroups(
+      this.movements(),
+      this.lookups(),
+      { accountId: account.id, currency: account.currency },
+      this.periods.today(),
+    );
   });
 
   constructor() {
@@ -235,62 +228,5 @@ export class AccountDetailPage implements AccountPane {
       const removed = await this.transactions.remove(id);
       void this.toast.show(removed.ok ? TRANSACTION_SAVED_TEXT.undone : removed.message);
     }
-  }
-
-  private toItem(movement: Transaction): TransactionListItem {
-    const account = this.account();
-    const accountId = account?.id ?? '';
-    const tagNames = this.tags
-      .tags()
-      .filter((tag) => movement.tag_ids.includes(tag.id))
-      .map((tag) => tag.name);
-    const details = [
-      ...tagNames,
-      ...(movement.installments > 1 ? [`${movement.installments} cuotas`] : []),
-      ...(movement.note ? [movement.note] : []),
-    ];
-    const source = this.accounts.find(movement.account_id);
-    return {
-      id: movement.id,
-      ...this.describe(movement, accountId),
-      subtitle: details.join(' · ') || undefined,
-      amount: balanceDelta(movement, accountId),
-      currency: account?.currency ?? movement.currency,
-      // Editing needs write access to the source account (spec §8).
-      editable:
-        this.spaces.canEdit() &&
-        !!source &&
-        (source.visibility === 'shared' || source.owner_id === this.auth.user()?.id),
-    };
-  }
-
-  private describe(movement: Transaction, accountId: string) {
-    if (movement.type === 'transfer') {
-      const outgoing = movement.account_id === accountId;
-      const otherId = outgoing ? movement.to_account_id : movement.account_id;
-      const other = otherId ? this.accounts.find(otherId) : null;
-      // Someone else's private account cannot be seen; only who recorded the movement (spec §3.2).
-      const otherName =
-        other?.name ??
-        (movement.author_name ? `Cuenta privada de ${movement.author_name}` : 'Cuenta privada');
-      return {
-        title: outgoing ? `Transferencia a ${otherName}` : `Transferencia desde ${otherName}`,
-        ...UNCATEGORIZED.transfer,
-      };
-    }
-    if (movement.type === 'adjustment') {
-      return { title: 'Ajuste de saldo', ...UNCATEGORIZED.adjustment };
-    }
-    const category = movement.category_id ? this.categories.find(movement.category_id) : null;
-    const parent = category?.parent_id ? this.categories.find(category.parent_id) : null;
-    return {
-      title: category
-        ? parent
-          ? `${parent.name} › ${category.name}`
-          : category.name
-        : TRANSACTION_TYPE_LABELS[movement.type],
-      icon: category?.icon ?? 'category',
-      color: category ? effectiveColor(category, parent) : null,
-    };
   }
 }
