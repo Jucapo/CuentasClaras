@@ -12,8 +12,9 @@ import {
 const catalogNames = ICON_CATALOG.flatMap((group) => group.icons.map((icon) => icon.name));
 
 describe('icon catalog', () => {
-  it('has several hundred icons in the groups of the spec', () => {
-    expect(catalogNames.length).toBeGreaterThanOrEqual(300);
+  // Spec §13.3: about 900 icons since the F1d2, twice the 443 of the F1b.
+  it('has about nine hundred icons in the groups of the spec', () => {
+    expect(catalogNames.length).toBeGreaterThanOrEqual(886);
     expect(ICON_CATALOG.map((group) => group.label)).toEqual([
       'Hogar',
       'Comida',
